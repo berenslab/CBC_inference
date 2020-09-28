@@ -10,7 +10,6 @@
 *.core
 *.pkl
 *.mph*
-!*_cleared.mph # Accepted cleared files.
 *.mat
 *.h5
 *.dat
@@ -18,6 +17,9 @@
 # Figures, Not that some png will be commited.
 *.pdf
 *.mp4
+
+# Added cleared comsol files.
+!*cleared.mph
 
 # Folders:
 __pycache__/
