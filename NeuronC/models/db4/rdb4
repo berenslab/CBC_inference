@@ -1,0 +1,329 @@
+#
+# Run bipolar cell experiment
+#
+# Cell parameters are defined in the "nval_cbp_flash.n" file.
+#  The first 36 parameters define the cell, and the remainder
+#  of the parameters define the synaptic properties.
+#  
+# Cell morphology is defined in a file in the runconf subdirectory.
+#   The file names begin with "morph_" with the file type attached: 
+#   "runconf/morph_dbp1" 
+#
+# Channel densities are set by "runconf/dens_dbp1.n"
+#  The full set of parameters is listed in "dens_default_full.n" 
+#
+# Offsets for channels are defined by "runconf/chanparams"
+#
+#---------------------------------------------------------
+#
+# To convert neuromantic files into nc morphology format,
+# use converter at nc/models/retsim/runconf/neuroman2nc:
+#
+# neuroman2nc file.neuroman > file.nc
+#
+#---------------------------------------------------------
+#
+# Run these models from the nc/models/retsim directory (folder).
+#
+# Surface area and conductance by region for db4
+#
+# retsim --expt surf_area --celltype dbp1 --dbp1_file morph_DB4_120605_02 --nvalfile nval_cbp_flash.n --dbp1_densfile dens_db4.n --cbplam 0.005 --dvrev -0.07 --dvst -0.07 --drm 30e3 --dri 60 --dria 600 --dcm 1e-6 --dcmab 1e-6 --drmab 5e3 --axdia 1 > db4_surf_area.txt
+#
+# Rin for db4
+#
+# mosrun -l  retsim --expt cell_Rin --celltype dbp1 --dbp1_densfile dens_db4.n --dbp1_file morph_DB4_120605_02 --set_drm 30e3 --dri 60 --dcm 1.185e-6 --vstart -0.07 --vstop -0.07 --dvrev -0.07 --dvst -0.06 --cbplam 0.005 --drmab 5e3 --axdia 1 &
+#
+#
+# vclamp for HCN cond, 0.6e-3 in terminal region only, sensitive to dri=30, need to edit for vclamp loop
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .1 --tailcurdur 0.02 --poststepdur 0.1 --vhold -0.04 --vstart -0.04 --vstop -0.1 --vstep -0.01 --ivplot 0 --outward 0 --gscal 2e-9 --set_drm 30e3 --dri 60 --dcm 1.185e-6 --mxrot -90 -v | vid -c db4_hcn_cond_vc.ps
+#
+# cclamp for db4
+#
+# retsim --expt cbp_cclamp --dbp1_densfile dens_db4.n --dbp1_file morph_DB4_120605_02 --stimtime 0.05 --stepdur 1.0 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --ivplot 0 --set_drm 30e3 --dri 60 --dcm 1.185e-6 --dvrev -0.060 --mxrot -90 -v | vid
+#
+# display morphology
+#
+retsim --expt cbp_cclamp --dbp1_densfile dens_db4.n --dbp1_file morph_DB4_120605_02.na1b --stimtime 0.05 --stepdur 1.0 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --ivplot 0 --set_drm 30e3 --dri 60 --dcm 1.185e-6 --dvrev -0.060 --mxrot -90 --dbp1_nscale -3.08 -d 9 -v | vid -c > db4_anatomy.ps &
+#
+# calibrated runs
+#
+# K channel conductance, -70 holding potential, short pulse
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 1 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_NA5 99 --_KH 99 --_CA5 99 --_CAP 99  --mxrot -90 --plotlabel db4_k70s --set_timinc 2e-6 -v | vid -c > db4_k70s_cond.ps &
+#
+# K channel conductance, -70 holding potential, long pulse
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .1 --tailcurdur 0.02 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 1 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6  --_NA5 99 --_KH 99 --_CA5 99 --_CAP 99 --mxrot -90 --plotlabel db4_k70l --set_timinc 2e-6 -v | vid -c > db4_k70l_cond.ps &
+#
+# K channel conductance, -70 holding potential, long pulse, ivplot
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .1 --tailcurdur 0.02 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 1 --outward 1 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6  --_NA5 99 --_KH 99 --_CA5 99 --_CAP 99 --mxrot -90 --plotlabel db4_k70liv --set_timinc 2e-6 -v | vid -c > db4_k70l_iv.ps &
+#
+# Na channel conductance, -70 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .2 --tailcurdur 0.1 --poststepdur 0.1 --vhold -0.1 --vstart -0.085 --vstop -0.02 --set_ploti 2e-5 --ivplot 0 --outward 0 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KDR 99 --_K6 99 --_KH 99 --_CA5 99 --mxrot -90 --plotlabel db4_na70 --set_timinc 1e-6 -v | vid -c > db4_na70_cond.ps &
+#
+# Na channel conductance, -90 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.09 --vstop 0.05 --ivplot 0 --outward 0 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KDR 99 --_K6 99 --_KH 99 --_CA5 99 --mxrot -90 --plotlabel db4_na90 --set_timinc 2e-6 -v | vid -c > db4_na90_cond.ps &
+#
+# Na channel conductance, -90 holding potential, ivplot
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.09 --vstop 0.05 --ivplot 1 --outward 0 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KDR 99 --_K6 99 --_KH 99 --_CA5 99 --mxrot -90 --plotlabel db4_na90iv --set_timinc 2e-6 -v | vid -c > db4_na90_iv.ps &
+#
+# Na,K channel conductance, -70 holding potential, short pulse
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KH 99 --_CA5 99 --mxrot -90 --plotlabel db4_nak70s --set_timinc 2e-6 -v | vid -c > db4_nak70s_cond.ps &
+#
+# Na,K channel conductance, -70 holding potential, long pulse
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .1 --tailcurdur 0.02 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KH 99 --_CA5 99 --mxrot -90 --plotlabel db4_nak70l --set_timinc 2e-6 -v | vid -c > db4_nak70l_cond.ps &
+#
+# CaT channel conductance, -70 holding potential, set voffset -30 to get no activation (same as all the Ca runs)
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.05 --vhold -0.07 --vstop 0.03 --ivplot 0 --outward 0 --iscal 5e-10 --gscal 5e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_NA5 99 --_KDR 99 --_K6 99 --_KH 99 --mxrot -90 --plotlabel db4_ca70 --set_timinc 2e-6 -v | vid -c > db4_ca70_cond.ps &
+#
+# CaT channel conductance, -90 holding potential, set voffset -30 to get activation here but not at -70
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.05 --vhold -0.09 --vstop 0.03 --ivplot 0 --outward 0 --iscal 2e-10 --gscal 2e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_NA5 99 --_KDR 99 --_K6 99 --_KH 99 --mxrot -90 --plotlabel db4_ca90 --set_timinc 2e-6 -v | vid -c > db4_ca90_cond.ps &
+#
+# CaT channel conductance, -90 holding potential, set voffset -30 to get activation here but not at -70
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.05 --vhold -0.09 --vstop 0.03 --ivplot 1 --outward 0 --iscal 2e-10 --gscal 2e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_NA5 99 --_KDR 99 --_K6 99 --_KH 99 --mxrot -90 --plotlabel db4_ca90iv --set_timinc 2e-6 -v | vid -c > db4_ca90_iv.ps &
+#
+# NaCaT channel conductance, -70 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 0 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KDR 99 --_K6 99 --_KH 99 --mxrot -90 --plotlabel db4_naca70 --set_timinc 2e-6 -v | vid -c > db4_naca70_cond.ps &
+#
+# NaCaT channel conductance, -90 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.09 --vstop 0.05 --ivplot 0 --outward 0 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KDR 99 --_K6 99 --_KH 99 --mxrot -90 --plotlabel db4_naca90 --set_timinc 2e-6 -v | vid -c > db4_naca90_cond.ps &
+#
+# Na, K, CaT channel conductance, -70 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.07 --vstop 0.05 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KH 99 --mxrot -90 --plotlabel db4_nakca70 --set_timinc 2e-6 -v | vid -c > db4_nakca70_cond.ps &
+#
+# Na, K, CaT channel conductance, -90 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .01 --tailcurdur 0.01 --poststepdur 0.1 --vhold -0.09 --vstop 0.05 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_KH 99 --mxrot -90 --plotlabel db4_nakca90 --set_timinc 2e-6 -v | vid -c > db4_nakca90_cond.ps &
+#
+# HCN channel conductance, -40 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.005 --stepdur .1 --tailcurdur 0.02 --poststepdur 0.25 --vhold -0.04 --vstart -0.04 --vstop -0.11 --vstep -0.01 --ivplot 0 --gvrev -0.012 --outward 0 --iscal 5e-10 --gscal 5e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --_NA5 99 --_KDR 99 --_K6 99 --_CA5 99  --set_timinc 1e-6 --mxrot -90 --plotlabel db4_hcn40 -v | vid -c > db4_hcn40_cond.ps &
+#
+# Na, K, CaT, HCN channel conductance, -90 holding potential
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.01 --poststepdur 0.25 --vhold -0.09 --vstop 0.05 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 50 --dcm 1.185e-6 --set_timinc 1e-6 --mxrot -90 --plotlabel db4_nakca_hcn90 -v | vid -c > db4_nakca_hcn90_cond.ps &
+#
+# Na, K, CaT, HCN channel conductance, -70 holding potential, "Iact" protocol, removed HCN
+#
+#retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --_K4 99 --plotlabel db4_Iact > db4_Iact.r &
+#
+# Na, K, CaT, HCN channel conductance, -90 holding potential, "NaAct" protocol, removed HCN
+#
+#retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .2 --tailcurdur 0.2 --poststepdur 0.01 --vhold -0.09 --vstart -0.085 --vstop -0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0855 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --_K4 99 --plotlabel db4_NaAct > db4_NaAct.r &
+#
+# Na, K, CaT, HCN channel conductance, -90 holding potential, "HCN" protocol
+#
+#retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .5 --tailcurdur 0.5 --poststepdur 0.02 --vhold -0.07 --vstart -0.075 --vstop -0.11 --vstep -0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 4e-5 --mxrot -90 --plotlabel db4_HCN > db4_HCN.r &
+#
+# cclamp, no HCN, KDR, or CA5 
+#
+# mosrun -l retsim --expt cbp_cclamp --dbp1_densfile dens_db4.n --dbp1_file morph_DB4_120605_02 --predur 0.15 --stimtime 0.05 --stimdur 1.0 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --ivplot 0 --set_drm 30e3 --dri 50 --dcm 1.e-6 --dvrev -0.060 --dvst -0.065 --_K4 99 --_KDR 99 --_CA5 99 --mxrot -90 --plotlabel db4_nak6_cclamp -v | vid -c > db4_nak6_cclamp.ps &
+#
+#
+#  run 4, dri 50, axon 0.5 um, increase Na5 cond to 400, ca6 to 0.9 at soma, Na act -13 mV, electrode 20 MOhm, 1e-14 cap
+#
+# To look at initial Na activation:
+#
+# plotmod -p 3 -t db4_Iact.r | plotmod -e .019 -E 0.032 -M 2e-10 -m -2e-10  | vid
+#
+#  mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.002 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.005 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --iscal 0.3e-9 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 80 --dcm 1.185e-6 --set_timinc 5e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact --_K4 99 --elnode 5000 | plotmod -p 1-3 -t | plotmod -E 0.012 | vid
+#
+#
+#
+# Run 5, add back HCN, increase Na to 500e-5 in axon, 10e-3 soma, 0.4 um dia axon, NA5 offset -12 mV m,h
+#
+# mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.002 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.005 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --iscal 0.3e-9 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 5e-6 --set_ploti 2e-5 --elec_rs 20e6 --mxrot -90 --plotlabel db4_Iact --elnode 5000 | plotmod -p 1-3 -t | plotmod -E 0.012 | vid
+#
+# Na, K, CaT, HCN channel conductance, -70 holding potential, "Iact" protocol
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact > db4_Iact.r &
+#
+# Na, K, CaT, HCN channel conductance, -90 holding potential, "NaAct" protocol
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .2 --tailcurdur 0.2 --poststepdur 0.01 --vhold -0.09 --vstart -0.085 --vstop -0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0855 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_NaAct > db4_NaAct.r &
+#
+# Na, K, CaT, HCN channel conductance, -90 holding potential, "HCN" protocol
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .5 --tailcurdur 0.5 --poststepdur 0.02 --vhold -0.07 --vstart -0.075 --vstop -0.11 --vstep -0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 4e-5 --mxrot -90 --plotlabel db4_HCN > db4_HCN.r &
+#
+#  
+# Run 6, all channels, Na 500e-5 in axon, 7e-3 soma, 0.4 um dia axon, NA5 offset -12 mV m,h, CA5 -0.01 offsetm,h, 1.8 taua-d, K4 offset -0.005, K1 taua,b=25
+#
+
+# Iact protocol, only CaT channel conductance, -70 holding potential 
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_CaT --_NA5 99 --_KDR 99 --_K6 99 --_K4 99  > db4_Iact_CaT.r &
+#
+# NaAct protocol, only CaT channel conductance, -90 holding potential 
+# to get activation here but not at -70
+#
+# retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.05 --stepdur .2 --tailcurdur 0.2 --poststepdur 0.01 --vhold -0.09 --vstart -0.085 --vstop -0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0855 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_NaAct_CaT --_NA5 99 --_KDR 99 --_K6 99 --_K4 99 >db4_NaAct_CaT.r &
+
+#
+#  Iact, remove KH, elbow is gone
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_xk4 --_K4 99 > db4_Iact_xk4.r &
+#
+#  Iact, only KH, KDR, K6 
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 150 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_k146 --_NA5 99 --_CA5 99 > db4_Iact_k146.r &
+#
+#  Iact, ri 100
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 100 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri100 > db4_Iact_ri100.r &
+#
+# Iact, ri 120
+#
+retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 120 --dcm 1.185e-6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri120 > db4_Iact_ri120.r &
+#
+# Run 7, test
+# 
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --set_drm 30e3 --dvst -0.0685 --dri 80 --dcm 1.185e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_ri80 | plotmod -p 1 -p 3 -e 0.18 -E 0.03 | vid
+
+#
+# Run 7, test 2
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --dvst -0.0685 --dri 200 --dcm 1.185e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_ri80 | plotmod -p 1-4 -t | plotmod -e 0.018 -E 0.03 | vid
+#
+# fixed plotmod
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --dvst -0.0685 --dri 200 --dcm 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_ri200 | plotmod -p 2-5 -e 0.018 -E 0.03 | vid
+#
+# dendritic R4, for independent Na regions
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.test.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02_r4 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --dvst -0.0685 --dri 200 --dcm 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_r4 | plotmod -p 1-5 -e 0.018 -E 0.03 | vid
+#
+# with drmab, dria, and dcmab for axon branches, added k7 for slow, med, fast K chans
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --predur 0.02 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 30e3 --dri 50 --dria 1600 --dcm 1e-6 --dcmab 0.3e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1 -p 5 -e 0.018 -E 0.03 | vid
+#
+# Run 7, with 1 high-dens Na region (900e3), but with term branches 50e3
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 20e3 --dri 50 --dria 600 --dcm 1e-6 --dcmab 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na1 > db4_Iact_na1.r
+#
+#
+# Run 7, with 2 high-dens Na region (900e3), (400), but with term branches 30e3
+#   morph file morph_DB4_120605_02 is copy of morph_DB4_120605_02.na2r2
+#   morph_DB4_120605_02.na2r has R4,R5,R6,R7,R8,R9, axon 6 um farther down, smaller axon terminal branch varicosities
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 20e3 --dri 50 --dria 1600 --dcm 1e-6 --dcmab 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_Iact_na2.r
+#
+#  For testing only, shorter pulse
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 20e3 --dri 100 --dria 1600 --dcm 1e-6 --dcmab 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1 -p 5 -e 0.018 -E 0.03 | vid
+#
+# testing, trace 3, peak at 5 ms
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 5e3 --dri 100 --dria 2000 --dcm 1e-6 --dcmab 1e-6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1 -p 5 -e 0.018 -E 0.03 | vid
+#
+# axdia 0.6, dri 60, dria 1000
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .02 --tailcurdur 0.01 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 5e3 --dri 60 --dria 1000 --dcm 1e-6 --dcmab 1e-6 --axdia 0.6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1 -p 5 -e 0.018 -E 0.03 | vid
+
+#
+# run 8
+#
+ mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run8.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2  --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 4e3 --dri 60 --dria 1000 --driab 200 --dcm 1e-6 --dcmab 1e-6 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run8.r
+#
+# run 9 test
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run9.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 1000 --dcm 1e-6 --dcmab 1e-6 --axdia 0.6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid
+#
+# run 9
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run9.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 1000 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run9.r
+#
+#
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run9.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 1000 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.075 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run9b.r
+#
+# run 10 test, channels only in soma, dria, driab added
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run10_soma.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid
+#
+# run 10, channels only in soma
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run10_soma.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run10.r
+#
+# run 11 test, K channels everywhere but in soma, dria, driab added
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_k.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 1000 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid
+#
+# run 11, K channels everywhere but in soma, dria, driab added
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_k.n --dbp1_densfile2 dens_db4x.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 1000 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run11.r
+#
+# run 12 test, same as run9, but only 1 high-density Na region, no driab
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run12.n --dbp1_densfile2 dens_db4x_run12.n --dbp1_file morph_DB4_120605_02.na2r2 --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 800 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.079 --axdia 0.6 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid 
+#
+# run 12, same as run9, but only 1 high-density Na region, no driab
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run12.n --dbp1_densfile2 dens_db4x_run12.n --dbp1_file morph_DB4_120605_02.na2r2 --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 60 --dria 800 --driab 800 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.079 --axdia 0.6 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run12.r
+#
+# run 13 test, same as run 12 test (1 high-density Na region) but original length axon
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.081 --axdia 0.6 --cbplam 0.02 --naax 60e-3 --nahd 1000e-3 --naab 60e-3 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid 
+#
+# run 13, same as run 12 (1 high-density Na region) but original length axon
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --naab 60e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run13.r &
+#
+# run 14 test, same as run 13 test, but naab = 60e3 (same as run12), naax set low (soma and axon), 
+#    Na5 offm -0.005 mV, offh = 0 mV
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.081 --axdia 0.6 --cbplam 0.02 --naax 4e-3 --nahd 1000e-3 --naab 60e-3 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid 
+#
+# cclamp for run 14
+#
+ mosrun -l retsim --expt cbp_cclamp --dbp1_densfile dens_db4_run13.n --dbp1_file morph_DB4_120605_02.na1b --stimtime 0.05 --stimdur 1.0 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --ivplot 0 --set_drm 30e3 --dvreva -0.070 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd 800e-3 --naab 0e-3 --set_timinc 1e-6 --set_ploti 10e-5 --mxrot -90 -v | vid
+
+#
+# run 14 test, axdia 0.8, naax 0, dria, driab 200, nahd, naab set to give short timing on spikes 
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.8 --cbplam 0.02 --naax 0e-3 --nahd 1400e-3 --naab 0e-3 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid
+#
+#
+# from rdb4_run14, perl file, just run trace at -55 mV, with $ri and $na variables:
+#
+        system ("mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.055 --vstop -0.054 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 30e3 --dri 100 --dria $ri --driab $ri --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd $na.e-3 --naab 0 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_run14_na$na_ri$ri > db4_run14_na$na.ri$ri.r &");
+#
+#  Find input resistance and densities for cell
+#
+#
+ retsim --expt surf_area --celltype dbp1 --dbp1_file morph_DB4_120605_02.na1b --dbp1_densfile dens_db4_run13.n --cbplam 0.01 --dvrev -0.07 --dvreva -0.07 --dvst -0.07 --drm 30e3 --dri 100 --dria 300 --driab 300 --naax 0 --nahd 600e-3 --naab 0 --dcm 1e-6 --dcmab 1e-6 --drmab 30e3 --axdia 0.8 > db4_surf_area.txt
+#
+# put total Na conductance of axon in soma
+#
+ retsim --expt surf_area --celltype dbp1 --dbp1_file morph_DB4_120605_02.na1b --dbp1_densfile dens_db4_run14b_soma.n --cbplam 0.01 --dvrev -0.07 --dvreva -0.07 --dvst -0.07 --drm 30e3 --dri 100 --dria 300 --driab 300 --naax 0 --nahd 600e-3 --naab 0 --dcm 1e-6 --dcmab 1e-6 --drmab 30e3 --axdia 0.8 > db4_surf_area_soma.txt
+#
+#
+#
+# cclamp, remove KH, CA5, K7 for more symmetrical spikes
+#
+mosrun -l retsim --expt cbp_cclamp --dbp1_densfile dens_db4_run13.n --dbp1_file morph_DB4_120605_02.na1b --stimtime 0.05 --stimdur 0.5 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --ivplot 0 --set_drm 30e3 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd 800e-3 --naab 0e-3 --set_timinc 1e-6 --set_ploti 10e-5 --_K7 99 --_K6 99  --_CA5 99 --_KH 99 --mxrot -90 -v | vid -B 7
+#
+# cclamp, remove all the channels
+#
+mosrun -l retsim --expt cbp_cclamp --dbp1_densfile dens_db4_run13.n --dbp1_file morph_DB4_120605_02.na1b --stimtime 0.05 --stimdur 0.5 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --ivplot 0 --set_drm 30e3 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd 800e-3 --naab 0e-3 --set_timinc 1e-6 --set_ploti 10e-5 --_NA5 99 --_K7 99 --_K6 99  --_KDR 99 --_CA5 99 --_KH 99 --mxrot -90 -v | vid -B 7
+#
+# display with tapered cables
+#
+mosrun -l retsim --expt cbp_cclamp --dbp1_densfile dens_db4_run13.n --dbp1_file morph_DB4_120605_02.na1bs --stimtime 0.05 --stimdur 1.0 --stimfreq 10 --iinj 10e-12 --dci 0e-12 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --ivplot 0 --set_drm 30e3 -axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd 800e-3 --naab 0e-3 --set_timinc 1e-6 --set_ploti 10e-5 --_K7 99 --_K6 99  --_CA5 99 --_KH 99 --mxrot -90 -v | vid
+#
+# run14, all channels at soma
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13_soma.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 30e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd 1000e-3 --naab 0 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_run14_soma > db4_run14_soma.r

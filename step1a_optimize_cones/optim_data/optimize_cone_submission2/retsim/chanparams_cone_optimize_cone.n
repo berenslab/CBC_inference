@@ -1,0 +1,9 @@
+columns:       cone    
+
+#CA0           cone    
+CA0.offm:      c_L_offm
+CA0.taua:      c_L_taua
+
+#K0           cone    
+K0.offm:      c_Kv_offm
+K0.taua:      c_Kv_taua

@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+#  Script to convert cell anatomy file from Neurolucida "old format"
+#   to the NeuronC format. 
+#
+#   R.G. Smith, Aug, 2001
+#
+     echo "#"
+     echo "# DS cell from Neurolucida file \""$1"\""
+     echo "#"
+     echo "#  Converted by \"dsconv3\" on "`date`
+
+gawk 'BEGIN {
+     FS="[(),]";	# field separators ( , ) 
+     old_node=0; 
+     node=1; 
+     dendrite = 1;
+     old_dendrite = 0;
+     nsoma = 0;
+     xsoma = ysoma = zsoma = 0;
+     xsoma_max = ysoma_max = -10000;
+     xsoma_min = ysoma_min = 10000;
+     printf ("#\n");
+ printf ("#    node  parent   dia     xbio     ybio     zbio     region  dendr \n");
+     printf ("#\n");
+     region = "DEND";
+     old_region = "";
+     pid[0] = 0;
+     seg = 1;
+     }
+
+     /\[10,41]/ {  region = "SOMA"; }
+     /\[10,1]/  { dendrite++; region = "DEND"}
+     /\[1,2]/   { region = "DEND"}
+     /\[10,21]/ { dendrite++; region = "AXON";}
+
+
+# { print "line",NR, "fields",NF; 
+#	for (i=1; i<=NF; i++) { print $i; }; print ""; }
+ 
+     NF>=6 && /^\[/ {
+
+#         print region;   
+         x = $3;
+         y = $4;
+         z = $5;
+         r = $6;
+         obj = substr($1,2,length($1));    # remove "[" from beginning
+         op  = substr($2,0,length($2)-1);  # remove "]" from end
+       }
+                   			
+  /\[1,42]/  {					# region == SOMA
+            xsoma += x; 
+            ysoma += y; 
+            zsoma += z; 
+            nsoma++;
+            if (xsoma_max < x) xsoma_max = x;
+            if (xsoma_min > x) xsoma_min = x;
+            if (ysoma_max < y) ysoma_max = y;
+            if (ysoma_min > y) ysoma_min = y;
+         } 
+
+         { if (old_region=="SOMA" && region != "SOMA") {
+             xsoma /= nsoma;
+             ysoma /= nsoma;
+             zsoma /= nsoma;
+             soma_dia = ((xsoma_max-xsoma_min)+(ysoma_max-ysoma_min)) *0.5;
+             printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %5g\n",
+	 		0, 0, soma_dia, xsoma, ysoma, zsoma,
+			 old_region, dendrite-2);
+          }
+	}
+
+#		{ print $0, op;}
+
+     /\[10,1]/  { pn = 0; seg = 1; 		    # make new dendrite
+#		  print "start of new den, push node", node, "parent", pn, "seg",seg;
+		  pid[seg] = 0;
+		}
+
+     /\[1,2]/   { pn = old_node;}           # continue dendrite
+
+     /\[10,5]/  { region = "NODE";	    # remember node
+		  pid[seg++] = node;
+#		  print "push node", node, "seg", seg;
+		}
+
+     /\[10,101]/   { seg--;      # end of old dendrite
+     		     pn = pid[seg];  
+#		     print "pop node", node, "parent", pn, "seg",seg;
+		   }
+
+     /\[2,1]/   { pn = pid[seg];     # move to start of new dendrite
+#		    print "start of den", node, "parent", pn, "seg",seg;
+		}
+
+     NF>=6 && /^\[/ {
+        if ((op != 101) && !(obj==10 && op==1)) {
+	if ((region=="DEND") || (region=="AXON")) {
+
+# print id, seqn, parent, pn;
+
+#           printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %s %s\n",
+#	  			node, pn, r*2, x, y, z,region,id,parent);
+           printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %5g\n",
+ 	 		node, pn, r*2, x, y, z, region,dendrite-1);
+          old_node = node;
+          node++;
+        } 
+       } 
+       old_region = region;
+       old_dendrite = dendrite;
+     }
+    ' $1 
+

@@ -1,0 +1,30 @@
+
+The files in this directory are meant for use with "tkdesk", an X
+file manager available for the Linux operating system.  They give
+tkdesk the ability to recognize standard montage file types, so
+that you can display NeuronC displays and graphs by clicking on
+their icons.  
+
+Tkdesk has a file manager and an application bar, much like a
+commonly used 'doze commercial operating system.  Tkdesk gives
+you the ability to "drag-'n-drop" icons to automatically run
+commands.  New commands can be created by dragging an icon to the
+screen background.
+
+To use the tkdesk files in this directory, first install "tkdesk"
+(at the time of this writing, the latest version is tkdesk-1.0,
+available from http://people.mainz.netsurf.de/~bolik/tkdesk/).
+Then copy the contents of the dottkdesk directory to .tkdesk in
+your home directory. This overwrites the default configuration
+files with the ones included here (but I started with the
+defaults so you aren't losing much). Copy the pixmap files into
+your /usr/local/lib/TkDesk/images directory (or other suitable
+location, check the tkdesk path). Copy the files in bin to a
+directory that is in your path, such as /usr/bin or
+/usr/local/bin.
+
+tkdesk is part of several distributions of Linux available at:  
+
+  sunsite.unc.edu 
+
+Rob Smith     Sept, 1998

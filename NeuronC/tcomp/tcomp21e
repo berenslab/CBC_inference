@@ -1,0 +1,111 @@
+/* tcomp21c:  flash response */
+
+/* script to test cone response */
+
+timinc = 1e-4;
+ploti = 1e-3;
+endexp = 0.3;
+drm = 10000;
+
+expt = 3;
+
+if (expt==1) {
+/* check rhod, rhod2, rstar, gpr, pde */
+
+stimstart = .001;
+endexp = .02;
+stimdur = .0001;
+ploti = .0001;
+ 
+}
+else if (expt==2) {
+/* check rstar, gpr, pde, cond */
+
+  endexp = .1;
+
+}
+else if (expt==3) {
+/* check pde, cycg, cond, ca, cax, gcyc */
+
+  endexp = 0.4;
+}
+else if (expt==4) {
+/* check cond */
+
+  endexp = .3;
+  n=1;
+
+};
+
+n=15;
+
+if (notinit(n)) n = 10;
+dim rn[n];
+
+if (notinit(stimdur))   stimdur   = 0.001;
+if (notinit(flashb))    flashb    = 30/stimdur;
+if (notinit(stimstart)) stimstart = 0.1;
+
+for (i=0; i<n; i++) {
+  at [i] sphere dia 2;
+  at [i] cone (i,0) linit=0 ename rn[i];
+  stim cone  i inten flashb*2^i start stimstart dur stimdur;
+  stim node i vclamp -.06 start 0 dur 5;
+};
+
+
+cond  = 0;
+rhod  = 1;
+rhod2 = 2;
+rstar = 3;
+gpr   = 4;
+pde   = 5;
+gcyc  = 6;
+cycg  = 7;
+ca    = 8;
+cax   = 9;
+
+/*plot I[n] max 40e-12 min 0; */
+
+plmax = -.02;
+plmin = -.07;
+
+if (expt==1) { 
+  for (i=0; i<n; i++) {
+     plot G(rhod)  rn[i] max 1 min -.3 pen 1;
+     plot G(rhod2) rn[i] max 1 min -.3 pen 2;
+     plot G(rstar) rn[i] max 1 min -.3 pen 3;
+     plot G(gpr)   rn[i] max 1 min -.3 pen 4;	
+     plot G(pde)   rn[i] max 1 min -.3 pen 5;	
+  }; 
+};
+
+if (expt==2) { 
+  for (i=0; i<n; i++) {
+    plot I[i] max 0 min -80e-12 pen 1;
+    plot G(rstar) rn[i] max 1 min -.3 pen 3;
+    plot G(gpr)   rn[i] max 3 min -1 pen 4;	
+    plot G(pde)   rn[i] max 3 min -1 pen 5;
+  }; 
+};
+
+if (expt==3) { 
+  for (i=0; i<n; i++) {
+    plot I[i] max 0 min -160e-12 pen 1;
+    plot G(cycg) rn[i] max 2 min -4 pen 2;
+//    plot G(gpr) rn[i] max 2 min -4 pen 4;
+    plot G(pde)  rn[i] max 5 min -4 pen 5;
+    plot G(gcyc) rn[i] max 5 min -1 pen 6;
+    plot G(ca)   rn[i] max 2 min 0 pen 3;
+    plot G(cax)  rn[i] max 2 min 0 pen 8;
+  };
+};
+
+if (expt==4) { 
+  for (i=0; i<n; i++) {
+    plot I[i] max -65e-12 min -67e-12 pen 1;
+  };
+};
+
+run; 
+

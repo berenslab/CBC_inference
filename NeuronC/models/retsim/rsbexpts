@@ -1,0 +1,31 @@
+
+# nc --expt sb_vc_sclamp --sbdensfile sbac_dens.n -v retsim1.n | vid
+# 
+# nc --expt sb_vc_sclamp --sbdensfile sbac_densnoca.n -v retsim1.n | vid
+# 
+# nc --expt sb_vc_sclamp --sbdensfile sbac_densnoca.n --complam .2 -v retsim1.n | vid
+# 
+# nc --expt sb_vc_sclamp --info_chan 1 --sbdensfile sbac_densca.n --complam .2 -v retsim1.n | vid       
+# 
+# nc --expt sb_vc_sclamp --info_chan 1 --sbdensfile sbac_dens.n --complam .2 --pulsedur .1 --poststimdur .05 -v retsim1.n | vid       
+# 
+ # nc --expt sb_vc_sclamp --stimtype backgnd --info_chan 1 --sbdensfile sbac_dens.n --complam .2 --pulsedur .05 --poststimdur .02 -v retsim1.n | vid
+# 
+# nc --expt sb_vc_sclamp --info_chan 1 --sbdensfile sbac_dens.n --complam .2 --pulsedur .1 --dend_dia_factor 0.6 --poststimdur .05 --vnoise 0 --ninfo 2 -v retsim1.n | vid
+
+# nc --expt sb_cc_sine --predur 0 --ninfo 2 -v retsim1.n | vid
+# 
+# /*---------------------------------------------------------*/
+
+mosrun -l nc --expt sb_cc_sineann --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_stim_volts 1 --predur .3 --setxmin 0 -v retsim1.n | vid -c -B 0 -P sb_cc_sineann_sv_ &
+
+mosrun -l nc --expt sb_cc_sineann --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_poisson_rate 1 --predur .3 --setxmin 0 -v retsim1.n | vid -c -B 0 -P sb_cc_sineann_sp_ &
+
+mosrun -l nc --expt sb_cc_sineann --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_actual_release 1 --predur .3 --setxmin 0 -v retsim1.n | vid -c -B 0 -P sb_cc_sineann_sa_ &
+
+mosrun -l nc --expt sb_cc_windmill --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_stim_volts 1 --predur .3 --setxmin 0 -v retsim1.n | vid -c -B 0 -P sb_cc_windmill_sv_ &
+
+mosrun -l nc --expt sb_cc_sine --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_stim_volts 1 --predur .3 --setxmin 0 -v retsim1.n | vid -c -B 0 -P sb_cc_sine_sv_ &
+
+mosrun -l nc --expt sb_cc_sineann --ninfo 2 --make_movie 1 --space_time 1 --show_inputs 1 --show_stim_volts 1 --predur .3 --setxmin 0 --vnoise 0 -v retsim1.n | vid -c -B 0 -P sb_cc_sineann_sv2_ &
+

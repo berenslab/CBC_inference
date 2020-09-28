@@ -1,0 +1,32 @@
+/* XPM */
+static char * fig_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"16 16 10 1",
+/* colors */
+" 	s None	c None",
+".	c LightSlateGray",
+"X	c black",
+"o	c LightGray",
+"O	c gray",
+"+	c LightGoldenrodYellow",
+"@	c peru",
+"#	c ForestGreen",
+"$	c LimeGreen",
+"%	c MediumSpringGreen",
+/* pixels */
+"                ",
+"............XoO ",
+".+++++XXXX++XooO",
+".+++++X+++++XXXX",
+".+++++XXX+++++.X",
+".+@@@+X+++++++.X",
+".+++@@X@@@++++.X",
+".+++#+@@+#$+++.X",
+".++##%+++#$$++.X",
+".++#%%+++#$$$+.X",
+".+##%%+++#$$$+.X",
+".+#%%%+++#$$++.X",
+".+#%%+++++##++.X",
+".++#++++++++++.X",
+"...............X",
+" XXXXXXXXXXXXXXX"};

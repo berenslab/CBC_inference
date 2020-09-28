@@ -1,0 +1,43 @@
+/* tcomp34: plot of diffusion of molecule in rod */
+
+timinc = 1e-4;
+ploti = timinc;
+endexp = .01;
+implicit = 1;
+crit=1e-8;
+relax = .5;
+plmax=1;
+plmin=0;
+
+drm = 1e30;
+vcl = 0;
+molconv = 1e3;
+
+/* D = 2e-5;			/* cm2/sec */
+D = 1e-6;			/* cm2/sec */
+dri = molconv / D;
+dcap = 1e-7;
+
+segdia = 10;			/* um */
+
+totlen = 40;
+rnodes = 21;
+nsegs  = rnodes-1;
+seglen = totlen / nsegs;
+midseg = (rnodes-1) / 2;
+
+for (i=0; i<nsegs; i++) {
+  conn i to i+1 cable dia segdia length seglen cm dcap*segdia/4;
+  plot V[i];
+};
+
+conn 100 to midseg cable dia 5 length 1 cm dcap*5/4; 
+/* conn 100 to midseg resistor 1e7; */
+
+stimdur = endexp;
+/* stim node 100 vclamp 1 start 0 dur stimdur; */
+stim node 100 vclamp 1 start 0 dur stimdur;
+
+/* plot 7,6,5,4,3,2,1; */
+
+run;

@@ -1,0 +1,13 @@
+
+fread ("uncorr.txt",uncorr,cols,rows);
+
+start_freq = .1;
+stop_freq  = 60;
+step_freq  = .1;
+
+blurrad = 2;
+
+for (f=start_freq; f<=stop_freq; f+= step_freq) {
+
+   print f, 1 / (1+ pow(f/blurrad,2.0));
+};

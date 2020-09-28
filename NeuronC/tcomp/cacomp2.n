@@ -1,0 +1,64 @@
+/* cacomp.n */
+/* test of Ca compartment */
+
+timinc = 1e-4;
+ploti  = 1e-3;
+endexp = 0.5;
+rseed = 104;
+tempcel = 22;
+implicit=0;
+
+ddca=2e-6;      /* Ca diffusion const */
+dcai=100e-9;
+dcavoff=0;      /* voltage offset from Ca on surface of membrane */
+dpkca=1/1000;     /* rel permeability of K in Ca chans */
+
+
+	/* Note cao is set by default to 0.00115 (from Ames & Nesbitt). */ 
+	/* Note that a change in cao from 1.15 mM shifts Vm of other chans */
+	/*  "Voltage offset from external calcium" in nc manual */
+
+at 1 sphere dia 10 rm 2000;
+
+		/* This makes same cacomp channel as params below */
+
+//at 1 cacomp cai=.1e-6 
+//capump vmax 22e-5 km=.5-6 
+//caexch kex=5e-9 
+//cshell 10  
+//cabuf vmax 1e8 kd 1e-5 btot 1e-6 btoti 10e-6
+//cbound 10;  
+
+			/* note that capump and caexch here are *
+			/*  adjusted to give approx same time const */
+
+at 1 chan Ca maxcond 1e-9
+   capump vmax= 22e-7 km=.5e-6  
+   caexch kex = 5e-11
+   cshell 10 
+//   cbound 10
+   cabuf vmax 1e8 kd 1e-5 btot 1e-6 btoti 10e-6
+   ename xxx
+   ;
+
+stimtime1 = 0.05;
+stimdur  = 0.1;
+
+stim node 1 vclamp -.01 start stimtime1 dur stimdur;
+stim node 1 vclamp -.07 start stimtime1+stimdur dur 1;
+
+stimtime2 = 0.15;
+
+/*
+plot V[1] max -.02 min -.07;
+plot V[2] max -.02 min -.07;
+*/
+
+plot G        xxx max 1000e-12 min 0;
+plot Ca(1)    1   max 2e-6 min 0;
+plot cabuf(1) 1   max 10e-6 min 0;
+plot Ca(5)    1   max 2e-6 min 0;
+plot Ca(99)   1   max 2e-6 min 0;
+plot Ca(vrev) 1   max .10 min -.1;
+
+run;

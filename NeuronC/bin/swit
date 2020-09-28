@@ -1,0 +1,18 @@
+:
+#  command to switch two columns in a file
+#  from stdin to stdout
+#
+#  Syntax is:  swit col1 col2 <input >output
+#
+c=$1
+d=$2
+awk " 
+{  for (i=1; i<=NF; i++) {
+	if      (i==$c) r=$d;
+	else if (i==$d) r=$c;
+	else           r=i;
+	printf \"%s \", \$r
+   }
+printf \"\\n \"  }  "
+
+

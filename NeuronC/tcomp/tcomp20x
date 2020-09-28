@@ -1,0 +1,29 @@
+/* tcomp20:  test of voltage clamp current recording
+   from a cone with simultaneous voltage recording */
+
+/* calibrate at inten 100e3 for 1e-3 dur to give
+   8e-12 A peak response */
+
+plmax = -.01;
+plmin = -.06;
+endexp = .1;
+ploti = .001;
+
+drm = 5000;
+conrest= -.07;
+conerm = 5000;
+ 
+include "con2.m";
+
+n=mcone (0,0,1);
+
+flash= 20000e3;
+
+stim cone 1 inten flash wavel 560 start .009 dur .001;
+stim node 1 vclamp -.07 start .008 dur 1.5;
+
+
+plot I[1] max 0 min -8.0e-11;
+
+run;
+

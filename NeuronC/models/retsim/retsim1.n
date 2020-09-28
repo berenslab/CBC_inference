@@ -1,0 +1,1252 @@
+#! /usr/mont/bin/nc -c
+
+/* Simulation of circuit that creates ganglion cell
+   receptive field.  Contains array of cones,
+   array of cone horizontal cells,
+   cone bipolars and ganglion cell. */
+
+retsim_version = 1.504;
+
+timinc	= 1e-4;
+ploti	= 1e-3;
+crit	= 1e-8;
+tempcel	= 35;
+relax	= .1;
+plsep	= 1;
+
+rseed	= 13745811;
+
+			/* default membrane params in densfile */
+drm	= 50000;
+gc_rm   = 50000;
+gc_vs   = -0.065;
+vcl	= -0.068;
+dvs	= -0.070;	/* default vstart */
+dri	= 200;
+
+dcavoff = 0;
+calcnernst = 0;
+dpcak	= 0;		/* permeability of K channels to Ca */
+dpcana	= 0;		/* permeability of Na channels to Ca */
+dpcaampa = 0;		/* permeability of AMPA channels to Ca */
+
+/* experiments */
+
+expt = "help";      	/* Show "expt" values on command line or here */
+
+/* dnoise    = 0.2;	/* dark continuous noise in rod */
+dnoise    = 0;		/* dark continuous noise in rod */
+pnoise    = 1;
+vnoise	  = 1;		/* =1 -> synaptic vesicle noise */
+cnoise    = 0;		/* =1 -> synaptic channel noise */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+mxrot     = 0;		/* X rotation */
+
+/**********************************************/
+
+/* Set default make variables */
+
+/* params that control making cells */
+make_rod	= 0;
+make_cone	= 0;
+make_ha		= 0;
+make_hb		= 0;
+make_hbat	= 0;
+make_cbp	= 0;
+make_hbp	= 0;
+make_rbp	= 0;
+make_am		= 0;
+make_amh	= 0;
+make_ams	= 0;
+make_sb		= 0;
+make_aii	= 0;
+make_a17	= 0;
+make_gc		= 0;
+make_dsgc	= 0;
+make_gcoff	= 0;
+
+/* params that control making synapses */
+
+make_cone_cone	= 0;
+make_rod_rbp	= 1;
+make_cone_cbp	= 1;
+make_cone_hbp	= 1;
+make_rod_hbat	= 1;
+make_cone_ha	= 1;
+make_cone_hb	= 1;
+make_rbp_aii	= 1;
+make_aii_aii    = 0;
+make_aii_cbp    = 0;
+make_rbp_a17	= 1;
+make_cbp_sb	= 1;
+make_cbp_cbp	= 0;
+make_hbp_hbp	= 0;
+make_cbp_gc	= 1;
+make_sb_dsgc	= 1;
+make_sb_sb	= 0;
+make_cbp_dsgc	= 1;
+make_hbp_dsgc	= 1;
+make_ams_dsgc	= 1;
+make_hbp_gcoff	= 1;
+make_ha_cbp	= 0;
+make_ha_hbp	= 0;
+make_hb_cbp	= 0;
+make_hb_hbp	= 0;
+
+info = 1;    		/* level of information printout from binary code */
+ninfo = 1;    		/* level of information printout */
+info_chan = 0;		/* information about channels */
+info_cell = 1;		/* information about cells */
+info_syn  = 1;		/* information about synapses */
+info_disp = 0;		/* information about display */
+script = 0;		/* use when running higher level script */
+
+x = setvar();		/* set variables from command line */
+
+/*------------------------------------------------*/
+
+/* anatomy files */
+
+if (notinit(funcfile)) funcfile = "celfuncs.n";  /* useful funcs */
+if (notinit(segfile))   segfile = "celseg.n";   /* make cable segments */
+
+if (notinit(makfile))   makfile = "makcel.n";   /* make cells */
+if (notinit(colorfile))colorfile = "colors.n";   /* color defs */
+if (notinit(sbmakefile))sbmakefile = "sb_makfuncs.n"; /* make starburst */
+
+if (notinit(nvalfile)) nvalfile = "nval.n";  /* default neuron params */
+
+if (notinit(amfile))   amfile  = "morph_sb1";  	/* amac cell anatomy */
+if (notinit(sbfile))   sbfile  = "morph_sb1";  	/* sb   cell anatomy */
+if (notinit(aiifile))  aiifile = "morph_sb1";  	/* aii  cell anatomy */
+if (notinit(a17file))  a17file = "morph_sb1";  	/* a17  cell anatomy */
+if (notinit(gcfile))   gcfile  = "morph_beta8b";     	/* gc   cell anatomy */
+if (notinit(dsgcfile)) dsgcfile= "morph_ds1e";     	/* dsgc cell anatomy */
+if (notinit(gcofffile)) gcofffile= "morph_beta8b";    	/* gcoff cell anatomy */
+
+   /* reduce thickness for this DSGC anatomy file */
+
+if (notinit(def_dens_file)) def_dens_file="dens_def.n"; /* def biophys */
+
+if (expt=="help") {
+  fprintf (stderr,"Retina simulation, version %s\n",print_version(retsim_version));
+  fprintf (stderr,"\n");
+  fprintf (stderr,"Usage: nc [options] [-v] file.n [ | vid ] \n");
+  fprintf (stderr," options:  -d 1     (display anatomy; see 'nc .h')\n");
+  fprintf (stderr,"           -R       (display in ray trace mode)\n");
+  fprintf (stderr,"           -v       (display in video mode)\n");
+  fprintf (stderr,"           --expt surf_area    \n");
+  fprintf (stderr,"		   | sb_cc_stim   | sb_vc_sclamp\n");
+  fprintf (stderr,"		   | sb_cc_sine   | dsgc_cc_stim\n");
+  fprintf (stderr,"		   | dsgc_cbp_stim| dsgc_cbp_bar\n");
+  fprintf (stderr,"                | rbp_flash    | aii_flash\n");
+  fprintf (stderr,"                | cbp_flash | hbp_flash \n");
+  fprintf (stderr,"                | gc_cbp_flash \n");
+  fprintf (stderr,"                | gcoff_hbp_flash \n");
+  fprintf (stderr,"                | gc_Rin       | disp_only\n");
+  fprintf (stderr,"           --gcfile s       (beta8)\n");
+  fprintf (stderr,"           --sbfile s       (sb1)\n");
+  fprintf (stderr,"           --segfile  s     (celseg.n)\n");
+  fprintf (stderr,"           --dsgcdensfile s (dsgc_dens.n)\n");
+  fprintf (stderr,"           --gcdensfile s   (gc_dens.n)\n");
+  fprintf (stderr,"           --sbdensfile s   (sb_dens.n)\n");
+  fprintf (stderr,"           --amdensfile s   (am_dens.n)\n");
+  fprintf (stderr,"           --make_cbp   n   (1)\n");
+  fprintf (stderr,"           --make_hbp   n   (1)\n");
+  fprintf (stderr,"           --make_rbp   n   (0)\n");
+  fprintf (stderr,"           --make_aii   n   (0)\n");
+  fprintf (stderr,"           --make_a17   n   (0)\n");
+  fprintf (stderr,"           --make_gc    n   (1)\n");
+  fprintf (stderr,"           --am_morph   n   (0)\n");
+  fprintf (stderr,"           --sb_morph   n   (2)\n");
+  fprintf (stderr,"           --gc_morph   n   (0)\n");
+  fprintf (stderr,"           --stimdia n (stimulus diameter (default=30um))\n");
+  exit;
+};
+
+/*---------------- define functions ---------------------*/
+
+include colorfile;
+include makfile;
+include "dummyfuncs.n";
+
+include "stimfuncs.n";  /* funcs to make stimuli */
+
+exptfile = "expt_" + expt + ".n";
+
+if (!(x=fopen(exptfile,"r"))) {              /* check for experiment file */
+  fprintf (stderr,"retsim: unknown experiment '%s'.\n", expt);
+  exit;
+};
+
+include "plot_funcs.n";
+
+include exptfile;
+
+/*---------------- set build params ---------------------*/
+
+defparams();		/* Define params for the experiment */
+			/*  defined in the experiment file */
+
+initneurvals();		/* initialize neuron params */
+
+setparams();		/* Set or possibly change the neuron params */
+			/*  defined in the experiment file */
+
+initsynconn();		/* initialize synaptic connection table */
+                        /* after possible modifications in setparams() */
+
+/*-----------------------------------------------------*/
+ 
+if (!notinit(arrsiz)) setarrsiz = 1
+else                  setarrsiz = 0;
+
+/* User may provide numbers from command line. */
+/* Leave unset numbers = -1 for automatic algorithms below. */
+
+if (notinit(n_rods))   n_rods = -1;
+if (notinit(n_rbp))     n_rbp = -1;
+if (notinit(n_cones)) n_cones = -1;
+if (notinit(n_ha))       n_ha = -1;
+if (notinit(n_hb))       n_hb = -1;
+if (notinit(n_hbat))   n_hbat = -1;
+if (notinit(n_cbp))     n_cbp = -1;
+if (notinit(n_hbp))     n_hbp = -1;
+if (notinit(n_aii))     n_aii = -1;
+if (notinit(n_a17))     n_a17 = -1;
+if (notinit(n_am))      n_am  = -1;
+if (notinit(n_amh))     n_amh = -1;
+if (notinit(n_ams))     n_ams = -1;
+if (notinit(n_sb))       n_sb = -1;
+if (notinit(n_gc))       n_gc = -1;
+if (notinit(n_dsgc))   n_dsgc = -1;
+if (notinit(n_gcoff)) n_gcoff = -1;
+
+/*------------------- make ------------------------*/
+
+/* Set "make" params consistent with numbers. */
+/* User may turn off a celltype by setting number "n_xx" to zero */
+
+ if (n_cones == 0) make_cone = 0;
+ if (n_rods == 0)  make_rod = 0;
+ if (n_ha == 0)    make_ha = 0;
+ if (n_hb == 0)    make_hb = 0;
+ if (n_hbat == 0)  make_hbat = 0;
+ if (n_cbp == 0)   make_cbp = 0;
+ if (n_hbp == 0)   make_hbp = 0;
+ if (n_rbp == 0)   make_rbp = 0;
+ if (n_aii == 0)   make_aii = 0;
+ if (n_a17 == 0)   make_a17 = 0;
+ if (n_am == 0)    make_am  = 0;
+ if (n_amh == 0)   make_amh = 0;
+ if (n_ams == 0)   make_ams = 0;
+ if (n_sb == 0)    make_sb = 0;
+ if (n_gc == 0)    make_gc = 0;
+ if (n_dsgc == 0)  make_dsgc = 0;
+ if (n_gcoff == 0) make_gcoff = 0;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (notinit(gc_morph))   gc_morph   = 0;
+if (notinit(dsgc_morph)) dsgc_morph = 0;
+if (notinit(gcoff_morph)) gcoff_morph = 0;
+if (notinit(sb_morph))   sb_morph   = 0;
+if (notinit(am_morph))   am_morph   = 0;
+if (notinit(amh_morph))  amh_morph  = 0;
+
+if (!notinit(gc_biophys))    setn(gc,BIOPHYS,gc_biophys);
+if (!notinit(dsgc_biophys))  setn(dsgc,BIOPHYS,dsgc_biophys);
+if (!notinit(gcoff_biophys)) setn(gcoff,BIOPHYS,gcoff_biophys);
+if (!notinit(am_biophys))    setn(am,BIOPHYS,am_biophys);
+if (!notinit(amh_biophys))   setn(amh,BIOPHYS,amh_biophys);
+if (!notinit(aii_biophys))   setn(aii,BIOPHYS,aii_biophys);
+if (!notinit(sb_biophys))    setn(sb,BIOPHYS,sb_biophys);
+
+setchandens();		/* Find and set cell channel densities. */
+			/* Dependent on BIOPHYS */
+
+if (anysetn(BIOPHYS)) {	  /* reduce time step for membr. channels */
+  timinc = 5e-6;
+  ploti  = 1e-5;
+  if (anysetn(CHNOISE)) {	  /* reduce time step for membr. channels */
+    timinc = 1e-6;
+  };
+};
+
+if (!vnoise) {
+  for (ct=0; ct<nceltypes; ct++) {
+    if ((ct==cbp))
+    for (n=1; n<=NCONNO; n++) 
+      setsv(ct,SVNOISE,n,0);
+  };
+};
+
+if (!cnoise) {
+  for (ct=0; ct<nceltypes; ct++) {
+    for (n=1; n<=NCONNO; n++) 
+      setsv(ct,SCNOISE,n,0);
+  };
+};
+
+if (notinit(Chnoise)) Chnoise = 0;
+
+if (Chnoise) {          /* turn on all channel noise */
+  timinc  = 1e-6;
+  if (notinit(nanois))  nanois  = 1;
+  if (notinit(na5nois)) na5nois = 1;
+  if (notinit(na6nois)) na6nois = 1;
+  if (notinit(na8nois)) na8nois = 1;
+  if (notinit(kdrnois)) kdrnois = 1;
+  if (notinit(kanois))  kanois  = 1;
+  if (notinit(kihnois)) kihnois = 1;
+  if (notinit(sk1nois)) sk1nois = 1;
+  if (notinit(sk2nois)) sk2nois = 1;
+  if (notinit(bknois))  bknois  = 1;
+  if (notinit(canois))  canois  = 1;
+}
+else {
+  if (notinit(nanois))  nanois  = 0;
+  if (notinit(na5nois)) na5nois = 0;
+  if (notinit(na6nois)) na6nois = 0;
+  if (notinit(na8nois)) na8nois = 0;
+  if (notinit(kdrnois)) kdrnois = 0;
+  if (notinit(kanois))  kanois  = 0;
+  if (notinit(kihnois)) kihnois = 0;
+  if (notinit(sk1nois)) sk1nois = 0;
+  if (notinit(sk2nois)) sk2nois = 0;
+  if (notinit(bknois))  bknois  = 0;
+  if (notinit(canois))  canois  = 0;
+};
+
+/* set "make" params for automatic processing from command line */
+
+  setn (xcone,MAKE,make_cone);
+  setn (xrod, MAKE,make_rod);
+  setn (ha,   MAKE,make_ha);
+  setn (hb,   MAKE,make_hb);
+  setn (hbat, MAKE,make_hbat);
+  setn (cbp,  MAKE,make_cbp);
+  setn (hbp,  MAKE,make_hbp);
+  setn (rbp,  MAKE,make_rbp);
+  setn (aii,  MAKE,make_aii);
+  setn (a17,  MAKE,make_a17);
+  setn (sb,   MAKE,make_sb);
+  setn (am,   MAKE,make_am);
+  setn (amh,  MAKE,make_amh);
+  setn (ams,  MAKE,make_ams);
+  setn (gc,   MAKE,make_gc);
+  setn (dsgc, MAKE,make_dsgc);
+  setn (gcoff,MAKE,make_gcoff);
+
+  setn (sb,   MORPH,sb_morph);
+  setn (am,   MORPH,am_morph);
+  setn (gc,   MORPH,gc_morph);
+  setn (dsgc, MORPH,dsgc_morph);
+  setn (gcoff,MORPH,gcoff_morph);
+
+/*---------------------------------------------------*/
+
+/* print biophysical properties */
+
+printchaninfo();
+
+/* print version, input file, date, host and morphology file names */
+
+if (ninfo>=1) {
+  printf ("# Retina simulation, version %s\n",print_version(retsim_version));
+  printf ("#\n");
+  printf ("#   script name:       %s     \n",  infile);
+  printf ("#   date:              %s     \n", ccstr(system("date")));
+  printf ("#   machine:           %s     \n", ccstr(system("hostname -s")));
+  printf ("#   nc version:        %s     \n", print_version(ncversion));
+  for (ct=0; ct<nceltypes; ct++) {	/* get density file names */
+    if (getn(ct, MAKE)) {
+       if ((morph=getn(ct,MORPH))==0) {
+	 if (anatfiles[ct]!="")
+          printf ("#   %-5s morph:       %-8s", cname[ct],anatfiles[ct])
+	 else {
+	  setn(ct,MORPH,morph=1);
+          printf ("#   %-5s morph   set:  %-8g",cname[ct],morph);
+	 };
+       }
+       else
+          printf ("#   %-5s morph:       artif %-8g", cname[ct],morph);
+       if (getn (ct,BIOPHYS))
+         printf ("   densities from: %s", densfil[ct]);
+       printf ("\n");
+    };
+  };
+  printf ("#   experiment:        %s     \n",  expt);
+  printf ("#\n");
+};
+
+/*---------------------------------------------------------*/
+
+/* Rationale for order of cell creation:
+
+ 1) as expt requires:
+   - make gcs
+   - make enough amacs to fill gc dend field, update size of array
+   - make enough bipolars to fill amac dend field, update size of array
+   - if enough bipolars exist to fill hz dend field, add hzs, 
+	update size of array, else add extra bipolars, 
+	then add hcs, update size of array.
+    - make enough photoreceptors to fill bp receptive fields
+
+ 2) grow dendrites of hz, am, and bp cells, make synapses.
+
+*/
+
+ if (notinit(maxha))   maxha   = getn(ha,  MAXNUM);
+ if (notinit(maxhb))   maxhb   = getn(hb,  MAXNUM);
+ if (notinit(maxhbat)) maxhbat = getn(hbat,MAXNUM);
+ if (notinit(maxrbp))  maxrbp  = getn(rbp, MAXNUM);
+ if (notinit(maxcbp))  maxcbp  = getn(cbp, MAXNUM);
+ if (notinit(maxhbp))  maxhbp  = getn(hbp, MAXNUM);
+ if (notinit(maxa17))  maxa17  = getn(a17, MAXNUM);
+ if (notinit(maxaii))  maxaii  = getn(aii, MAXNUM);
+ if (notinit(maxsb))   maxsb   = getn(sb,  MAXNUM);
+ if (notinit(maxam))   maxam   = getn(am,  MAXNUM);
+ if (notinit(maxamh))  maxamh  = getn(amh, MAXNUM);
+ if (notinit(maxams))  maxams  = getn(ams, MAXNUM);
+ if (notinit(maxgc))   maxgc   = getn(gc,  MAXNUM);
+ if (notinit(maxdsgc)) maxdsgc = getn(dsgc,MAXNUM);
+ if (notinit(maxgcoff))maxgcoff = getn(gcoff,MAXNUM);
+
+ maxha   = amin(maxha,  getn(ha,  MAXNUM));	/* number of HA cells */
+ maxhb   = amin(maxhb,  getn(hb,  MAXNUM));	/* number of HB cells */
+ maxhbat = amin(maxhbat,getn(hbat,MAXNUM));	/* number of HB axon terms */
+ maxcbp  = amin(maxcbp, getn(cbp, MAXNUM));	/* number of cone bipolars  */
+ maxhbp  = amin(maxhbp, getn(hbp, MAXNUM));	/* number of cone bipolars  */
+ maxrbp  = amin(maxrbp, getn(rbp, MAXNUM));	/* number of rod bipolars */
+ maxa17  = amin(maxa17, getn(a17, MAXNUM));	/* number of a17 amacrines */
+ maxaii  = amin(maxaii, getn(aii, MAXNUM));	/* number of aii amacrines */
+ maxsb   = amin(maxsb,  getn(sb,  MAXNUM));	/* number of sb amacrines */
+ maxam   = amin(maxam,  getn(am,  MAXNUM));	/* number of am amacrines */
+ maxamh  = amin(maxamh, getn(amh, MAXNUM));	/* number of amh amacrines */
+ maxams  = amin(maxams, getn(ams, MAXNUM));	/* number of ams amacrines */
+ maxgc   = amin(maxgc,  getn(gc,  MAXNUM));	/* number of GC cells */
+ maxdsgc = amin(maxdsgc,getn(dsgc,MAXNUM));	/* number of DSGC cells */
+ maxgcoff= amin(maxgcoff,getn(gcoff,MAXNUM));	/* number of off GC cells */
+
+/*---------------------------------------------------------*/
+
+if(!notinit(arrsiz)) {	/* if user specifies arrsiz, make square array */
+   xarrsiz = arrsiz;
+   yarrsiz = arrsiz;
+};
+
+if(notinit(arrcentx)) arrcentx = 0;
+if(notinit(arrcenty)) arrcenty = 0;
+
+/*---------------------------------------------------------*/
+
+func setupcells(ct,ncells) {
+
+/* create array of cells with specified spacing and regularity */
+
+  local spacing;
+
+ /* arrsiz, num of cells not set -> make 1 cell */
+
+  if (ninfo>=2) printf ("#\n# %ss:\n",cname[ct]);
+
+  if (notinit(arrsiz)) { 
+    if (ncells < 0) ncells = 1;
+    ncells = gausnn (cellarr, N=ncells, density=getn(ct,DENS)*1e-6, rsd=ct,
+				reg=getn(ct,REGU), center(arrcentx,arrcenty),ginfo=info);
+  }
+
+ /* arrsiz set, num of cells isn't */
+
+  else if (ncells < 0) {	   
+
+    ncells = gausnn (cellarr, density=getn(ct,DENS)*1e-6, 
+			reg=getn(ct,REGU),rsd=ct,center(arrcentx,arrcenty), 
+			size (xarrsiz,yarrsiz),ginfo=info);
+  }
+
+ /* arrsiz and nr of cells set by user */
+
+  else {
+
+    ncells = gausnn (cellarr, N=ncells, reg=getn(gc,REGU),rsd=ct,
+  		center(arrcentx,arrcenty),size (xarrsiz,yarrsiz),ginfo=info);
+  };
+
+  if (ncells > getn(ct, MAXNUM))
+      ncells = getn(ct, MAXNUM);
+
+  if (ninfo>=3) 
+     printf ("# Number of %s cells: %g\n", cname[ct], ncells);
+
+  if (ninfo>=3) {
+    spacing = 1 / sqrt (getn(ct,DENS) * 1e-6); /* convert cell/mm^2 to um/cell*/
+    printf ("# approx %s spacing: %.3g um\n",cname[ct], spacing);
+  };
+
+  setn (ct,NMADE,ncells);
+  if(ncells==1)
+    makcell (ct, 1, arrcentx, arrcenty)
+  else
+    for (i=0; i<ncells; i++) {
+      if (ninfo>=4)
+       printf ("# %s #%g, x=%g  y=%g\n",
+		cname[ct],i+1,cellarr[i][0],cellarr[i][1]);
+      makcell (ct, i+1, cellarr[i][0], cellarr[i][1]);
+    };
+
+  find_maxmin(-1,-1);	/* get size of array, update array size */
+
+  xarrsiz=xmax-xmin;
+  yarrsiz=ymax-ymin;
+  zarrsiz=zmax-zmin;
+  arrcentx=(xmax+xmin)/2;
+  arrcenty=(ymax+ymin)/2;
+  arrcentz=(zmax+zmin)/2;
+  setn (ct,NMADE,ncells);
+  if (notinit(arrsiz))
+    arrsiz=amax(xarrsiz,yarrsiz);
+  return ncells;
+
+}; /* func setupcells() */
+
+/*-------------------------Ganglion cells------------------------------*/
+
+/* First, make large cells (gc, hz cells, amacrines) */
+
+if (make_gc) {
+  ngc=setupcells(gc,n_gc);
+};
+
+if (make_dsgc) {
+  ndsgc=setupcells(dsgc,n_dsgc);
+};
+
+if (make_gcoff) {
+  ngcoff=setupcells(gcoff,n_gcoff);
+};
+
+if (ninfo>=2 && (make_gc || make_dsgc || make_gcoff)) 
+  fprintf(stderr, "# ganglion cells done, arrsiz=%g um\n", arrsiz);
+
+/*----------------------Starburst amacrine cells------------------------*/
+
+if (make_sb) include sbmakefile;  	/* file to make real morphology */
+
+if (make_sb) {
+
+  if (sb_morph>0) {
+    if (notinit(am_seglen))  am_seglen  = 10;          /* length of seg  */
+    if (notinit(am_den_seg)) am_den_seg = xradius/am_seglen;  /* segs/br */
+  };
+
+  nsb = setupcells(sb,n_sb);
+
+  if (ninfo>=2) printf ("# starburst amacrine cells made = %g\n",nsb);
+};
+
+/*----------------------A17 amacrine cells------------------------*/
+
+if (make_a17) {		 		/* A17 cells */
+  na17=setupcells(a17,n_a17);
+};
+
+/*----------------------AII amacrine cells------------------------*/
+
+if (make_aii) {		 		/* AII cells */
+  naii=setupcells(aii,n_aii);
+};
+
+if ((make_aii || make_sb || make_am || make_a17) &&
+			   (ninfo>=2)) print "# amacrine cells done";
+
+/*------------------------Horizontal cells-----------------------------*/
+
+if (make_hbat) {	/* rod Hz cells */
+  nhbat=setupcells(hbat,n_hbat);
+};
+
+if (make_ha) {		/* HA cells */
+  nha=setupcells(ha,n_ha);
+};
+
+if (make_hb) {	 	/* HB cells */
+  nhb=setupcells(hb,n_hb);
+};
+
+if ((make_ha || make_hb || make_hbat) && (ninfo>=2)) 
+	print "# horizontal cells done";
+
+/*---------------------------------------------------------------------*/
+
+/* Before making bps and photoreceptors,
+   make array larger so that bp,hz dens can grow out.
+   Then fill array with photoreceptors and bipolars
+   After dendrites have grown, remove photorecs, bps without connections.
+*/
+	/* if none of the above cells are made, set arrsiz now */
+
+
+if(notinit(arrcentx)) arrcentx=0;
+if(notinit(arrcenty)) arrcenty=0;
+
+if(notinit(arrsiz)) { 
+
+ if(notinit(xarrsiz)) xarrsiz = 10;
+ if(notinit(yarrsiz)) yarrsiz = 10;
+ 
+ if (make_ha && make_hb) {/* add a little more than half dend tree diam */
+   xarrsiz += amax(getn(ha,DTREEDIA),getn(hb,DTREEDIA))/1.5;
+   yarrsiz += amax(getn(ha,DTREEDIA),getn(hb,DTREEDIA))/1.5;}
+ else if (make_ha){
+   xarrsiz += getn(ha,DTREEDIA)/1.5;
+   yarrsiz += getn(ha,DTREEDIA)/1.5;}
+ else if (make_hb){
+   xarrsiz += getn(hb,DTREEDIA)/1.5;
+   yarrsiz += getn(hb,DTREEDIA)/1.5;}
+ else if (make_hbat){
+   xarrsiz += getn(hbat,DTREEDIA)/1.5;
+   yarrsiz += getn(hbat,DTREEDIA)/1.5;}
+ else if (make_cbp){
+     local axarbdia;
+   axarbdia = getn(cbp,AXARBDIA);
+   if (xarrsiz<axarbdia) xarrsiz=axarbdia;	/* set minimum arrsiz */
+   xarrsiz += getn(cbp,DTREEDIA)/1.5;
+   if (yarrsiz<axarbdia) yarrsiz=axarbdia;
+   yarrsiz += getn(cbp,DTREEDIA)/1.5;}
+ else if (make_hbp){
+   xarrsiz += getn(hbp,DTREEDIA)/1.5;
+   yarrsiz += getn(hbp,DTREEDIA)/1.5;}
+ else if (make_rbp) {
+   xarrsiz += getn(rbp,DTREEDIA)/1.5;
+   yarrsiz += getn(rbp,DTREEDIA)/1.5;};
+ 
+ arrsiz  = amax(xarrsiz, yarrsiz);
+}
+else {
+   xarrsiz = arrsiz;
+   yarrsiz = arrsiz;
+};
+
+if (ninfo>=2)
+ printf("# xarrsiz = %g; yarrsiz=%g; arrcentx=%g; arrcenty=%g\n",
+                          xarrsiz, yarrsiz,arrcentx,arrcenty);
+/* */
+
+/*------------------------make rods------------------------------------*/
+
+if (notinit(rod_rect_arr)) rod_rect_arr = 0;
+
+if (make_rod) {
+
+  if (ninfo>=2) printf ("#\n# %ss:\n",cname[xrod]);
+
+  if (notinit(rodspac))
+    rodspac   = 1 / sqrt (getn(xrod,DENS)* 1e-6);		/* rod spacing */
+  if (ninfo>=2) printf ("# rod spacing: %g\n",rodspac);
+
+  rodnum = 0;
+  if (rod_rect_arr) {
+    rodarrsiz = arrsiz / rodspac;		/* size of rod array */
+    if (ninfo>=2) {
+      printf ("# rod array size: %g\n",rodarrsiz);
+    };
+    rwid = rodarrsiz / 2;
+    for (j= -rwid; j<rwid; j++)
+      for (i= -rwid; i<rwid; i++) {
+         makcell (xrod, ++rodnum, i*rodspac, j*rodspac);
+      };
+    nrods = rodnum;
+  }
+  else	/* random rod array */
+  {
+      local rodx, rody;
+
+    if (notinit(rodransd)) rodransd = 1277;
+    nrods = gausnn (conarr, size (xarrsiz,yarrsiz), nnd=rodspac,
+			center(arrcentx,arrcenty), reg=getn(xrod,REGU),
+			rsd=rodransd, ginfo=info);
+
+    for (i=0; i<nrods; i++) {	/* random bipolar array */
+      rodx = conarr[i][LOCX];
+      rody = conarr[i][LOCY];
+      makcell (xrod, ++rodnum, rodx, rody);
+    };
+  };
+
+  if (ninfo>=2) printf ("# Number of rods: %g\n", nrods);
+
+  setn (xrod,NMADE,nrods);
+
+  find_maxmin(xrod,-1);	/* get size of array, update array size */
+  xarrsiz=xmax-xmin;
+  yarrsiz=ymax-ymin;
+  arrcentx=(xmax+xmin)/2;
+  arrcenty=(ymax+ymin)/2;
+  if (notinit(arrsiz))
+    arrsiz=amax(xarrsiz,yarrsiz);
+
+};  /* make rods */
+
+/*------------------------make cones---------------------------------- */
+
+if (notinit(cone_rect_arr)) cone_rect_arr = 0;
+
+if (make_cone) {
+
+  if (ninfo>=2) printf ("#\n# %ss:\n",cname[xcone]);
+
+  if (notinit(conespac))
+     conespac = 1 / sqrt (getn(xcone,DENS)* 1e-6);	/* cone spacing */
+  if (ninfo>=2) printf ("# cone spacing: %.3g um\n",conespac);
+
+  conenum = 0;
+  if (cone_rect_arr) {				/* make rectangular array */
+    conarrsiz = arrsiz / conespac;		/* size of cone array */
+    if (ninfo>=2) {
+      printf ("# cone square array size: %g\n",conarrsiz);
+    };
+    rwid = conarrsiz / 2;
+    for (j= -rwid; j<rwid; j++)
+      for (i= -rwid; i<rwid; i++) {
+       makcell (xcone, ++conenum, i*conespac, j*conespac);
+      };
+    ncones = conenum;
+  }
+  else	/* random cone array */
+  {
+      local conex, coney;
+
+    if (notinit(conransd)) conransd = 1275;
+
+    ncones = gausnn (conarr, size (xarrsiz,yarrsiz), center(arrcentx,arrcenty),
+                nnd=conespac, reg=getn(xcone,REGU), rsd=conransd, ginfo=info);
+    ct = xcone;
+    for (i=0; i<ncones; i++) {	/* random cone array */
+      conex = conarr[i][LOCX];
+      coney = conarr[i][LOCY];
+      if (ninfo>=4)
+        printf ("# %s #%g, x=%g  y=%g\n",
+                cname[ct],i+1,conex,coney);
+      makcell (xcone, ++conenum, conex, coney);
+    };
+  };
+
+  if (ninfo>=2)
+    fprintf (stderr,"# Number of cones: %g\n", ncones);
+  setn (xcone,NMADE,ncones);
+
+  find_maxmin(xcone,-1);	/* get size of array, update arraysiz */
+  xarrsiz=xmax-xmin;
+  yarrsiz=ymax-ymin;
+  if (notinit(arrsiz))
+    arrsiz=amax(xarrsiz,yarrsiz);
+
+};  /* make cones */
+
+if (ninfo>=2 && (make_cone || make_rod)) 
+   fprintf (stderr,"# photoreceptors done, arrsiz=%g\n",arrsiz);
+
+/*------------------------make bipolar cells---------------------------*/
+
+if (make_rbp) {		 /* make array of rod bipolars */
+  nrbp=setupcells(rbp,n_rbp);
+};
+
+if (notinit(make_one_cbp)) make_one_cbp = 0;
+
+if (make_one_cbp) {	 /* make one cone bipolar at specified location */
+   make_cbp = 1;
+   cbp_xloc = node [dsgc][1][gcdistnod] -> xloc;
+   cbp_yloc = node [dsgc][1][gcdistnod] -> yloc;
+   makcell (cbp, 1, cbp_xloc, cbp_yloc);
+   ncbp = 1;
+   setn (cbp,MAKE,1);
+   setn (cbp,NMADE,ncbp);
+}
+else if (make_cbp) {		 /* make array of cone bipolars */
+  ncbp=setupcells(cbp,n_cbp);
+};
+
+if (make_hbp) {		 	/* make array of off cone bipolars */
+  nhbp=setupcells(hbp,n_hbp);
+};
+
+if (ninfo>=2 && (make_rbp || make_cbp || make_hbp)) 
+   fprintf (stderr,"# bipolar cells done.\n");
+
+if (make_ams) {		 	/* make array of small-field amacrines */
+  nams=setupcells(ams,n_ams);
+};
+
+if (ninfo>=2 && (make_ams)) 
+   fprintf (stderr,"# small-field amacrine cells done.\n");
+
+/*--------------------------------------------------------------------*/
+
+if (ninfo>=2) {
+  fprintf (stderr,"# Done making neurons.\n");
+  fprintf (stderr,"#\n");
+};
+
+if (ninfo>=2) {
+  for (i=0; i<nceltypes; i++) {
+    if (getn(i,NMADE))
+      fprintf (stderr,"# total %-5s = %g\n",cname[i]+"s",getn(i,NMADE));
+  };
+  fprintf (stderr,"#\n");
+};
+
+/*----------------------- make connections ------------------------------*/
+
+if (notinit(ncones)) ncones = 0;
+if (notinit(nrods))  nrods =0;
+if (notinit(ncbp))   ncbp =0;
+if (notinit(nhbp))   nhbp =0;
+if (notinit(nrbp))   nrbp =0;
+if (notinit(naii))   naii =0;
+if (notinit(nam))    nam =0;
+if (notinit(namh))   namh =0;
+if (notinit(nams))   nams =0;
+if (notinit(na17))   na17 =0;
+if (notinit(nsb))    nsb =0;
+if (notinit(nha))    nha =0;
+if (notinit(nhb))    nhb =0;
+if (notinit(nhbat))  nhbat =0;
+if (notinit(ngc))    ngc =0;
+if (notinit(ndsgc))  ndsgc =0;
+if (notinit(ngcoff)) ngcoff =0;
+
+dim ncell_erased[nceltypes] = {{0}};  /* number of cells erased (see below) */
+
+include "synfuncs.n";
+
+if (make_cone_cone) connect_types (xcone,xcone); /* */
+
+if (make_rod_rbp)   connect_types (xrod,rbp); /* */
+
+if (make_cone_cbp)  connect_types (xcone,cbp); /* */
+
+if (make_cone_hbp)  connect_types (xcone,hbp); /* */
+
+if (make_rod_hbat)  connect_types (xrod,hbat); /* */
+
+if (make_cone_ha)   connect_types_dyad (xcone,ha,make_ha_cbp); /* */
+
+if (make_cone_hb)   connect_types (xcone,hb); /* */
+
+if (make_rbp_aii)   connect_types (rbp,aii); /* */
+
+if (make_rbp_a17)   connect_types (rbp,a17); /* */
+
+if (make_aii_aii)   connect_types (aii,aii); /* */
+
+if (make_aii_cbp)   connect_types (aii,cbp); /* */
+
+if (make_cbp_sb)    connect_types (cbp,sb); /* */
+
+if (make_cbp_cbp)   connect_types (cbp,cbp); /* */
+
+if (make_hbp_hbp)   connect_types (hbp,hbp); /* */
+
+if (make_cbp_gc)    connect_types (cbp,gc); /* */
+
+if (make_sb_dsgc)   connect_types (sb,dsgc); /* */
+
+if (make_sb_sb)     connect_types (sb,sb);   /* */
+
+if (make_hbp_dsgc)  connect_types (hbp,dsgc); /* */
+
+if (make_cbp_dsgc)  connect_types (cbp,dsgc); /* */
+
+if (make_ams_dsgc)  connect_types (ams,dsgc); /* */
+
+if (make_hbp_gcoff) connect_types (hbp,gcoff); /* */
+
+
+/*  -  -  -  -  -  -  -  print connections -  -  -  -  -  -  -  -  -  */
+
+if (ninfo >= 2) {
+  if (notinit(print_conns)) print_conns = 0;
+  if (print_conns) {
+    for (ct=0; ct<nceltypes; ct++) {
+      print_connections(ct); 
+    };
+  };
+
+  if (notinit(print_avg_conns)) print_avg_conns = 1;
+  if (print_avg_conns) {
+    for (ct=0; ct<nceltypes; ct++) {
+      print_avg_connections(ct); 
+    };
+    fprintf (stderr,"# \n");
+  };
+};
+
+
+/*----------------------- prune connections -----------------------------*/
+
+proc checkcellin (ct)
+
+/* Erase cells that don't have any outputs */
+/*  Useful for bipolar and amacrine cells */
+/*  Ignores gap junctions to same type */
+
+{
+    local ncell_in,cn;
+
+  foreach node [ct] ?cn [soma] {
+    ncell_in  = tot_ncel_ind(ct,cn);       /* get number of outputs */
+    if (ncell_in == 0) {
+       ncell_erased[ct]++;
+       foreach node [ct][cn] ?nn {	   /* erase unconnected cells */
+         erase node [ct][cn][nn];	   /* erase all nodes */
+       };
+       rmcelconn(ct,cn);		   /* erase connection info */
+    };
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc checkcellout (ct)
+
+/* Erase cells that don't have any outputs */
+/*  Useful for bipolar and amacrine cells */
+/*  Ignores gap junctions to same type */
+
+{
+    local ncell_out;
+
+  foreach node [ct] ?cn [soma] {
+    ncell_out  = tot_ncel_outd(ct,cn);    /* get number of outputs */
+    if (ncell_out == 0) {
+       ncell_erased[ct]++;
+       foreach node [ct][cn] ?nn {	   /* erase unconnected cells */
+         erase node [ct][cn][nn];	   /* erase all nodes */
+       };
+       rmcelconn(ct,cn);		   /* erase connection info */
+    };
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (notinit(remove_nconns)) remove_nconns = 1;
+
+if (remove_nconns) {		/* if remove non-connected neurons */
+
+ /* remove cells without any inputs or outputs */
+
+if (ninfo>=2)
+     fprintf(stderr,"#\n# Removing neurons that don't connect.\n#\n");
+
+
+/* start with bipolar cells */
+/* Rationale here is to remove the cells that haven't connected to their
+   pre- or post-synaptic cells. First, check small cells that connect to 
+   large cells because the number of large cells is limited and this will
+   limit the number of small cells. Next, check the cells dependent on those
+   removed, proceeding backwards towards the photoreceptors.
+*/
+
+ if (getn(cbp,NMADE)>0) {		/* check on-bipolar connections */
+   if (make_gc   || make_dsgc || make_sb) checkcellout(cbp);
+   if (make_cone) checkcellin(cbp);
+   if (ninfo >= 2) fprintf (stderr,"# cbps  erased %g\n",ncell_erased[cbp]);
+   setn(cbp,NMADE,getn(cbp,NMADE)-ncell_erased[cbp]);
+ };
+ 
+ if (getn(hbp,NMADE)>0) {		/* check off-bipolar connections */
+   if (make_gcoff || make_dsgc) checkcellout(hbp);
+   if (make_cone) checkcellin(hbp);
+   if (ninfo >= 2) fprintf (stderr,"# hbps  erased %g\n",ncell_erased[hbp]);
+   setn(hbp,NMADE,getn(hbp,NMADE)-ncell_erased[hbp]);
+ };
+
+/* next check amacrine cells */
+
+ if (getn(ams,NMADE)>0) {		/* check small-field amacrine connections */
+   if (make_gcoff || make_gc || make_dsgc) checkcellout(ams);
+   if (make_cone) checkcellin(ams);
+   if (ninfo >= 2) fprintf (stderr,"# ams's  erased %g\n",ncell_erased[ams]);
+   setn(ams,NMADE,getn(ams,NMADE)-ncell_erased[ams]);
+ };
+
+ if (getn(sb,NMADE)>0) {			/* check starburst connections */
+   if (make_cbp) checkcellin(sb);
+   if (make_dsgc) checkcellout(sb);
+   if (ninfo >= 2) fprintf (stderr,"# sbacs erased %g\n",ncell_erased[sb]);
+   setn(sb,NMADE,getn(sb,NMADE)-ncell_erased[sb]);
+ };
+
+ if (getn(aii,NMADE)>0) {		/* check aii amacrine connections */
+   if (make_cbp) checkcellout(aii);
+   if (make_rbp) checkcellin(aii);
+   if (ninfo >= 2) fprintf (stderr,"# aiis erased %g\n",ncell_erased[aii]);
+   setn(aii,NMADE,getn(aii,NMADE)-ncell_erased[aii]);
+ };
+
+/* next check rod bipolars */
+ 
+ if (getn(rbp,NMADE)>0) {		/* check rod bipolar connections */
+   if (make_aii) checkcellout(rbp);
+   if (make_rod) checkcellin(rbp);
+   if (ninfo >= 2) fprintf (stderr,"# rbps erased %g\n",ncell_erased[rbp]);
+   setn(rbp,NMADE,getn(rbp,NMADE)-ncell_erased[rbp]);
+ };
+ 
+  /* then go back to check cones */
+
+ if (getn(xcone,NMADE)>0) {		/* check cone connections */
+   if (make_cbp || make_hbp) checkcellout(xcone);
+   if (ninfo >= 2) fprintf (stderr,"# cones erased %g\n",ncell_erased[xcone]);
+   setn(xcone,NMADE,getn(xcone,NMADE)-ncell_erased[xcone]);
+ };
+
+ if (getn(xrod,NMADE)>0) {		/* check rod connections */
+   if (make_rbp) checkcellout(xrod);
+   if (ninfo >= 2) fprintf (stderr,"# rods erased %g\n",ncell_erased[xrod]);
+   setn(xrod,NMADE,getn(xrod,NMADE)-ncell_erased[xrod]);
+ };
+
+  /* then go back to check has */
+
+ if (getn(ha,NMADE)>0) {                /* check ha connections */
+   if (make_cones) checkcellin(ha);
+   if (ninfo >= 2) fprintf (stderr,"# has erased %d\n",ncell_erased[ha]);
+   setn(ha,NMADE,getn(ha,NMADE)-ncell_erased[ha]);
+ };
+
+  /* then go back to check hbs */
+
+ if (getn(hb,NMADE)>0) {                /* check hb connections */
+   if (make_cones) checkcellin(hb);
+   if (ninfo >= 2) fprintf (stderr,"# has erased %d\n",ncell_erased[hb]);
+   setn(hb,NMADE,getn(hb,NMADE)-ncell_erased[hb]);
+ };
+ 
+};
+ 
+if (ninfo>=2) {
+  for (i=0; i<nceltypes; i++) {
+    if (getn(i,NMADE))
+      fprintf (stderr,"# total %5ss = %g\n",cname[i], getn(i,NMADE));
+  };
+  fprintf (stderr,"#\n");
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+/* remove cellparts that have grown outside of the array */
+
+if (notinit(disp_margin)) disp_margin = 0.07;		/* size of margin */
+
+if (setarrsiz) {
+  xmax = arrcentx +  arrsiz / 2 * (1 + 1*disp_margin);
+  ymax = arrcenty +  arrsiz / 2 * (1 + 1*disp_margin);
+  xmin = arrcentx - (arrsiz / 2 * (1 + 1*disp_margin));
+  ymin = arrcenty - (arrsiz / 2 * (1 + 1*disp_margin));
+};
+
+if (notinit(limit_array)) limit_array = 0; /* remove cell parts outside of arr */
+if (disp & 1) limit_array = 1;			/* always do when displaying */
+limit_array = 0;			/* always do when displaying */
+
+if (limit_array) {
+  //elimit X max xmax min xmin Y max ymax min ymin Z max -23 min -100;
+  //elimit X max xmax min xmin Y max ymax min ymin Z max 0 min -23;
+  elimit X max xmax min xmin Y max ymax min ymin;
+  foreach element ?e node [-1][-1][-1]  {
+      elimit element e;
+  }; 
+};
+
+if (ninfo >= 3) {
+  fprintf (stderr,"# Final array parameters:\n");
+  fprintf (stderr,"# xcent %g ycent %g\n",arrcentx,arrcenty);
+  fprintf (stderr,"# xsize %g ysize %g\n",xarrsiz,yarrsiz);
+};
+
+if (ninfo>=1) {
+  fprintf (stderr,"# Done connecting neurons.\n#\n");
+};
+
+if (ninfo >= 2) {
+  if (notinit(print_avg_conns)) print_avg_conns = 1;
+  if (print_avg_conns) {
+    for (ct=0; ct<nceltypes; ct++) {
+      print_avg_connections(ct); 
+    };
+    fprintf (stderr,"# \n");
+  };
+};
+ 
+/*--------------------------display------------------------------------*/
+
+/*
+proc dispcelltype(ct,n,scal,nscal) {
+    local colval, nod, i, q;
+    local dsgcnodq, sbcelq, sbnodq;
+    local dim sbcolor[nsb+1] = {{1}};
+
+  for (i=1;i<=nsb;i++)
+    sbcolor[i]=getn(sb,COLOR)-1+i;	// give each sb a different color 
+
+  for (i=1; i<=n; i++) {
+    if ( !(colval=getn(ct,COLOR))) colval = i;
+    if (ct==dsgc) {
+      for (q=0;q<sb_dsconns;q++) {		// show synapses 
+        dsgcnodq =  dsgc_sbconn_nodenrs[i][q];  // get nod with sb input 
+	if (dsgcnodq>=0 && dsgc_in_syns[i][dsgcnodq][0]==sb) {
+	  sbcelq=dsgc_in_syns[i][dsgcnodq][1];  // sb cell providing input 
+	  sbnodq=dsgc_in_syns[i][dsgcnodq][2];  // sb node providing input 
+	  display synapse matching [dsgc][i][sbnodq] color sbcolor[sbcelq];
+	};
+      };
+      display matching [dsgc][i][-1] only color colval dscale scal;
+    }
+    else if (ct==sb)
+      display matching [ct][i][-1] only color sbcolor[i] dscale scal
+    else
+      display matching [ct][i][-1] only color colval dscale scal;
+
+    display comps matching [ct][1][-1];
+    display node matching [ct][1][-1] dscale nscal;
+  };
+};
+/* */
+
+/* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+proc dispcelltype(ct, start, stop, scal, nscal) {
+    local colval, i;
+
+if (disp)
+  for (i=start; i<=stop; i++) {
+    if ( !(colval=getn(ct,COLOR))) colval = colval;
+
+    display synapse matching [ct][i][-1] color 5;    /* show synapses magenta*/
+    display gj matching      [ct][i][-1] color 6 dscale scal*.5;  
+    display sphere matching  [ct][i][-1] only color colval dscale scal;
+    display cable matching   [ct][i][-1] only color colval dscale scal;
+    display comps matching   [ct][i][-1];
+    display node matching    [ct][i][-1] color cyan dscale nscal;
+  };
+};
+
+/* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+find_maxmin(-1,-1);
+
+xarrsiz=xmax-xmin;
+yarrsiz=ymax-ymin;
+zarrsiz=zmax-zmin;
+arrcentx=(xmax+xmin)/2;
+arrcenty=(ymax+ymin)/2;
+arrcentz=(zmax+zmin)/2;
+
+/* add extra margin for displaying scale bar */
+
+if (notinit(dispsize)) dispsize = arrsiz;
+zarrsiz = zarrsiz * (cos(mxrot/180*PI)+sin(mxrot/180*PI));
+
+maxsize = amax(yarrsiz,zarrsiz);
+dispsize = amax(dispsize,maxsize) * (1+disp_margin);
+
+//fprintf (stderr,"arrcentx %g arrcenty %g\n",arrcentx,arrcenty);
+
+display center (arrcentx,arrcenty,arrcentz); 
+display size (dispsize);
+
+/* display size (100); /* */
+display calibline 50 loc (0.95,0.04) color cyan;
+display xrot=mxrot yrot 0;
+display cmap=1;
+
+if (make_rod)
+ dispcelltype(xrod,1,nrods,scal=0.9,1);
+
+if (make_cone)
+ dispcelltype(xcone,1,ncones,scal=0.8,1);
+
+if (make_hbat)
+ dispcelltype(hbat,1,nhbat,scal=1,1);
+
+if (make_ha)
+ dispcelltype(ha,1,nha,scal=1,1);
+
+if (make_hb)
+ dispcelltype(hb,1,nhb,scal=1,1);
+
+if (make_rbp)
+ dispcelltype(rbp,1,nrbp,scal=0.6,nscal=-2.1);
+
+if (make_cbp)
+ dispcelltype(cbp,1,ncbp,scal=1,nscal=-2.1);
+
+if (make_hbp)
+ dispcelltype(hbp,1,nhbp,scal=1,nscal=-2.1);
+
+if (make_aii)
+ dispcelltype(aii,1,naii,scal=0.6,nscal=-2.1);
+
+if (make_ams)
+ dispcelltype(ams,1,nams,scal=0.9,nscal=-2.1);
+
+setn(a17,COLOR,0);
+if (make_a17)
+ dispcelltype(a17,1,na17,scal=1,1);
+
+if (make_gc)
+ dispcelltype(gc,1,ngc,scal=1,nscal=-3.09);
+
+if (make_dsgc)
+  dispcelltype(dsgc,1,ndsgc,scal=1,nscal=-3.04); /* display third node number, size=.7 */
+
+if (make_gcoff)
+  dispcelltype(gcoff,1,ngcoff,scal=1,nscal=-3.1);
+
+if (info_disp>=1) {
+    print_sb_out_syns();
+};
+
+
+/* display starburst cells */
+
+if (make_sb) {
+    local colval, i, q;
+
+  for (i=1; i<=nsb; i++) {
+    colval=getn(sb,COLOR)-1+i;
+
+    display matching [sb][i][-1] only color colval;
+    display comps matching [sb][1][-1];
+    display node matching [sb][1][-1] dscale -3.1 color magenta;
+
+    /* show sb synapses, syns from each sbcell different color */
+
+    if (make_dsgc) display_sb_out_syns(i);
+  };
+};
+
+
+/*------------------------------------------------------------*/
+
+if (notinit(plot_freq)) {
+  if (make_dsgc && getn(dsgc,BIOPHYS))
+    plot_freq = 1			/* plot spike freq of ganglion cells */
+  else 
+    plot_freq = 0;		/* otherwise no spikes, so don't plot */
+};
+
+if (disp & 3) exit;		/* exit if anything displayed */
+
+/* end display */
+
+/*------------------------expt-------------------------------------*/
+
+runexpt();	/* Run the experiment defined in the experiment file */

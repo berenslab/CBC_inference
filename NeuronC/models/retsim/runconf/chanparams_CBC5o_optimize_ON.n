@@ -1,0 +1,20 @@
+columns:       dbp1           	cone           
+
+#CA0           dbp1           	cone       
+CA0.offm:      c_L_off        	-0.00085093       
+CA0.taua:      c_L_taua       	1.0543  
+                                
+#K0            dbp1           	cone         
+K0.offm:       c_Kv_off        	0.0043493  
+K0.taua:       c_Kv_taua       	0.81783      
+
+#K5            dbp1           	cone           
+K5.offm:       c_Kir_off      	0.0         
+
+#NA5           dbp1           	cone           
+NA5.offm:      c_N_offm       	0.0            
+NA5.offh:      c_N_offh       	0.0            
+NA5.taua:      c_N_tau        	1.0            
+NA5.taub:      c_N_tau        	1.0            
+NA5.tauc:      c_N_tau         	1.0            
+NA5.taud:      c_N_tau         	1.0

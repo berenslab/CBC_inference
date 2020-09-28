@@ -1,0 +1,40 @@
+/* tcomp15: test of rod */
+
+timinc=1e-4;
+ploti = endexp/200;
+endexp = 0.5;
+
+plmax = .04;
+plmin = -.08;
+
+drm = 10000;
+
+rodrm = 5000;
+rvrest= -.02;
+
+at 1 rod (0,0); 
+conn 1 to 2 cable dia 2 length 20 rm=rodrm vrest=rvrest;
+conn 2 to 3 cable dia .2 length .2 rm=rodrm vrest=rvrest;
+at 3 sphere dia 3 rm=rodrm vrest=rvrest;
+conn 3 to 4 cable length 50 dia .2 rm=rodrm vrest=rvrest;
+at 4 sphere dia 5 rm=rodrm vrest=rvrest;
+					/* synapse from rod to horiz */
+
+conn 4 to 5 synapse expon 10 maxcond 4e-9 thresh -.06 timec1 1.5;
+
+conn 5 to 6 cable length 10 dia .1;
+conn 6 to 7 cable length 10 dia .5;
+conn 7 to 8 cable length 10 dia 2;
+at 8 sphere dia 30;
+conn 8 to 9 cable length 50 dia 5;
+						/* */
+
+stim rod 1 inten 100e3 start .02 dur .001;
+
+/*stim node 1 vclamp -.06 start .005 dur 1;  */
+
+/*plot I[1] max 40e-12 min 0; */
+plot V[1],V[4],V[5],V[7],V[8];
+
+run;
+

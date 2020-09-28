@@ -1,0 +1,140 @@
+/* tcomp68j: Test of Ca chan activation */
+
+timinc = 5e-6;
+crit   = 1e-10;
+ploti  = 1e-5;
+
+expt1 = 1;		/* -> 1, plot activation kinetics  */
+expt2 = 1;		/* -> 2, plot deactivation kinetics */
+
+ivplot = 1;
+// plsep = 0;
+sampletime = 0;
+
+dscavg = 1e6;		/* synaptic release gain */
+dscaeg = 2;		/* synaptic release exponential gain */
+
+x = setvar();
+
+/*----------------------------------------*/
+
+flag = 0;
+
+proc onplot()
+
+{
+ if (flag) {
+   if (expt==1) {
+     if (prestimdur+0.0001<time && time < (prestimdur+stimdur)) {
+        Irec = I[1];
+        if (Irec < maxcurrent) maxcurrent = Irec;
+        Irec2 = I[2];
+        if (Irec2 < maxcurrent2) maxcurrent2 = Irec2;
+     };
+ };
+};
+
+};
+
+
+/* Experiment to plot activation */
+
+at 1 sphere dia 4 rm=1e8 vrev -.07 vrest -0.07
+ chan Ca type 1 density 10e-3 offsetm = 0 
+ capump vmax=20e-6 km=20e-6;
+ // capump vmax=0.5e-6 km=10e-6 cabuf vmax 4e7 kd 2e-6 btot 10e-6 btoti 10e-6;
+
+at 2 sphere dia 4 rm=1e8 vrev -.07 vrest -0.07;
+
+conn 1 to 2 synapse maxcond 2e-9 
+                timec2 [1,1]
+		expon 3
+		thresh -0.05
+                // sens Ca 
+		// rrpool   50
+		// mrrpool  50 
+		// maxsrate 20
+		trconc 20e-4
+		// vesnoise=1
+                resp ampa type 5 taum=1 tauh=1 chnoise=0 N=100 
+                ename xxx;
+
+
+if (expt1) {
+
+expt = 1;
+
+vhold    = -0.10;
+vpulse   = -0.05;
+vstop    =  0.02;
+tailvolt = -0.12;
+if (notinit(vstart)) vstart = -0.07;
+if (notinit(vstep))   vstep =  0.002;
+
+predur      = 0.5;
+prestimdur  = 0.01;
+stimdur     = 0.20;
+tailcurdur  = 0.001;
+poststimdur = 0.5;
+
+ endexp = prestimdur+stimdur+tailcurdur+poststimdur;
+// endexp = prestimdur+stimdur+tailcurdur;
+
+/* Experiment to test activation at different voltages */
+
+
+if (ivplot) {
+  plsep = 0;
+  graph X max vstop min vstart;
+  graph Y max 5e-12 min -10e-12;
+  graph Y max 100e-12 min -200e-12;
+  graph init;
+  graph pen (5,2);
+  //gmove (0.5, 0.95);
+  //sprintf (sbuf,"sample time %g\n",sampletime);
+  //gtext (sbuf);
+}
+else {
+  timinc = 1e-4;
+  plsep = 1;
+  setxmin = 0;
+  plot I[1] max 0e-12 min -20e-12  plnum 2 plname "ICa";
+  plot V[1] max vstop min vhold    plnum 3 plname "Vpre";
+  plot I[2] max 0e-12 min -200e-12 plnum 2 plname "Ipost";
+  plot Ca[1] max 20e-6 min 0       plnum 1 plname "Cai" plsize 0.5;
+//  plot FA9  xxx max 100 min 0;
+//plot G(1) xxx max 2 min 0;
+//plot G(2) xxx max 2 min 0;
+//plot G(3) xxx max 2 min 0;
+};
+
+
+time = -predur;
+stim node 1 vclamp=vhold start=time dur=predur;
+stim node 2 vclamp=vhold start=time dur=1e3;
+step predur;
+
+sprintf (savefile,"tcomp68j%06g.save",getpid());       // add pid to file name
+save model (savefile);
+
+for (vpulse=vstart,i=0; vpulse < vstop; vpulse += vstep,i++) {
+  time = 0;
+  maxcurrent  = 0;
+  maxcurrent2 = 0;
+  Irec = 0;
+  stim node 1 vclamp=vhold start=time dur=prestimdur;
+  step prestimdur; 
+  flag = 1;
+  stim node 1 vclamp=vpulse start=prestimdur dur=stimdur;
+  step stimdur; 
+  flag = 0;
+  if (ivplot) graph (vpulse,maxcurrent,maxcurrent2);
+  stim node 1 vclamp=tailvolt start=prestimdur+stimdur dur=tailcurdur;
+  step tailcurdur; 
+  stim node 1 vclamp=vhold start=prestimdur+stimdur+tailcurdur dur=poststimdur;
+  step poststimdur; 
+  restore model (savefile);
+ };
+};
+unlink (savefile);
+

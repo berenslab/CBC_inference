@@ -1,0 +1,59 @@
+
+/* Display of conductance in KCa type 1 channel  */
+
+timinc = 1e-5;
+ploti  = 1e-4;
+tempcel = 22;
+implicit=0;
+crit=1e-10;
+rseed = 12496;
+
+nchan=50;
+nchan=0;
+
+x = setvar();
+
+drm=40000;
+
+at 1 sphere dia 1 vrest -.075 jnoise=10;
+
+at 1 chan KCa type 5 
+   ndensity .35 
+   taua = .05
+   taub = .05
+   taud = 2
+   chnoise=1 
+   ename kca;
+
+//at 1 chan KCa type 2 
+//   ndensity .35 
+//   chnoise=1 
+//   k1=.2e-7
+//   k2=1e-7
+//   ename kca;
+
+stimstart = .001;
+stimdur = 5;
+vstim = -.03;
+
+stim node 1 vclamp -.07 start 0 dur stimstart;
+stim node 1 vclamp vstim start stimstart dur stimdur;
+
+plot G(I) kca max 2e-12 min -2e-12 filt [.1e-3,.05e-3]; /* */
+
+//plot G(1) kca max 2 min -2; /* */
+//plot G(2) kca max 2 min -2; /* */
+//plot G(3) kca max 2 min -2; /* */
+//plot G(4) kca max 2 min -2; /* */
+//plot G(5) kca max 2 min -2; /* */
+//plot G(6) kca max 2 min -2; /* */
+
+endexp=4;
+
+dcai = 200e-9;
+
+step 2;
+
+dcai=500e-9;
+
+run;

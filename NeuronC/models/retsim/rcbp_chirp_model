@@ -1,0 +1,825 @@
+#! /home/rob/bin/nci -c
+#
+# rcbp_chirp_model
+#
+# usage:  (see rcbp_chirp script)
+#
+#      cells and celltypes:
+#
+#	 rcbp_chirp_model --cellnum 510 -d 1 -v 1              # displays cell in vid window
+#        rcbp_chirp_model --cellnum 510 -d 1 -R 1              # displays cell in .png file 
+#        rcbp_chirp_model --cellnum 510 -d 1 -R 1 --n_dbp1 2   # displays stereo pair in .png file 
+#        rcbp_chirp_model --cellnum 510 -d 1                   # displays cell in .pdf file 
+#        rcbp_chirp_model --cellnum 510 -d 1      --n_dbp1 2   # displays stereo pair in .pdf file 
+#        rcbp_chirp_model --cellnum 510           --n_dbp1 100 # runs model for one cell, makes .r file
+#
+#        rcbp_chirp_model --celltype t1 -d 1 -v 1              # displays cells in vid window 
+#        rcbp_chirp_model --celltype t1 -d 1 -R 1              # displays cells in .png file 
+#        rcbp_chirp_model --celltype t1 -d 1 -R 1 --n_dbp1 2   # displays stereo pairs in .png files
+#        rcbp_chirp_model --celltype t1 -d 1                   # displays cells in .pdf files
+#        rcbp_chirp_model --celltype t1           --n_dbp1 100 # runs model for all cells in type, makes .r file
+#
+#        rcbp_chirp_model --cellnum all -d 1                   # displays all cells in .pdf files
+#        rcbp_chirp_model --cellnum all -d 1 -R 1              # displays all cells in .png files
+#        rcbp_chirp_model --cellnum all -d 1 -R 1 --n_dbp1 2   # displays all stereo pairs in .png files
+#        rcbp_chirp_model --cellnum all           --n_dbp1 100 # runs model for all cells, makes .r file
+#
+#        rcbp_chirp_model --cellnum all -d 1 -R 1 --n_dbp1 2 --zmax -20 --zmin -100 # removes dendrites from view
+#
+#      side view with labels (run povray):
+#
+#	 rcbp_chirp_model --cellnum 592 --n_dbp1 2 --c2rot 3 --dbp1_nscale -3.10 --mxrot -90 --d 1 --R 1
+#
+#      bottom view with labels (run povray):
+#
+#	 rcbp_chirp_model --cellnum 592 --n_dbp1 2 --c2yrot 3 --dbp1_nscale -3.04 --mxrot 180 --d 1 --R 1 
+#	 			--zmax -20 --zmin -100
+#
+#      run model:
+#
+#        rcbp_chirp_model --cellnum 576 --n_dbp1 1 		# run one model
+#        rcbp_chirp_model --cellnum 576 --n_dbp1 1 --one_run 0	# run series of models defined by recpnts[];
+#
+#      display options:
+#
+#	  --v 1			make vid window to see display of cell(s) or model
+#	  --d 1			make display of cell(s)
+#	  --R 1			make povray image of cell(s) display
+#	  --mxrot -90		x rotation for side view
+#	  --mxrot 180		x rotation for bottom view
+#	  --n_dbp1 2		sets stereo pair
+#	  --c2rot  3		z rotation for second cell of stereo pair (sets disparity for side view)
+#	  --c2yrot 3		y rotation for second cell of stereo pair (sets disparity for bottom view)
+#	  --zmax n		sets z max limit for view of cell
+#	  --zmin n		sets z min limit for view of cell
+#	  --dbp1_nscale n	size of font for displaying node numbers on dbp1
+#	  --povres 2000		resolution (pixels) for povray image created with --R 1
+#	  --spacing 50		overrides preset spacing of stereo pair
+#
+#
+#      model options: 		for other options, see below and expt_cbp_chirp.cc
+#
+#	   --n_dbp1 11		sets 11 dbp1s and amacrine
+#	   --cone_type n	set cone transduction (1=cone,2=vc transducer,3=cc transducer)
+#	   --make_cones n	=1 -> make cones, (default 0)
+#	   --cone_soma_z n	set zloc of cone to allow connecting to cbp dendrites (20)
+#	   --amarr n            select amacrine cell feedback model (11 => 1 am cell, 11 dbp1s)
+# 	   --spotdia n  	diameter of spot
+#	   --vnoise n		=0 => run model without noise (default = 1)
+#	   --scontrast n	contrast of stimulus (default = 1.0)
+#	   --vcontrast n	run vcontrast stimulus after chirp
+#	   --itransducer n	=1 -> use cclamp instead of vclamp
+#	   --cmult n     	set contrast of VC stimulus (volts for vtrans, amps for itrans, or ph/um/s for cone)
+#	   --minten n     	set backgnd inten (for cone, 10000, for transducer, -0.042, for itrans 8e-12)
+#	   --naxdia n		set several axon dia factors from list (1.0, 0.6, 0.8, 1.2), default all
+#	   --axdia n     	set just one axon diameter factor, override list
+#	   --nrecpnt n		set several recording points from nrecpnts[], default all
+#	   --recpntx n		set recpnt x 1, override list of recpnts
+#	   --vcaxon n		set voltage clamp potential
+#	   --elec_rs n		set voltage clamp series resistance (default 400e6)
+#	   --dria n		set dri for axon (default dri) 
+#	   --cbplam n		set complam for axon in central cbp (default 0.02 ) 
+#	   --cbplam2 n		set complam for axon in lateral cbp (default 0.2  ) 
+#
+#	   --g_dbp1_am  4e-10   conductance of dbp1 feedforward synapse -> am
+#	   --g_dbp1_am2 4e-10   conductance of dbp1 feedforward synapse -> am2
+#	   --g_dbp2_am  4e-10   conductance of dbp2 feedforward synapse -> am
+#	   --g_dbp2_am2 4e-10   conductance of dbp2 feedforward synapse -> am2
+#	   --g_am_dbp1  4e-10	conductance of am  -> dbp1 feedback synapses
+#	   --g_am_dbp2  4e-10	conductance of am  -> dbp2 feedback synapses
+#	   --g_am2_dbp1 4e-10	conductance of am2 -> dbp1 feedback synapses
+#	   --g_am2_dbp2 4e-10	conductance of am2 -> dbp2 feedback synapses
+#	   --dbp1_gtau 100	rel. tau of GABA channels in dbp1 (feedback)
+#	   --am_atau  15	rel. tau of AMPA channels in am (feedforward)
+#	   --am_sdur 50		tau of am feedback synapse to dbp1 (msec)
+#	   --am_sdur2 50	tau of am feedback synapse to dbp2 (msec)
+#	   --am_sfall 0		fall tau of am feedback synapse to dbp1 (msec)
+#	   --am_sfall2 0	fall tau of am feedback synapse to dbp2 (msec)
+#	   --cone_timec n	relative time constant for cones (1.0)
+#
+#	   --ksoma 0e-3		Kdr chan density at soma (0 S/um2) (see dens_cbp_chirp.n)
+#	   --kr6   0e-3		Kdr chan density in region R6 (0 S/um2) (see dens_cbp_chirp.n)
+#	   --kr7   0e-3		Kdr chan density in region R7 (0 S/um2) (see dens_cbp_chirp.n)
+#	   --dbp1_k1o  0.01	Kdr chan voltage offset (see chanparams_cbp_chirp)
+#	   --kasoma 0e-3	KA chan density at soma (0 S/um2) (see dens_cbp_chirp.n)
+#	   --kar6   0e-3	KA chan density in region R6 (0 S/um2) (see dens_cbp_chirp.n)
+#	   --kar7   0e-3	KA chan density in region R7 (0 S/um2) (see dens_cbp_chirp.n)
+#	   --khsoma 0e-3	Kh chan density at soma (0 S/um2) (see dens_cbp_chirp.n)
+#	   --cadist 1e-3	Ca L-type chan density at distal axon tips (R8) (see dens_cbp_chirp.n)
+#	   --cadist2 1e-3	Ca L-type chan density at distal axon tips (R8) (see dens_cbp2_chirp.n)
+#	   --catdist 1e-3	Ca T-type chan density at distal axon tips (R8) (see dens_cbp_chirp.n)
+#	   --catsoma 1e-3	Ca T-type chan density in soma(see dens_cbp_chirp.n)
+#	   --nahd 3e-3		Na chan density in R6, just above base of axon
+#	   --naab 3e-3		Na chan density in R7, along axon branches
+#	   --stimtype 1 	=1 -> chirp, =2 -> annulus with sector mask, =3 -> random checkerboard
+#
+#          --no_tip_labels 1	don't display tip labels
+#          --no_rpnt_labelss 1	don't display recording points
+#          --comnd_line_only 1	outputs only the command line (useful to see what to run or modify)
+#	   --predur n		equilibrium time before time=0
+#	   --setxmin n		start plot at time other than zero (e.g. -predur to see equilib)
+#	   --one_run 1		only one axdia and set of recording points
+#	   --pjobs 1		run with parallel jobs
+#	   --mosrun "mosrun -l " run with Mosix parallel job system
+#	   --plotpdf 1 		make .pdf files from .r files, when made with parallel jobs
+#	   --filename "xxx" 	set file name, override default
+#
+#	   --ninfo 2		Show construction of model (number of cells, synaptic connections)
+#
+#
+#	This script (running retsim ...) can make:
+#
+#	  1. One cbp, and possibly a vclamp in one of the axon branches,
+#
+#	     a. with transduction (vclamp) stimulus in cbp soma,
+#	     b. with cone input (stimulated by vclamp in cone)
+#	     c. with cone input (light stimulus with phototransduction) ...
+#
+#	  2. Several cbps (11) and 1 amacrine cell with negative feedback.
+#
+#	     a. with transduction (vclamp) stimulus in cbp soma,
+#	     b. with cone input (stimulated by vclamp in cone)
+#	     c. with cone input (light stimulus with phototransduction) ...
+#
+#	  3. Several arrangements of amacrine feedback to cbps. 
+#
+#
+#	 This script (rcbp_chirp_model) when run with "--n_dbp1 1" creates a set of files 
+#	   (when run without --v 1 or --d 1) with varying axdia and varying voltage clamp and 
+#	   recording points througout the axonal arbor. On each successive set of recording points, 
+#	   the voltage clamp and recording points are shifted right in "recpnts[]".
+#
+#	   When run with "--axdia n", only that one axdia is used. If run with "--one_run 1" 
+#	   only 1 file is created using the first axdia and the first set of recording points.
+#
+#	   To run several jobs in parallel with an smp kernel, set "--pjobs = 1".
+#
+#	   The "mosrun" command is used on a Mosix system (mosix.org) to run multple jobs on a local cluster.
+#
+#	   When running parallel jobs, use the "ncplotpdf" command or run with "--plotpdf 1" after 
+#	   the jobs are done to convert the .r files into pdf files.
+#	
+#	Note that cone->cbp synapse and am->cbp synapse use generic neurotransmitter release defined 
+#	by "expon" and "thresh" (in nval_cbp_chirp.n) and that cbp_am synapse uses Ca channels, vgain, 
+#	to generate release.
+#
+#	To vary amount of amacrine feedback, you can change:
+#		Vm of dbp1 (by changing its input, or Rm), 
+#		L-Ca channel density in R8 of dbp1 (cadist), or T_Ca chan density (catdist)
+#		L-Ca (CA0) channel voltage offset in dbp1 (chanparams_cbp_chirp), 
+#		vgain of dbp1->am synapse (nval_cbp_chirp.n), 
+#		trconc of dbp1->am synapse (nval_cbp_chirp.n),
+#		g_dbp1_am, 
+#		Rm for am, 
+#		threshold of am->dbp1 synapse, 
+#		trconc of am->dbp1 synapse (nval_cbp_chirp.n),
+#		g_am_dbp1  
+#
+#	Note that increasing am->cbp feedback will tend to hyperpolarize the cbp.
+#
+#	To see output of a .r (text output) file durin a run, do;
+#
+#		tail -f -c +1 file.r | plotmod | vid
+#
+
+dim cellnames[] = {{ 
+	"cbp_0395_t2", 
+	"cbp_0399_t2", 
+	"cbp_0402_t2", 
+	"cbp_0437_t2", 
+	"cbp_0447_t1",
+	"cbp_0476_t3b", 
+	"cbp_0483_t3b", 
+	"cbp_0510_t4", 
+	"cbp_0520_t4", 
+	"cbp_0523_t4",
+	"cbp_0529_t4", 
+	"cbp_0534_t5i", 
+	"cbp_0536_t5o", 
+	"cbp_0540_t5i", 
+	"cbp_0541_t5i",
+	"cbp_0569_t5o", 
+	"cbp_0572_t5t", 
+	"cbp_0576_t5o", 
+	"cbp_0577_t5t", 
+	"cbp_0580_t5o",
+	"cbp_0592_t5t", 
+	"cbp_0594_t5i", 
+	"cbp_0596_t5o", 
+	"cbp_0598_t5o", 
+	"cbp_0604_xbc",
+	"cbp_0605_xbc", 
+	"cbp_0607_xbc", 
+	"cbp_0608_xbc", 
+	"cbp_0609_xbc", 
+	"cbp_0643_t6",
+	"cbp_0647_t6", 
+	"cbp_0652_t6", 
+	"cbp_0654_t6", 
+#	"cbp_0658_t7", 
+	"cbp_0658_t7",
+	"cbp_0686_t8",
+	"cbp_0687_t8"
+}};
+all_cellnum = sizeof (cellnames);
+
+# - - - - - - - - - - - - - - - - - - - -
+
+
+dim t0_cells[] = {{"0"}};
+t0_cellnum = sizeof(t0_cells);
+
+dim t1_cells[] = {{"447"}};
+t1_cellnum = sizeof(t1_cells);
+
+dim t2_cells[] = {{"395","399","402","437"}};
+t2_cellnum = sizeof(t2_cells);
+
+dim t3b_cells[] = {{"476","483"}};
+t3b_cellnum = sizeof(t3b_cells);
+
+dim t4_cells[] = {{"510","520","523","529"}};
+t4_cellnum = sizeof(t4_cells);
+
+dim t5i_cells[] = {{"534","540","541","594"}};
+t5i_cellnum = sizeof(t5i_cells);
+
+dim t5o_cells[] = {{"536","569","576","580","596","598"}};
+t5o_cellnum = sizeof(t5o_cells);
+
+dim t5t_cells[] = {{"572","577","592"}};
+t5t_cellnum = sizeof(t5t_cells);
+
+dim xbc_cells[] = {{"604", "605","607","608","609"}};
+xbc_cellnum = sizeof(xbc_cells);
+
+dim t6_cells[] = {{"643","647","652","654"}};
+t6_cellnum = sizeof(t6_cells);
+
+# dim t7_cells[] = ("658","658a");
+dim t7_cells[] = {{"658"}};
+t7_cellnum = sizeof(t7_cells);
+
+dim t8_cells[] = {{"686,687"}};
+t8_cellnum = sizeof(t8_cells);
+
+cellnum_n = 510;
+celltype = "t0";
+cbptype2 = "";
+amarr   = -1;
+dbp1_soma_z = 1e6;
+mxrot = 0;
+myrot = 0;
+mzrot  = 0;
+zrot  = 0;
+soma_z = sz = 0;
+dim tips[] = {{800:830:1}};
+
+psyn1 = 0;
+psyn2 = 0;
+psyn3 = 0;
+rrp1 = 0;
+rrp2 = 0;
+rrp3 = 0;
+rrp4 = 0;
+rrp5 = 0;
+elnode = 0;
+rseed = 12543; 
+
+d = 0;
+v = 0;
+w = 1;
+B = 7;
+R = 0;
+spotdia = 300;
+n_dbp1 = 1;
+n_dbp2 = 0;
+// stimloc = 201;
+stimloc = 0;
+axon_base = 701;
+comnd_line_only = 0;
+cone_soma_z = 25;
+
+     dri = 200;
+     drm = 30000;
+
+//  ksoma = 0;
+//    kr6 = 0;
+//    kr7 = 0;
+// kasoma = 0;
+//   kar6 = 0;
+//   kar7 = 0;
+// khsoma = 0;
+//   nahd = 0;
+//   naab = 0;
+// dbp1_k1o = 0;
+// axdia = 1.0;
+
+g_am_dbp1  = 4e-10;
+g_am_dbp2  = 4e-10;
+g_am2_dbp1 = 4e-10;
+g_am2_dbp2 = 4e-10;
+g_dbp1_am  = 4e-10;		// conductance of dbp1 ribbon output synapse to am
+g_dbp1_am2 = 4e-10;		// conductance of dbp1 ribbon output synapse to am2
+g_dbp2_am  = 4e-10;
+g_dbp2_am2 = 4e-10;
+
+dbp1_gtau = 1;			// relative tau for GABA1,2,3 channel in dbp1
+   am_sdur = 1;			// tau for am -> dbp1 synapse
+  am_sfall = 0;			// tau for falltime am -> dbp1 synapse
+  am_sdur2 = 1;			// tau for am -> dbp2 synapse
+ am_sfall2 = 0;			// tau for falltime am -> dbp2 synapse
+   am_atau = 2;			// relative tau for AMPA channel in am
+
+dbp2_gtau  = 1;			// relative tau for GABA1,2,3 channel in dbp2
+  am2_sdur = 1;			// tau for am2 -> dbp1 synapse
+ am2_sdur2 = 1;			// tau for am2 -> dbp2 synapse
+ am2_sfall = 0;			// tau for falltime am2 -> dbp1 synapse
+am2_sfall2 = 0;			// tau for falltime am2 -> dbp2 synapse
+  am2_atau = 1;			// relative tau for AMPA channel in am2
+
+remove_nconns = 1;		/* set to 0 to debug synaptic connections (find correct soma_z) */
+dbp1_nscale = -3.07;
+
+povres = 2000;
+sp = 40;
+spacing = -1;
+c2rot = 0;
+c2yrot = 0;
+zmax = 10;
+zmin = -50;
+one_run = 0;
+vnoise = 1;
+pnoise = 0;
+dnoise = 0;
+ninfo = 2;
+
+pjobs = 0;			/* = 1 -> run with parallel jobs */
+//mosrun = "mosrun -l";		/* for running jobs in parallel with Mosix system */
+mosrun = "";
+filename = "";			/* set filename to override default set below */
+filename_header = "";		/* header for filename that includes cellname and amarr */
+plotpdf = 0;			/* = 1 -> convert .r file into .pdf */
+
+x = setvar();			/* get parameters from command line */
+
+
+
+  if (notinit(cellnum)) cellnum = 510;
+  if (varstr(cellnum)) { 	/* if cellnum is a text string, i.e. "all" */
+      cellnum_a = cellnum;
+      if (cellnum_a == "all") celltype = "all";
+  } else {
+      cellnum_n = cellnum;
+      sprintf(cellnum_a,"%g",cellnum_n);
+  };
+
+  if      (celltype == "t0")  { cellt = t0_cells;  celln = t0_cellnum; }
+  else if (celltype == "t1")  { cellt = t1_cells;  celln = t1_cellnum; }
+  else if (celltype == "t2")  { cellt = t2_cells;  celln = t2_cellnum; }
+  else if (celltype == "t3b") { cellt = t3b_cells; celln = t3b_cellnum; }
+  else if (celltype == "t4")  { cellt = t4_cells;  celln = t4_cellnum; }
+  else if (celltype == "t5i") { cellt = t5i_cells; celln = t5i_cellnum; }
+  else if (celltype == "t5o") { cellt = t5o_cells; celln = t5o_cellnum; }
+  else if (celltype == "t5t") { cellt = t5t_cells; celln = t5t_cellnum; }
+  else if (celltype == "xbc") { cellt = xbc_cells; celln = xbc_cellnum; }
+  else if (celltype == "t6")  { cellt = t6_cells;  celln = t6_cellnum; }
+  else if (celltype == "t7")  { cellt = t7_cells;  celln = t7_cellnum; }
+  else if (celltype == "t8")  { cellt = t8_cells;  celln = t8_cellnum; }
+  else if (celltype == "all") { cellt = cellnames; celln = all_cellnum;};
+
+# - - - - - - - - - - - - - - - - - - - - - - - - -
+
+dim recpnts[] = {{0}};
+
+func getrecpnt(n) 
+
+{
+   return recpnts[n % nrecpnts];
+};
+
+# - - - - - - - - - - - - - - - - - - - - - - - - -
+
+dim axdias[] = {{1.0, 0.6, 0.8, 1.2}};
+naxdias = sizeof(axdias);
+if (notinit(naxdia)) naxdia = naxdias;
+if (naxdia < 1) naxdia = 1;
+if (naxdia > naxdias) naxdia = naxdias;
+set_axdia = 0;
+
+if (!notinit(axdia)) set_axdia = 1;		// if axdia set by user, don't set from list
+if (v > 0) one_run = 1;				// if vid display, only do one run
+
+ for (c=0; c<celln; c++) {
+       if      (celltype == "t0")  { cell = cellnum_a; }     // if no cell type, then use cellnum  
+       else if (celltype == "all" || cellnum_a == "all") 
+	       		{ cell = substr(cellt[c],5,rindex(cellt[c],'_')-5); }  // find cellnum 
+       else             { cell = cellt[c]; };
+       cellx = cell + "_";
+       for (found=i=0; i<all_cellnum; i++) {
+           if (strstr (cellnames[i], cellx) >= 0) {
+               cellname = cellnames[i];
+               found = 1;
+               break;
+           };
+       };
+       if (!found) { print "rcbp_chirp_model: cell", cell, "not found."; exit; };
+
+       // print celltype," ",cell," ",cellx," ",cellname, "\n\n\n";
+       // print index(cellt[c],'_',6)-5, "\n";
+
+      // reset params
+
+      zr = 0;
+      mi = 7;			// mean intensity "--minten" must mult by 1e-12 for cclamp
+      cm = 3;			// contrast mult   "--cmult" must mult by 1e-12 for cclamp
+      recpnts = {{ 801 }};
+      nrecpnts = sizeof(recpnts);
+
+//  Aubrey's cells
+
+// t1
+if        (cell == "447") { sz = -9;  zr = 0;   sp = 25; 
+// t2
+} else if (cell == "395") { sz = -12; zr = 0;   sp = 25; mi=7; recpnts={{801,803,805,807,808,811,818,819}};
+} else if (cell == "399") { sz = -10; zr = 0;   sp = 25; mi=7; recpnts={{801,804,805,806,810,811,813,814,817,819}};
+} else if (cell == "402") { sz = -15; zr = 90;  sp = 25; mi=7; recpnts={{801,802,803,804,807,808,809,811,814}};
+} else if (cell == "437") { sz = -17; zr = 120; sp = 30; mi=7; recpnts={{801,802,803,807,811,812,813,814}};
+// t3b
+} else if (cell == "476") { sz = -9;  zr = 0;   sp = 30;
+} else if (cell == "483") { sz = -10; zr = 0;   sp = 30;
+// t5i
+} else if (cell == "534") { sz = -6;  zr = 0;   sp = 25;
+// t5o
+// t5t
+} else if (cell == "577") { sz = -6;  zr = 180; sp = 30; mi=9;  recpnts={{801,806,807,815,818,819,820,821}};
+} else if (cell == "592") { sz = -2;  zr = 200; sp = 40; mi=13; recpnts={{801,803,804,807,811,812,815}};
+// xbc
+} else if (cell == "604") { sz = -4;  zr = 0;   sp = 40;
+// t7
+} else if (cell == "658") { sz = 6;   zr = 0;   sp = 25;
+};
+
+// Serge's cells
+
+# t4
+if        (cell == "510") { sz = -7;            sp = 20;  
+} else if (cell == "520") { sz = -15; zr = 0;   sp = 20;
+} else if (cell == "523") { sz = -15; zr = 90;  sp = 25;
+} else if (cell == "529") { sz = -15;           sp = 30; 
+# t5i
+} else if (cell == "540") { sz = -7;  zr = 0;   sp = 20;
+} else if (cell == "541") { sz = -2;  zr = 90;  sp = 30;
+} else if (cell == "594") { sz = -4;  zr = 0;   sp = 30;
+# t5o
+} else if (cell == "536") { sz =  0;  zr = 180; sp = 35; mi=7;  recpnts={{801,802,811,814,817,818,820,821,823}};
+} else if (cell == "569") { sz = -8;  zr = 0;   sp = 35; mi=5;  recpnts={{801,804,807,809,812,814,815,817,819,821}};
+} else if (cell == "576") { sz = -6;  zr = 90;  sp = 35; mi=10; recpnts={{823,819,804,829,812,808,802,824,826}};
+} else if (cell == "580") { sz = -4;  zr = 180; sp = 35; mi=6;  recpnts={{801,804,806,808,812,813,820,822,830}};
+} else if (cell == "596") { sz = -7;  zr = 0;   sp = 25; mi=4;  recpnts={{801,802,804,805,808,811,816,817,818}};
+} else if (cell == "598") { sz = -4;  zr = 0;   sp = 25; mi=5;  recpnts={{801,805,806,809,810,813,820}};
+# t5t
+} else if (cell == "572") { sz = -5;  zr = 180; sp = 30; mi=7;  recpnts={{801,806,807,812,820,827,826,829}};
+# xbc
+} else if (cell == "605") { sz =  0;  zr = -45; sp = 40;
+} else if (cell == "607") { sz =  0;  zr = 0;   sp = 40;
+} else if (cell == "608") { sz = -2;  zr = -45; sp = 40;
+} else if (cell == "609") { sz = -6;  zr = 0;   sp = 30;
+// t6
+} else if (cell == "643") { sz =  10; zr = 0;   sp = 25;
+} else if (cell == "647") { sz =  12; zr = 0;   sp = 20;
+} else if (cell == "652") { sz =  12; zr = 0;   sp = 20;
+} else if (cell == "654") { sz =  4;  zr = 0;   sp = 20;
+// t8
+} else if (cell == "686") { sz = 12;  zr = 0;   sp = 45; mi=9;  recpnts={{801,804,808,813,817}};
+} else if (cell == "687") { sz = 12;  zr = 180; sp = 45; mi=9;  recpnts={{801,804,805,808,810,813}};
+};
+
+
+  nrecpnts = sizeof(recpnts);
+  // if (n_dbp1 > 2) nrecpnts = 1;
+  if (notinit(nrecpnt)) nrecpnt = nrecpnts;
+  if (nrecpnt < 1) nrecpnt = 1;
+  if (nrecpnt > nrecpnts) nrecpnt = nrecpnts;
+
+  if (dbp1_soma_z < 1e6) { sz = dbp1_soma_z; };
+  c2yrt = c2yrot;
+  if (zr != 0) { c2yrt = 0; };  /* If zr != 0 and bottom view, don't rotate y (should be done after zrot)
+		           This works for povray because 2 cells side-by-side generate perspective.
+		           It doesn't work for 2D display from "retsim ... -d 8 -v | vid". */
+  zr += zrot;
+  if (zr == 0)         { thetaz = ""; } else { sprintf(thetaz," --dbp1_thetaz %g --dbp2_thetaz %g",zr,zr); };
+  if (remove_nconns==1)  { remove_nconn = ""; } else { remove_nconn = "--remove_nconns 0"; };
+  if (spacing >= 0) { sp = spacing; };  /* override preset spacing */
+
+     				    // options passed through to expt_cbp_chirp
+   options = "";
+   sprintf (options,"%s --drm %g --dri %g -r %g",options,drm,dri,rseed);
+   if (!notinit(dbp1_am))   sprintf (options,"%s --dbp1_am %g",options,dbp1_am);
+   if (!notinit(dbp2_am))   sprintf (options,"%s --dbp2_am %g",options,dbp2_am);
+   if (!notinit(dtreedia))  sprintf (options,"%s --dtreedia %g",options,dtreedia);
+   if (!notinit(cmult))     sprintf (options,"%s --cmult %g",options,cmult)
+   else			    sprintf (options,"%s --cmult %g",options,cm*1e-12);
+   if (!notinit(minten))    sprintf (options,"%s --minten %g",options,minten)
+   else 		    sprintf (options,"%s --minten %g",options, mi*1e-12);
+   if (!notinit(dria))      sprintf (options,"%s --dria %g",options,dria);
+   if (!notinit(cbplam))    sprintf (options,"%s --cbplam %g",options,cbplam);
+   if (!notinit(cbplam2))   sprintf (options,"%s --cbplam2 %g",options,cbplam2);
+   if (vnoise==0)           sprintf (options,"%s --vnoise %g",options,vnoise);
+   if (pnoise==0)           sprintf (options,"%s --pnoise %g",options,pnoise);
+   if (dnoise==0)           sprintf (options,"%s --dnoise %g",options,dnoise);
+   if (!notinit(scontrast)) sprintf (options,"%s --scontrast %g",options,scontrast);
+   if (!notinit(itransducer)) sprintf (options,"%s --itransducer %g",options,itransducer);
+   if (!notinit(vcontrast)) sprintf (options,"%s --vcontrast %g",options,vcontrast);
+   if (!notinit(no_tip_labels)) sprintf (options,"%s --no_tip_labels %g",options,no_tip_labels);
+   if (!notinit(no_rpnt_labels))sprintf (options,"%s --no_rpnt_labels %g",options,no_rpnt_labels);
+   if (!notinit(vcaxon))    sprintf (options,"%s --vcaxon %g",options,vcaxon);
+   if (!notinit(elec_rs))   sprintf (options,"%s --elec_rs %g",options,elec_rs);
+   if (!notinit(ksoma))     sprintf (options,"%s --ksoma %g",options,ksoma);
+   if (!notinit(kr6))       sprintf (options,"%s --kr6 %g",options,kr6);
+   if (!notinit(kr7))       sprintf (options,"%s --kr7 %g",options,kr7);
+   if (!notinit(kasoma))    sprintf (options,"%s --kasoma %g",options,kasoma);
+   if (!notinit(kar6))      sprintf (options,"%s --kar6 %g",options,kar6);
+   if (!notinit(kar7))      sprintf (options,"%s --kar7 %g",options,kar7);
+   if (!notinit(khsoma))    sprintf (options,"%s --khsoma %g",options,khsoma);
+   if (!notinit(cadist))    sprintf (options,"%s --cadist %g",options,cadist);
+   if (!notinit(cadist2))   sprintf (options,"%s --cadist2 %g",options,cadist2);
+   if (!notinit(catdist))   sprintf (options,"%s --catdist %g",options,catdist);
+   if (!notinit(catsoma))   sprintf (options,"%s --catsoma %g",options,catsoma);
+   if (!notinit(_CA_L))     sprintf (options,"%s --_CA_L %g",options,_CA_L);
+   if (!notinit(nahd))      sprintf (options,"%s --nahd %g",options,nahd);
+   if (!notinit(naab))      sprintf (options,"%s --naab %g",options,naab);
+   if (!notinit(dbp1_k1o))  sprintf (options,"%s --dbp1_k1o %g",options,dbp1_k1o);
+   if (!notinit(ct2))       sprintf (options,"%s --ct2 %g",options,ct2);
+   if (!notinit(cone_timec))sprintf (options,"%s --cone_timec %g",options,cone_timec);
+   if (!notinit(cone_loopg))sprintf (options,"%s --cone_loopg %g",options,cone_loopg);
+   if (!notinit(dvst))      sprintf (options,"%s --dvst %g",options,dvst);		/* dbp1 Vstart */
+   if (!notinit(spotdur))   sprintf (options,"%s --spotdur %g",options,spotdur);
+   if (!notinit(predur))    sprintf (options,"%s --predur %g",options,predur);
+   if (!notinit(setxmin))   sprintf (options,"%s --setxmin %g",options,setxmin);
+   if (!notinit(disp_c2))   sprintf (options,"%s --disp_c2 %g",options,disp_c2);
+   if (!notinit(nspots))    sprintf (options,"%s --nspots %g",options,nspots);
+   if (!notinit(stimtype))  sprintf (options,"%s --stimtype %g",options,stimtype);
+   if (cbptype2 != "")      sprintf (options,"%s --cbptype2 %s",options,cbptype2);
+
+  syn_options = "";
+  if (n_dbp1 > 0) sprintf(syn_options,"%s --g_dbp1_am %g --g_dbp1_am2 %g --g_am_dbp1 %g --g_am2_dbp1 %g",  syn_options, g_dbp1_am, g_dbp1_am2, g_am_dbp1, g_am2_dbp1);
+
+  if (n_dbp2 > 0) sprintf(syn_options,"%s --g_dbp2_am %g --g_dbp2_am2 %g --g_am_dbp2 %g --g_am2_dbp2 %g --dbp2_gtau %g", syn_options, g_dbp2_am, g_dbp2_am2, g_am_dbp2,g_am2_dbp2,dbp2_gtau);
+ 
+  sprintf(syn_options,"%s --dbp1_gtau %g --am_sdur %g --am_sfall %g --am_sdur2 %g --am_sfall2 %g --am_atau %g", syn_options, dbp1_gtau, am_sdur, am_sfall, am_sdur2, am_sfall2, am_atau);
+
+  if (amarr==22) sprintf(syn_options,"%s --am2_sdur %g --am2_sdur2 %g --am2_sfall %g --am2_atau %g", syn_options, am2_sdur, am2_sdur2, am2_sfall, am2_atau);
+
+
+   for (r=0, nrecs=nrecpnt; r<nrecs; r++) {		// run models with different VC and recording points
+
+    if (n_dbp1 <= 2 && n_dbp2==0) {	// if 1 cell, set up vc and recording points, set by user or default "recpnts[]" 
+      if (!notinit(vcloc))       rvcloc = vcloc
+      else if (notinit(rvcloc))  rvcloc = getrecpnt(r) 	
+      else if (rvcloc > 0)       rvcloc = getrecpnt(r); 	
+								// if rvcloc <= 0 don't make vclamp
+      if (rvcloc <= 0) { nrecs = 1; rr = r-1; }			// if no vclamp, don't run with different recpnts
+      else rr = r;
+
+      if (nrecpnt>1) {
+        if (!notinit(rp1))   rrp1   = rp1
+        else                 rrp1   = getrecpnt(rr+1);
+      };
+      if (nrecpnt>2) {
+        if (!notinit(rp2))   rrp2   = rp2
+        else                 rrp2   = getrecpnt(rr+2);
+      };
+      if (nrecpnt>3) {
+        if (!notinit(rp3))   rrp3   = rp3
+        else                 rrp3   = getrecpnt(rr+3);
+      };
+      if (nrecpnt>4) {
+        if (!notinit(rp4))   rrp4   = rp4
+        else                 rrp4   = getrecpnt(rr+4);
+      };
+      if (nrecpnt>5) {
+        if (!notinit(rp5))   rrp5   = rp5
+        else                 rrp5   = getrecpnt(rr+5);
+      };
+
+      // print rvcloc, rrp1, rrp2, rrp3, rrp4, sizeof(recpnts);
+
+    } else {				// run models with feedback from amacrines
+
+       if (psyn1<=0)   	      psyn1 = getrecpnt(r);	// for dbp1
+
+       if (psyn2<=0)   	      psyn2 = getrecpnt(r+1);	// for 2nd feedback synapse in dbp1
+
+       if (psyn3<=0)   	      psyn3 = getrecpnt(r);	// for dbp2
+
+       if (nrecpnt>1) {
+         if (!notinit(rp1))   rrp1   = rp1
+         else                 rrp1   = getrecpnt(r+2);
+       };
+       if (nrecpnt>2) {
+         if (!notinit(rp2))   rrp2   = rp2
+         else                 rrp2   = getrecpnt(r+3);
+       };
+       if (nrecpnt>3) {
+         if (!notinit(rp3))   rrp3   = rp3
+         else                 rrp3   = getrecpnt(r+4);
+       };
+       if (nrecpnt>4) {
+         if (!notinit(rp4))   rrp4   = rp4
+         else                 rrp4   = getrecpnt(r+5);
+       };
+       if (nrecpnt>5) {
+         if (!notinit(rp5))   rrp5   = rp5
+         else                 rrp5   = getrecpnt(r+6);
+       };
+    };
+
+    // get_cbp is command string associated with a specific bipolar cell
+
+    if (!notinit(dbp1_file)) cellname = dbp1_file;
+    sprintf (get_cbp,"--dbp1_file %s --dbp1_soma_z %g%s",cellname,sz,thetaz);
+    if (notinit(dbp2_file)) dbp2_file = cellname;
+    sprintf (get_cbp,"%s --dbp2_file %s --dbp2_soma_z %g",get_cbp,dbp2_file,sz);
+    if (!notinit(make_cones)) {
+      sprintf (get_cbp,"%s --make_cones %g",get_cbp,make_cones);
+      if (!notinit(n_cones)) sprintf (get_cbp,"%s --n_cones %g",get_cbp,n_cones);
+      sprintf (get_cbp,"%s --cone_soma_z %g",get_cbp,cone_soma_z + sz);
+      if (!notinit(cone_type)) sprintf (get_cbp,"%s --cone_type %g",get_cbp,cone_type);
+    };
+    // print "get_cbp", get_cbp;
+
+    if (n_dbp1 <= 2 && amarr<=0) {
+
+         psyn1 = psyn2 = psyn3 = 0;
+         if (rvcloc > 0)  sprintf (get_cbp,"%s --vcloc %g",  get_cbp,rvcloc);
+         if (rrp1 > 0)    sprintf (get_cbp,"%s --recpnt1 %g",get_cbp,rrp1);
+         if (rrp2 > 0)    sprintf (get_cbp,"%s --recpnt2 %g",get_cbp,rrp2);
+         if (rrp3 > 0)    sprintf (get_cbp,"%s --recpnt3 %g",get_cbp,rrp3);
+         if (rrp4 > 0)    sprintf (get_cbp,"%s --recpnt4 %g",get_cbp,rrp4);
+         if (rrp5 > 0)    sprintf (get_cbp,"%s --recpnt5 %g",get_cbp,rrp5);
+ 
+    } else {		// full model
+
+                        sprintf (get_cbp,"%s --presyn1 %g",get_cbp,psyn1);
+        if (psyn2 > 0)  sprintf (get_cbp,"%s --presyn2 %g",get_cbp,psyn2);
+        if (psyn3 > 0)  sprintf (get_cbp,"%s --presyn3 %g",get_cbp,psyn3);
+        if (rrp1 > 0)   sprintf (get_cbp,"%s --recpnt1 %g",get_cbp,rrp1);
+        if (rrp2 > 0)   sprintf (get_cbp,"%s --recpnt2 %g",get_cbp,rrp2);
+        if (rrp3 > 0)   sprintf (get_cbp,"%s --recpnt3 %g",get_cbp,rrp3);
+        if (rrp4 > 0)   sprintf (get_cbp,"%s --recpnt4 %g",get_cbp,rrp4);
+        if (rrp5 > 0)   sprintf (get_cbp,"%s --recpnt5 %g",get_cbp,rrp5);
+        if (elnode > 0) sprintf (get_cbp,"%s --elnode %g", get_cbp,elnode);
+    };
+
+
+   for (a=0; a<naxdia; a++) {				// run model with several different axdias
+
+     if (!set_axdia) axdia = axdias[a]; 		// if axdia not set from command line, set from list 
+
+     if (n_dbp1 > 0 && n_dbp1 <= 2 && n_dbp2==0) {	/* construct model of 1 or 2 cells */
+							/*  if n_dpb1 == 2 make stereo pair */
+	  if (amarr < 0) {amarr = 0;};
+	
+	  /* include relevant parameters in the file name */
+
+	  sprintf (filename_header,"cbp_chirp-%s-%g",cellname,amarr);
+	  if (filename == "") {
+	     if (d > 0) sprintf (filenamec,"%s.%g.%g",filename_header,mxrot,myrot)
+	     else       sprintf (filenamec,"%s-%g-%g-%3.1f-%g-%g",filename_header,n_dbp1,dri,axdia,rvcloc,rrp1);
+          } else {
+	     sprintf (filenamec, "%s-%s",filename_header,filename);
+	  };
+
+	  if (zmax < 10 || zmin > -50)  { 
+		sprintf (zrange, "--disp_zmax %g --disp_zmin %g",zmax,zmin); 
+	  } else { zrange = ""; };
+
+          sprintf(str1,"retsim --expt cbp_chirp --cbptype dbp1 %s --axdia %g %s --dbp1_nscale %g --n_dbp1 %g --n_dbp2 %g --amarr %g --spacing %g --c2rot %g --c2yrot %g", get_cbp, axdia, options, dbp1_nscale, n_dbp1, n_dbp2, amarr, sp, c2rot, c2yrt);  
+
+	 if (amarr == 0) { 
+          sprintf(str2,"%s --spotdia %g --mxrot %g --myrot %g --mzrot %g", zrange, spotdia,  mxrot, myrot, mzrot);
+	} else {
+          sprintf(str2,"%s %s --spotdia %g --mxrot %g --myrot %g --mzrot %g", 
+							zrange, syn_options, spotdia, mxrot, myrot, mzrot);
+	};
+
+          sprintf(str3,"%s --plotlabel %s --ninfo %g", remove_nconn, filenamec, ninfo);
+
+
+    } else {						/* construct model with several cells */
+
+	  if (amarr < 0) {amarr = 11;};
+
+	  /* include relevant parameters in the file name */
+
+	  sprintf (filename_header,"cbp_chirp-%s-%g",cellname,amarr);
+	  if (filename == "") {
+	     if (d > 0) sprintf (filenamec,"%s.%g.%g.%g",filename_header,mxrot,myrot,mzrot)
+	     else       sprintf (filenamec,"%s-%g-%g-%3.1f-%g-%g-%g-%g-%g-%g",filename_header,n_dbp1,dri,axdia,psyn1,spotdia,dbp1_gtau,am_sdur,am_atau,vnoise);
+          } else {
+	     sprintf (filenamec, "%s-%s",filename_header,filename);
+	  };
+
+          sprintf(str1,"retsim --expt cbp_chirp --cbptype dbp1 %s --axdia %g %s --stimloc %g --axon_base %g --dbp1_nscale %g --n_dbp1 %g --n_dbp2 %g --amarr %g --spacing %g --mxrot %g", get_cbp, axdia, options, stimloc, axon_base, dbp1_nscale, n_dbp1, n_dbp2, amarr, sp, mxrot);
+
+          sprintf(str2,"%s --spotdia %g", syn_options, spotdia);
+
+          sprintf(str3,"%s --plotlabel %s --ninfo %g",remove_nconn,filenamec,ninfo);
+
+    };
+          sprintf(run_string,"%s %s %s",str1,str2,str3);
+
+    /* run or display model */
+
+    if (d > 0) {		// display model
+
+          if (R > 0) {		// make povray image
+
+            sprintf(ret_string,"%s -d %g -R > %s.pov",run_string,d,filenamec);
+            sprintf(pov_string,"povray -w%g -h%g -i%s.pov -dx",povres,povres,filenamec);
+            sprintf(system_string,"%s; %s",ret_string,pov_string);
+	    if (comnd_line_only) print "\n",system_string 
+	    else system (system_string);
+
+          } else {			/* display model with vid */
+
+	    if (v > 0) {	// make image with vid
+
+              sprintf(system_string,"%s -d %g -v | vid -B %g -w %g",run_string,d,B,w);
+	      if (comnd_line_only) print "\n",system_string 
+	      else system (system_string);
+
+	    } else {		// make .ps image, convert to pdf
+
+	      sprintf(vid_string,"%s -d %g -v | vid -c > %s.ps",run_string,d,filenamec);
+	      sprintf(ps2pdf_string,"ps2pdf %s.ps && rm %s.ps",filenamec,filenamec);
+	      sprintf(system_string,"%s; %s",vid_string,ps2pdf_string);
+	      if (comnd_line_only) print "\n",system_string 
+	      else system (system_string);
+
+	    }; /* make ps image */
+
+          }; /* display model with vid */
+
+     }  /* if (d > 0) */
+
+     else {			// run model
+
+	  if (v > 0) {		// run to vid window
+
+            sprintf(system_string,"%s -v | vid -B %g -w %g",run_string,B,w);
+	    if (comnd_line_only) print "\n",system_string 
+	    else system (system_string);
+
+	 } else {		// make .r file, if not parallel, convert to pdf 
+
+	   if (mosrun!="") pjobs = 1;
+
+	   if (plotpdf > 0) {	// convert .r file into pdf
+
+	      sprintf(plot_string,"plotmod %s.r | vid -c > %s.ps",filenamec,filenamec);
+	      sprintf(ps2pdf_string,"ps2pdf %s.ps && rm %s.ps",filenamec,filenamec);
+	      sprintf(system_string,"%s; %s",plot_string,ps2pdf_string);
+	      if (comnd_line_only) print "\n",system_string 
+	      else system (system_string);
+
+	   } else {		// make .r file
+
+	      if (pjobs==0) {	// if not parallel, make .r file, convert to pdf
+
+	        sprintf(model_string,"%s >& %s.r",run_string,filenamec);
+	        sprintf(plot_string,"plotmod %s.r | vid -c > %s.ps",filenamec,filenamec);
+	        sprintf(ps2pdf_string,"ps2pdf %s.ps && rm %s.ps",filenamec,filenamec);
+	        sprintf(system_string,"%s; %s; %s",model_string,plot_string,ps2pdf_string);
+	        if (comnd_line_only) print "\n",system_string 
+	        else system (system_string);
+	     } 
+	     else {		// make .r file in parallel
+
+	        if (mosrun=="") {
+	          sprintf(system_string,"%s >& %s.r &",run_string,filenamec);
+	        } else {
+		  sprintf(system_string,"%s %s >& %s.r & sleep 0.5",mosrun,run_string,filenamec);
+	        };
+	        if (comnd_line_only) print "\n",system_string 
+	        else system (system_string);
+	     };
+	   };  /* else plotpdf==0 */
+
+	  }; /* make .r file */
+
+     }; /* run model */
+
+       if (d>0 || one_run>0 || set_axdia) break;  // if display model, run only once 
+
+     };  /* for (a;;) */
+
+     if (d>0 || one_run>0) break;		// if display model, run only once 
+
+   };  /* for (r;;) */
+ };  /* for (c;;) */
+
+
+
+

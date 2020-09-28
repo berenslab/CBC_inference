@@ -1,0 +1,1582 @@
+/*  makcel.n for script retsim.n */
+
+/* Script to create different cell types.  */
+
+/*----------------------------------------------------------*/
+
+xcone =  0;            /* Identity numbers for neurons */
+xrod  =  1;
+hbat  =  2;
+ha    =  3;
+hb    =  4;
+rbp   =  5;
+cbp   =  6;		/* depolarizing cone bipolar */
+hbp   =  7;		/* hyperpolarizing cone bipolar */
+a17   =  8;
+aii   =  9;
+sb    = 10;
+am    = 11;
+amh   = 12;
+ams   = 13;
+gc    = 14;
+dsgc  = 15;
+gcoff = 16;
+nceltypes = 17;
+
+soma  = 0;	/* node number for soma */
+axtrm = 1;	/* node number for axon terminals (bipolar cell, etc.) */
+recpnt = 10000; /* node number for sharp electrode recording point */
+
+/*----------------------------------------------------------*/
+
+/*  Neuron parameters for makcel.n simulation script */
+
+/* To add parameters, edit "maknval.n", run "maknval.n > nval.n",
+   then edit "makcel.n" and read in "nval.n" for these param defs.
+   Last, edit "nvals.n" and remove these param defs.
+*/
+
+ MAKE       =   0;	/* whether to make this cell type */
+ MAKE_DEND  =   1;	/* whether to make dendrites */
+ MAKE_AXON  =   2;	/* whether to make axon */
+ MAKE_LONG  =   3;	/* whether to make axon long */
+ NMADE      =   4;	/* number of cells made */
+ MAXNUM     =   5;	/* maximum number of cells of this type */
+ COLOR      =   6;	/* color of this cell type for display */
+ MAXCOV     =   7;	/* max coverage factor (for arrays) */
+ MAXSYNI    =   8;	/* max number of input syns per celltype */
+ MAXSYNO    =   9;	/* max number of output syns per celltype */
+ DENS       =  10;	/* density of this type (per mm2) */
+ REGU       =  11;	/* regularity (mean/stdev) of spacing */
+ MORPH      =  12;	/* morphology (=0 -> file, or artificial) */
+ COMPLAM    =  13;	/* compartment size (default=complam) */
+ BIOPHYS    =  14;	/* add biophys properties (chan dens file) */
+ CHNOISE    =  15;	/* add membrane channel noise properties   */
+ RATIOK     =  16;	/* set K density values as ratio from Na */
+ VSTART     =  17;	/* initial resting potential */
+ VREV       =  18;	/* membrane potential for Rm (VCl) */
+ RM         =  19;	/* the cell's Rm */
+ SOMADIA    =  20;	/* Soma diameter */
+ SOMAZ      =  21;	/* Z location (x,y loc determ. by array) */
+ DENDARB    =  22;	/* type of dendritic tree */
+ DENDARBZ   =  23;	/* dendritic arborization level */
+ DENZDIST   =  24;	/* dendritic arborization z tolerance */
+ STRATDIA   =  25;	/* stratif. annulus dia (fract of treedia) */
+ DTIPDIA    =  26;	/* diameter of dendritic tips */
+ DTREEDIA   =  27;	/* diameter of dendritic tree */
+ AXARBT     =  28;	/* type of axonal tree */
+ AXARBZ     =  29;	/* axonal arborization level */
+ AXTIPDIA   =  30;	/* diameter of axonal tips */
+ AXARBDIA   =  31;	/* diameter of axonal arbor */
+ TAPERSPC   =  32;	/* space constant of diameter taper */
+ TAPERABS   =  33;	/* abs diameter for taper */
+ NDENDR     =  34;	/* number of first-order dendrites */
+ GROWTHR    =  35;	/* distance thresh for growth of dendrites */
+ CELPRE1    =  36;	/* cell type to connect to (neg, no conn) */
+ CONPRE1    =  37;	/* connection number of presyn cell */
+ CELCONV1   =  38;	/* number of presyn cells to connect to */
+ GROWPOST1  =  39;	/* grow when making conn from presyn cell */
+ CELPRE2    =  40;	/* cell type to connect to (neg, no conn) */
+ CONPRE2    =  41;	/* connection number of presyn cell */
+ CELCONV2   =  42;	/* number of presyn cells to connect to */
+ GROWPOST2  =  43;	/* grow when making conn from presyn cell */
+ CELPRE3    =  44;	/* cell type to connect to (neg, no conn) */
+ CONPRE3    =  45;	/* connection number of presyn cell */
+ CELCONV3   =  46;	/* number of presyn cells to connect to */
+ GROWPOST3  =  47;	/* grow when making conn from presyn cell */
+ CELPRE4    =  48;	/* cell type to connect to (neg, no conn) */
+ CONPRE4    =  49;	/* connection number of presyn cell */
+ CELCONV4   =  50;	/* number of presyn cells to connect to */
+ GROWPOST4  =  51;	/* grow when making conn from presyn cell */
+ CELPRE5    =  52;	/* cell type to connect to (neg, no conn) */
+ CONPRE5    =  53;	/* connection number of presyn cell */
+ CELCONV5   =  54;	/* number of presyn cells to connect to */
+ GROWPOST5  =  55;	/* grow when making conn from presyn cell */
+ CELPRE6    =  56;	/* cell type to connect to (neg, no conn) */
+ CONPRE6    =  57;	/* connection number of presyn cell */
+ CELCONV6   =  58;	/* number of presyn cells to connect to */
+ GROWPOST6  =  59;	/* grow when making conn from presyn cell */
+ CELPRE7    =  60;	/* cell type to connect to (neg, no conn) */
+ CONPRE7    =  61;	/* connection number of presyn cell */
+ CELCONV7   =  62;	/* number of presyn cells to connect to */
+ GROWPOST7  =  63;	/* grow when making conn from presyn cell */
+ CELPRE8    =  64;	/* cell type to connect to (neg, no conn) */
+ CONPRE8    =  65;	/* connection number of presyn cell */
+ CELCONV8   =  66;	/* number of presyn cells to connect to */
+ GROWPOST8  =  67;	/* grow when making conn from presyn cell */
+
+ CELPOST1   =  68;	/* cell type to connect to (neg, no conn) */
+ CONPOST1   =  69;	/* connection number for postsyn cell */
+ CELDIV1    =  70;	/* number of postsyn cells to connect to */
+ GROWPRE1   =  71;	/* grow when making conn to postsyn cell */
+ USEDYAD1   =  72;	/* synapse is dyad using preexisting type */
+ DYADTYP1   =  73;	/* type of dyad synapse to connect with */
+ AUTAPSE1   =  74;	/* synapse back to presynaptic node */
+ SYNNUM1    =  75;	/* number of synapses per connection */
+ SENSCA1    =  76;	/* synaptic release sensitivity calcium */
+ SGAIN1     =  77;	/* synaptic gain */
+ SVGAIN1    =  78;	/* synaptic vgain */
+ SDURH1     =  79;	/* synaptic high pass time const. */
+ SNFILTH1   =  80;	/* synaptic high pass nfilt */
+ SHGAIN1    =  81;	/* synaptic high pass gain */
+ SVSIZ1     =  82;	/* synaptic vesicle size */
+ SCOND1     =  83;	/* synaptic conductance */
+ STHRESH1   =  84;	/* synaptic threshold */
+ SVNOISE1   =  85;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR1      =  86;	/* synaptic event time const. */
+ SNFILT1    =  87;	/* synaptic vesicle nfilt */
+ STRCONC1   =  88;	/* synaptic transmitter concentration. */
+ SRESP1     =  89;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT1   =  90;	/* second mesng. nfilt */
+ SCDUR1     =  91;	/* second mesng. time const. */
+ SCGAIN1    =  92;	/* synaptic second messenger gain */
+ SCNOISE1   =  93;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN1    =  94;	/* number of channels */
+ SUNIT1     =  95;	/* synaptic channel unitary conductace */
+ SVREV1     =  96;	/* synaptic reversal potential */
+
+ CELPOST2   =  97;	/* cell type to connect to (neg, no conn) */
+ CONPOST2   =  98;	/* connection number for postsyn cell */
+ CELDIV2    =  99;	/* number of postsyn cells to connect to */
+ GROWPRE2   = 100;	/* grow when making conn to postsyn cell */
+ USEDYAD2   = 101;	/* synapse is dyad using preexisting type */
+ DYADTYP2   = 102;	/* type of dyad synapse to connect with */
+ AUTAPSE2   = 103;	/* synapse back to presynaptic node */
+ SYNNUM2    = 104;	/* number of synapses per connection */
+ SENSCA2    = 105;	/* synaptic release sensitivity calcium */
+ SGAIN2     = 106;	/* synaptic gain */
+ SVGAIN2    = 107;	/* synaptic vgain */
+ SDURH2     = 108;	/* synaptic high pass time const. */
+ SNFILTH2   = 109;	/* synaptic high pass nfilt */
+ SHGAIN2    = 110;	/* synaptic high pass gain */
+ SVSIZ2     = 111;	/* synaptic vesicle size */
+ SCOND2     = 112;	/* synaptic conductance */
+ STHRESH2   = 113;	/* synaptic threshold */
+ SVNOISE2   = 114;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR2      = 115;	/* synaptic event time const. */
+ SNFILT2    = 116;	/* synaptic vesicle nfilt */
+ STRCONC2   = 117;	/* synaptic transmitter concentration. */
+ SRESP2     = 118;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT2   = 119;	/* second mesng. nfilt */
+ SCDUR2     = 120;	/* second mesng. time const. */
+ SCGAIN2    = 121;	/* synaptic second messenger gain */
+ SCNOISE2   = 122;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN2    = 123;	/* number of channels */
+ SUNIT2     = 124;	/* synaptic channel unitary conductace */
+ SVREV2     = 125;	/* synaptic reversal potential */
+
+ CELPOST3   = 126;	/* cell type to connect to (neg, no conn) */
+ CONPOST3   = 127;	/* connection number for postsyn cell */
+ CELDIV3    = 128;	/* number of postsyn cells to connect to */
+ GROWPRE3   = 129;	/* grow when making conn to postsyn cell */
+ USEDYAD3   = 130;	/* synapse is dyad using preexisting type */
+ DYADTYP3   = 131;	/* type of dyad synapse to connect with */
+ AUTAPSE3   = 132;	/* synapse back to presynaptic node */
+ SYNNUM3    = 133;	/* number of synapses per connection */
+ SENSCA3    = 134;	/* synaptic release sensitivity calcium */
+ SGAIN3     = 135;	/* synaptic gain */
+ SVGAIN3    = 136;	/* synaptic vgain */
+ SDURH3     = 137;	/* synaptic high pass time const. */
+ SNFILTH3   = 138;	/* synaptic high pass nfilt */
+ SHGAIN3    = 139;	/* synaptic high pass gain */
+ SVSIZ3     = 140;	/* synaptic vesicle size */
+ SCOND3     = 141;	/* synaptic conductance */
+ STHRESH3   = 142;	/* synaptic threshold */
+ SVNOISE3   = 143;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR3      = 144;	/* synaptic event time const. */
+ SNFILT3    = 145;	/* synaptic vesicle nfilt */
+ STRCONC3   = 146;	/* synaptic transmitter concentration. */
+ SRESP3     = 147;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT3   = 148;	/* second mesng. nfilt */
+ SCDUR3     = 149;	/* second mesng. time const. */
+ SCGAIN3    = 150;	/* synaptic second messenger gain */
+ SCNOISE3   = 151;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN3    = 152;	/* number of channels */
+ SUNIT3     = 153;	/* synaptic channel unitary conductace */
+ SVREV3     = 154;	/* synaptic reversal potential */
+
+ CELPOST4   = 155;	/* cell type to connect to (neg, no conn) */
+ CONPOST4   = 156;	/* connection number for postsyn cell */
+ CELDIV4    = 157;	/* number of postsyn cells to connect to */
+ GROWPRE4   = 158;	/* grow when making conn to postsyn cell */
+ USEDYAD4   = 159;	/* synapse is dyad using preexisting type */
+ DYADTYP4   = 160;	/* type of dyad synapse to connect with */
+ AUTAPSE4   = 161;	/* synapse back to presynaptic node */
+ SYNNUM4    = 162;	/* number of synapses per connection */
+ SENSCA4    = 163;	/* synaptic release sensitivity calcium */
+ SGAIN4     = 164;	/* synaptic gain */
+ SVGAIN4    = 165;	/* synaptic vgain */
+ SDURH4     = 166;	/* synaptic high pass time const. */
+ SNFILTH4   = 167;	/* synaptic high pass nfilt */
+ SHGAIN4    = 168;	/* synaptic high pass gain */
+ SVSIZ4     = 169;	/* synaptic vesicle size */
+ SCOND4     = 170;	/* synaptic conductance */
+ STHRESH4   = 171;	/* synaptic threshold */
+ SVNOISE4   = 172;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR4      = 173;	/* synaptic event time const. */
+ SNFILT4    = 174;	/* synaptic vesicle nfilt */
+ STRCONC4   = 175;	/* synaptic transmitter concentration. */
+ SRESP4     = 176;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT4   = 177;	/* second mesng. nfilt */
+ SCDUR4     = 178;	/* second mesng. time const. */
+ SCGAIN4    = 179;	/* synaptic second messenger gain */
+ SCNOISE4   = 180;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN4    = 181;	/* number of channels */
+ SUNIT4     = 182;	/* synaptic channel unitary conductace */
+ SVREV4     = 183;	/* synaptic reversal potential */
+
+ CELPOST5   = 184;	/* cell type to connect to (neg, no conn) */
+ CONPOST5   = 185;	/* connection number for postsyn cell */
+ CELDIV5    = 186;	/* number of postsyn cells to connect to */
+ GROWPRE5   = 187;	/* grow when making conn to postsyn cell */
+ USEDYAD5   = 188;	/* synapse is dyad using preexisting type */
+ DYADTYP5   = 189;	/* type of dyad synapse to connect with */
+ AUTAPSE5   = 190;	/* synapse back to presynaptic node */
+ SYNNUM5    = 191;	/* number of synapses per connection */
+ SENSCA5    = 192;	/* synaptic release sensitivity calcium */
+ SGAIN5     = 193;	/* synaptic gain */
+ SVGAIN5    = 194;	/* synaptic vgain */
+ SDURH5     = 195;	/* synaptic high pass time const. */
+ SNFILTH5   = 196;	/* synaptic high pass nfilt */
+ SHGAIN5    = 197;	/* synaptic high pass gain */
+ SVSIZ5     = 198;	/* synaptic vesicle size */
+ SCOND5     = 199;	/* synaptic conductance */
+ STHRESH5   = 200;	/* synaptic threshold */
+ SVNOISE5   = 201;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR5      = 202;	/* synaptic event time const. */
+ SNFILT5    = 203;	/* synaptic vesicle nfilt */
+ STRCONC5   = 204;	/* synaptic transmitter concentration. */
+ SRESP5     = 205;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT5   = 206;	/* second mesng. nfilt */
+ SCDUR5     = 207;	/* second mesng. time const. */
+ SCGAIN5    = 208;	/* synaptic second messenger gain */
+ SCNOISE5   = 209;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN5    = 210;	/* number of channels */
+ SUNIT5     = 211;	/* synaptic channel unitary conductace */
+ SVREV5     = 212;	/* synaptic reversal potential */
+
+ NPARAMS    = 213;	/* number of neuron parameters */
+
+ CELPRE     =   0;	/* cell type to connect to (neg, no conn) */
+ CONPRE     =   1;	/* connection number of presyn cell */
+ CELCONV    =   2;	/* number of presyn cells to connect to */
+ GROWPOST   =   3;	/* grow when making conn from presyn cell */
+ NCONNP     =   4;	/* number of connection parameters */
+
+ CELPOST    =   0;	/* cell type to connect to (neg, no conn) */
+ CONPOST    =   1;	/* connection number for postsyn cell */
+ CELDIV     =   2;	/* number of postsyn cells to connect to */
+ GROWPRE    =   3;	/* grow when making conn to postsyn cell */
+ USEDYAD    =   4;	/* synapse is dyad using preexisting type */
+ DYADTYP    =   5;	/* type of dyad synapse to connect with */
+ AUTAPSE    =   6;	/* synapse back to presynaptic node */
+ SYNNUM     =   7;	/* number of synapses per connection */
+ SENSCA     =   8;	/* synaptic release sensitivity calcium */
+ SGAIN      =   9;	/* synaptic gain */
+ SVGAIN     =  10;	/* synaptic vgain */
+ SDURH      =  11;	/* synaptic high pass time const. */
+ SNFILTH    =  12;	/* synaptic high pass nfilt */
+ SHGAIN     =  13;	/* synaptic high pass gain */
+ SVSIZ      =  14;	/* synaptic vesicle size */
+ SCOND      =  15;	/* synaptic conductance */
+ STHRESH    =  16;	/* synaptic threshold */
+ SVNOISE    =  17;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR       =  18;	/* synaptic event time const. */
+ SNFILT     =  19;	/* synaptic vesicle nfilt */
+ STRCONC    =  20;	/* synaptic transmitter concentration. */
+ SRESP      =  21;	/* synaptic response (ampa,gaba,gj,etc. */
+ SCNFILT    =  22;	/* second mesng. nfilt */
+ SCDUR      =  23;	/* second mesng. time const. */
+ SCGAIN     =  24;	/* synaptic second messenger gain */
+ SCNOISE    =  25;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN     =  26;	/* number of channels */
+ SUNIT      =  27;	/* synaptic channel unitary conductace */
+ SVREV      =  28;	/* synaptic reversal potential */
+ NSYNP      =  29;	/* number of synaptic parameters */
+
+ NCONNI     =   8;	/* number of input connection cell types */
+ NCONNO     =   5;	/* number of output connection cell types  */
+
+ xglut      =   1;	/* generic glutamate response */
+ xampa      =   2;	/* AMPA synaptic response */
+ xampa5     =   3;	/* AMPA type 5 synaptic response */
+ xkainate   =   4;	/* Kainate synaptic response */
+ xmglur6    =   5;	/* mGluR6 synaptic response */
+ xgaba      =   6;	/* GABA synaptic response */
+ xgly       =   7;	/* Glycine synaptic response */
+ xgapj      =   8;	/* gap junction synaptic response */
+ xdyad      =   9;	/* dyad synapse (uses other resp type) */
+ nresptypes =  10;	/* number of synaptic types */
+
+/* insert params from "maknval.n" above here */
+ 
+NCELINFO  = 10;		/* =0 -> cell count, = 1-9 -> cell numbers connecting */
+NCELLS = 0;
+CELN   = 1;
+
+NBRANCHED = 0;                /* not branched, separate dendrites for each input */
+BRANCHED  = 1;                /* branched dendritic tree */
+HBRANCHED = 2;                /* highly branched */
+SBRANCHED = 3;                /* starburst branching */
+
+dim cname[nceltypes];			/* cell names */
+dim rname[nresptypes];			/* synaptic types */
+dim nval[nceltypes][NPARAMS];		/* cell build params */
+dim anatfiles[nceltypes];		/* cell anatomy file names */
+
+dim cellconn [nceltypes][nceltypes];	/* connections to other cell types */
+dim pickden [nceltypes] = {{0}};	/* dendrites to allow connection to */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc initneurvals()
+
+/* Set the parameters describing the neurons and their circuits */
+
+{
+    local i,n,p;
+
+  cname [xrod]   = "rod";		/* set the names */
+  cname [xcone]  = "cone";
+  cname [hbat]   = "hbat";
+  cname [ha]     = "ha";
+  cname [hb]     = "hb";
+  cname [rbp]    = "rbp";
+  cname [cbp]    = "cbp";
+  cname [hbp]    = "hbp";
+  cname [aii]    = "aii";
+  cname [am]     = "am";
+  cname [amh]    = "amh";
+  cname [ams]    = "ams";
+  cname [sb]     = "sbac";
+  cname [a17]    = "a17";
+  cname [gc]     = "gc";
+  cname [dsgc]   = "dsgc";
+  cname [gcoff]  = "gcoff";
+
+  rname [xglut]	   = "glut";
+  rname [xampa]	   = "ampa";
+  rname [xampa5]   = "ampa5";
+  rname [xkainate] = "kainate";
+  rname [xmglur6]  = "mGluR6";
+  rname [xgaba]	   = "gaba";
+  rname [xgly]	   = "gly";
+  rname [xgapj]	   = "gj";
+  rname [xdyad]	   = "dyad";
+
+  for (n=0; n<nceltypes; n++) 	/* zero the array */
+    for (p=0; p<NPARAMS; p++)
+      nval[n][p] = 0;
+
+  /* Realistic neuron files */
+
+  anatfiles[xrod]  = "";		/* set the names */
+  anatfiles[xcone] = "";
+  anatfiles[hbat]  = "";
+  anatfiles [ha]   = "";
+  anatfiles [hb]   = "";
+  anatfiles [rbp]  = "";
+  anatfiles [cbp]  = "";
+  anatfiles [hbp]  = "";
+  anatfiles [aii]  = aiifile;
+  anatfiles [sb]   = sbfile;
+  anatfiles [am]   = amfile;
+  anatfiles [amh]  = amfile;
+  anatfiles [ams]  = "";
+  anatfiles [a17]  = a17file;
+  anatfiles [gc]   = gcfile;
+  anatfiles [dsgc] = dsgcfile;
+  anatfiles [gcoff] = gcofffile;
+
+  if (notinit(nvalfile)) nvalfile = "nval.n";	/* default neuron params */
+
+  if (ninfo >=3) fprintf(stderr,"# makcel.n: using nval file '%s'\n", nvalfile);
+
+  fread (nvalfile,tnval,nlines,ncols);
+
+  if (ncols != nceltypes) {
+    fprintf (stderr,"retsim: error in reading %s, wrong number of cols %g\n",
+		nvalfile, ncols);
+  };
+  if (nlines != NPARAMS) {
+    fprintf (stderr,"retsim: error in reading %s, wrong number of params %g\n",
+		nvalfile,nlines);
+  };
+  for (i=0; i<ncols; i++) 	/* transpose array */
+    for (j=0; j<nlines; j++) {
+      nval[i][j] = tnval[j][i];
+  };
+};
+
+  /* print out neuron values to check */
+
+  /*
+  for (j=0; j<NPARAMS; j++) {		// print nval array
+    for (i=0; i<nceltypes; i++ ) {
+     printf ("%-7.3g ", nval[i][j]);
+    };
+    print "\n";
+  }; /* */
+
+/*-----------------------------------------*/
+
+func find_ct(ct_str)
+
+{
+ if (ct_str) {
+   for (n=0; n<nceltypes; n++) {
+     if (cname[n] == ct_str) {
+       found = 1;
+       break;
+     };
+   };
+   if (found) return (n);
+ }; 
+ return (-1);
+};
+
+/*-----------------------------------------*/
+
+proc setn (cel,var,val)
+
+/* Set a value in the neural params table */
+
+{
+  nval[cel][var] = val;
+};
+
+/*-----------------------------------------*/
+
+func getn (cel,var)
+
+/* Get a value from the neural params table */
+
+{
+  return nval[cel][var];
+};
+
+
+/*-----------------------------------------*/
+
+func anysetn (var)
+
+/* Check if any cell has a value set for a param in the neural params table */
+
+{
+   local ct, found;
+
+  for (found=ct=0; ct<nceltypes; ct++) {
+    if (nval[ct][var]!= 0) {
+      found = 1;
+      break;
+    };
+  };
+  if (found) return 1
+  else       return 0;
+};
+
+/*-----------------------------------------*/
+
+func getcv(ctype,var,n)
+
+/* Get a value from the synaptic input connection table. */
+/*  "var" ranges from CELPRE (0) to CELCONV (NCONNP-1) */
+
+{
+  if (n>0)
+  return nval[ctype][CELPRE1+var+(n-1)*NCONNP]
+  else return 0;
+};
+
+/*-----------------------------------------*/
+
+proc setcv(ctype,var,n,val)
+
+/* Set a value from the synaptic input connection table. */
+/*  "var" ranges from CELPRE (0) to CELCONV (NCONNP-1) */
+
+{
+  nval[ctype][CELPRE1+var+(n-1)*NCONNP] = val;
+};
+
+/*-----------------------------------------*/
+
+func getsv(ctype,var,n)
+
+/* Given presynaptic celltype and synapse type (n),
+   look up a certain parameter "var" in the table*/
+/*  "var" ranges from CELPOST (0) to SVREV (NSYNP-1) */
+
+{
+  if (n>0)
+  return nval[ctype][CELPOST1+var+(n-1)*NSYNP]
+  else return 0;
+};
+
+/*-----------------------------------------*/
+
+proc setsv(ctype,var,n,val)
+
+/* Set a value from the synaptic parameter table. */
+/*  "var" ranges from CELPOST (0) to SVREV (NSYNP-1) */
+
+{
+  nval[ctype][CELPOST1+var+(n-1)*NSYNP] = val;
+};
+
+/*-----------------------------------------*/
+
+proc initsynconn()
+
+  /* find and index all connections */
+
+{
+    local i,j,ct;
+
+  for (ct=0; ct<nceltypes; ct++)
+    for (j=0; j<nceltypes; j++) {
+      cellconn[ct][j] = 0;
+    };
+
+  for (ct=0; ct<nceltypes; ct++) {		/* For all cell types */
+    for (j=1; j<=NCONNO; j++) {			/* check all connections. */
+      if (getsv(ct,AUTAPSE,j) == 0) { 		/* If not autapse */
+        if (getsv(ct,CELPOST,j) >= 0) {		/* If ct cell connects, */
+ 	  cellconn[ct][getsv(ct,CELPOST,j)] = j;  /* save connection num. */
+        };
+      };
+    };
+  };
+
+/*
+ printf("#   Connections between cells\n");
+ printf("\n");
+ for (j=0; j<nceltypes; j++) printf ("%9s ",cname[j]);
+ printf("\n");
+ print cellconn;
+*/
+
+};
+
+/*-----------------------------------------*/
+
+func getconn(a,b)
+
+/* Find the synaptic type from cell a to cell b. */
+
+{
+  if (a>=0 && b>=0) {
+    return cellconn[a][b];
+  }
+  else return 0;
+};
+
+/*-----------------------------------------*/
+
+include funcfile;		/* useful functions "celfuncs.n" */
+include segfile;		/* create dendritic/axonal segs "celseg.n" */
+
+/* Array to hold numbers of dendrites: */
+
+dim celnode[nceltypes][2000] = {{0}};
+
+/*-----------------------------------------*/
+
+proc makhden(ctype,n,nden,xpos,ypos)
+
+/* make Hz dendrites according to parameters */
+
+/* diabs  = starting size of dendrite for taper */
+/* diaspc = space constant of dendrite taper */
+
+
+{
+   local i;
+   local angl,sumangl;
+   local xden, yden;
+   local leng, thisangl;
+   local crm,cvrest;
+   local diabs,diaspc;
+   local sn;
+
+/* if (ctype==ha) printf ("ha # %g nden %g diabs %g diaspc %g\n",
+		n,nden,diabs,diaspc);
+if (ctype==hb) printf ("hb # %g nden %g diabs %g diaspc %g\n",
+		n,nden,diabs,diaspc);
+/* */
+
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);	/* starting taper diameter */
+   diaspc = getn(ctype,TAPERSPC);	/* taper space constant */
+
+   celnode[ctype][n] = 0;
+   at [ctype][n][0] loc (xpos,ypos,getn(ctype,SOMAZ))
+			sphere dia=getn(ctype,SOMADIA) rm=crm vrest=cvrest;
+   angl = 360 / nden;
+   sumangl = 0;
+   for (i=1; i<=nden; i++) {
+     thisangl = angl * (1 + (rand()-0.5)*0.2);
+     sumangl += thisangl;
+     leng = (rand() + 0.2)/1.2 * rad * 0.8;
+//printf ("angle %g length %g\n", angl, leng);
+
+     xden = cos(sumangl/DEG) * leng + xpos;
+     yden = sin(sumangl/DEG) * leng + ypos;
+//printf ("loc %g %gi\n", xden, yden);
+     at [ctype][n][++celnode[ctype][n]] loc (xden,yden,getn(ctype,DENDARBZ)+1);
+
+     sn = celnode[ctype][n];
+     celnode[ctype][n] = taperdistden (ctype,n,0,celnode[ctype][n],
+				diabs,diaspc,celnode[ctype][n]);
+     if (leng < rad * 0.5) {                  /* make first branch */
+           local shortang, shortlen, shsumang;
+           local xden1, yden1;
+
+        shortlen  = rrange(0.3,1) * (rad-leng) * 0.9;
+	if (shortlen+leng > rad) shortlen = rad - leng;
+        shortang = angl * rrange(.33,1) * 0.5 * (rad*0.4)/shortlen;
+        shsumang = sumangl - shortang;
+
+        xden1 = cos(shsumang/DEG) * shortlen + xden;
+        yden1 = sin(shsumang/DEG) * shortlen + yden;
+      at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ)+2);
+      celnode[ctype][n] = taperdistden(ctype,n,sn,celnode[ctype][n],
+				diabs,diaspc,celnode[ctype][n]);
+
+        shortlen  = rrange(.3,1) * (rad-leng) * 0.9;
+	if (shortlen+leng > rad) shortlen = rad - leng;
+        shortang = angl * rrange(.33,1) * 0.5 * (rad*0.4)/shortlen;
+        shsumang = sumangl + shortang;
+
+        xden1 = cos(shsumang/DEG) * shortlen + xden;
+        yden1 = sin(shsumang/DEG) * shortlen + yden;
+      at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ)+2);
+      celnode[ctype][n] = taperdistden(ctype,n,sn,celnode[ctype][n],
+				diabs,diaspc,celnode[ctype][n]);
+     };
+   };     /* for (i=0;i<nden;) */
+};
+
+/*-----------------------------------------*/
+
+proc extend_gc_branch(brnum,obrnum,ctype,n,sn,cumleng,angl,ord)
+
+  /* Extend an existing branch on a ganglion cell dendrite. */
+  /*  Includes competition between branches of same cell type. */
+
+{
+	local i, do_branch, nconn,nelem;
+	local cnum, cnod, cbrnum;
+	local leng, cmindist, dist, mdist, brprob_dia, brprob_dist;
+	local n2a, n2b, n2c, n2d, csn, sdia;
+
+        local shortang, shortlen, shsumang, sangl;
+        local nsn, xm, ym, zm, xden, yden,xden1,yden1;
+        local brdir,brdia,edia,mdia;
+
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);
+   diaspc = getn(ctype,TAPERSPC);
+   stratd  = getn(ctype,STRATDIA); /* inside radius of stratified dend. annulus */
+
+   brdir = ffs();		/* branch direction */
+   mdia   = rrange(0.6, 0.9);	/* dia of "main" side of branch */
+   brdia  = rrange(0.3, 0.6);	/* dia of side branch */
+
+	/* find branches at distal end of segment */
+
+   n1a = element brnum -> node1a;
+   n1b = element brnum -> node1b;
+   n1c = element brnum -> node1c;
+   n1d = element brnum -> node1d;
+
+   n2a = element brnum -> node2a;
+   n2b = element brnum -> node2b;
+   n2c = element brnum -> node2c;
+   n2d = element brnum -> node2d;
+   sdia = element brnum -> dia;
+
+   nconn = node [n2a][n2b][n2c][n2d] -> numconn;
+   xden = node [n2a][n2b][n2c][n2d] -> xloc;
+   yden = node [n2a][n2b][n2c][n2d] -> yloc;
+
+   xden1 = node [n1a][n1b][n1c][n1d] -> xloc;
+   yden1 = node [n1a][n1b][n1c][n1d] -> yloc;
+
+   xdiff = xden - xden1;
+   ydiff = yden - yden1;
+   if (xdiff==0) xdiff=1e-6;
+   sangl = atan(ydiff/xdiff) * DEG;
+   if (xdiff < 0) sangl += 180;
+
+   /* if (ninfo>=3) printf ("xden %g %g %g %g %g %g\n",
+			n1c,xden1,yden1,n2c,xden,yden); /* */
+   csn = n2c;
+
+   if (ninfo>=3) printf ("tracing from node %g %g %g\n",
+			n2a,n2b,n2c);
+   if (ninfo>=3) printf ("nconn %g\n",nconn);
+   if (ninfo>=3) printf ("sangl %g\n",sangl);
+
+	/* follow each branch to its end */
+
+   if (nconn>1) {
+     for (ncabl=0,i=1; i<=nconn; i++) {
+        nelem = node [n2a][n2b][n2c] -> i;
+        if (ninfo>=3) printf ("conn %g: elem %g\n", i,nelem);
+	if (nelem==brnum) continue;
+        if (element nelem->ntype != ntype(cable)) continue;
+        if (ninfo>=3) printf ("following conn %g: elem %g\n", i,nelem);
+	leng = element nelem->length;
+        extend_gc_branch(nelem,brnum,ctype,n,n2c,cumleng+leng,angl,ord);
+     };
+   }
+   else {	/* If this is the end, add to it */
+
+
+     if (ninfo>=3) printf ("found the end at node %g %g %g, %g\n", n2a,n2b,n2c,sn);
+
+	/* compute location of new tip of main dendrite */
+
+     shortlen  = rrange (0.8,1.2) * rad * 0.2; //(rad*1.5-cumleng) *  0.5;
+     if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+     shortang = angl * rrange(0.6,1) * 0.6;
+     shsumang = sangl + shortang * brdir;
+     if (shsumang < 0) shsumang += 360;
+  if (ninfo>=3) printf ("shsumang = %g %g %g\n",shsumang,sangl,shortang);
+        if (ninfo>=3) printf ("xden yden %g %g\n", xden,yden);
+     xm = cos(shsumang/DEG) * shortlen + xden;
+     ym = sin(shsumang/DEG) * shortlen + yden;
+     zm = getn(ctype,DENDARBZ);
+     nsn = ++celnode[ctype][n];
+     at [ctype][n][nsn] loc(xm,ym,zm);
+
+		/* Check proximity of other branches of same cell type. */
+
+     cmindist = mdist = 1e10; /* now find closest dendrite */
+     cbrnum = -1;
+     foreach cable ?cbrnum node [ctype] ?cnum ?cnod {
+       if (cbrnum==brnum) continue;		/* ignore this cable */
+       if (cbrnum==obrnum) continue;		/* ignore this cable */
+//       if ((dist=e3dist([n2a][n2b][n2c],cbrnum)) < cmindist) {
+//           cmindist = dist;			/* remember this dist */
+//       };
+       if ((dist=e3dist([ctype][n][nsn],cbrnum)) < mdist) {
+           cmindist = dist;			/* remember this dist */
+       };
+
+ //if (ninfo>=3) printf ("cnod %g n2c %g dist %g\n", cnod,n2c,dist);
+     };   /* foreach cable, remember dist. */
+
+		/* Extend this branch if other branches are far enough away. */
+
+     if (ninfo>=3) printf ("closest branch %g\n", cmindist);
+
+     if (sdia > getn(ctype,DTIPDIA)*1.5) {	/* only grow if fat enough */
+
+       growthresh = getn (ctype,GROWTHR);
+       if (cmindist > growthresh) { 		/* grow, maybe make branch */
+
+ 	 do_branch = 0;
+
+         if (cmindist > growthresh*2 &&
+            sdia > getn(ctype,DTIPDIA)*3) {  /* only make branch if fat enough */
+	    brprob_dist =  cmindist / growthresh / 30;
+	    brprob_dia  =  sdia / getn(ctype,DTIPDIA)/20;
+     if (ninfo>=3) printf ("branch probability %g %g\n", brprob_dia, brprob_dist);
+	    //if (brprob_dist < brprob_dia) brprob_dia = brprob_dist;
+	    do_branch = (rand() < (brprob_dia));
+//	    if (mdist < growthresh*2) do_branch = 0;
+
+	 };
+				/* extend main dendrite */
+	 if (! do_branch) {
+	    brdir = 0;
+	 };
+
+
+/*  If end of new dendritic tip is too close to cells of same type, */
+/*   move tip to make dendrite shorter. */
+
+	 if (cmindist < growthresh*2) {
+            shsumang = sangl + shortang * brdir;
+     	    xm = cos(shsumang/DEG) * shortlen * 0.5 + xden;
+     	    ym = sin(shsumang/DEG) * shortlen * 0.5 + yden;
+	    at [ctype][n][nsn] loc(xm,ym,zm);
+	 };
+
+      if (ninfo>=3) printf ("extending branch from %g to %g\n", csn, nsn);
+
+	 edia = taperdia(ctype,n,csn,ctype,n,celnode[ctype][n],sdia,diaspc);
+         make_celseg (ctype, n, csn, celnode[ctype][n],cd1=sdia*mdia,cd2=edia,DEND);
+
+         if (do_branch) {		/* make side branch */
+
+	/* Make side branch if other branches are further than threshold. */
+
+	   shortlen  = rrange (0.6,1.0) * (rad*1.2-cumleng)*0.3;
+	   if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+	   shortang = angl * rrange(0.6,1) * 0.5;
+	   shsumang = sangl - shortang * brdir;
+
+	   xden1 = cos(shsumang/DEG) * shortlen + xden;
+	   yden1 = sin(shsumang/DEG) * shortlen + yden;
+	  at [ctype][n][++celnode[ctype][n]] loc(xden1,yden1,getn(ctype,DENDARBZ));
+	   nsn = celnode[ctype][n];
+     if (ninfo>=3) printf ("making side branch to %g\n", nsn);
+	   edia = taperdia(ctype,n,csn,ctype,n,celnode[ctype][n],sdia,diaspc);
+           make_celseg (ctype, n, csn, celnode[ctype][n],cd1=sdia*brdia,
+							cd2=edia*brdia,DEND);
+        };
+
+     };		/* cmindist > growthresh */
+
+    }	/* if (sdia > ) */
+    else  erase node [ctype][n][nsn];
+
+   };   /* this is end */
+
+   if (ninfo>=3) printf ("extend_gc_branch end\n");
+};
+
+/*-----------------------------------------*/
+
+proc mak_gc_branch (ctype,n,sn,cumleng,angl,sumangl,cxden,cyden,ord,sdia)
+
+  /* Make a branch on a ganglion cell dendrite */
+
+{
+        local shortang, shortlen, shsumang;
+        local nsn, xden1, yden1;
+        local brdir,brdia,edia,mdia;
+
+ if (ord < 5) {
+
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);
+   diaspc = getn(ctype,TAPERSPC);
+   stratd  = getn(ctype,STRATDIA); /* inside radius of stratified dend. annulus */
+
+   brdir = ffs();		/* branch direction */
+   mdia   = rrange(0.6, 0.9);	/* dia of "main" side of branch */
+   brdia  = rrange(0.3, 0.6);	/* dia of side branch */
+
+	/* make first order branch */
+
+   shortlen  = rrange (0.6,1) * (rad-cumleng) * (1-stratd) * 0.6;
+   shortlen  = rrange (0.6,1) * (rad*1.5-cumleng) *  0.3;
+   if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+   shortang = angl * rrange(0.3,1) * 0.5; // * (rad*0.4 + rad)/shortlen;
+   shsumang = sumangl + shortang * brdir;
+
+   xden1 = cos(shsumang/DEG) * shortlen + cxden;
+   yden1 = sin(shsumang/DEG) * shortlen + cyden;
+   at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ));
+   nsn = celnode[ctype][n];
+   edia = taperdia(ctype,n,sn,ctype,n,celnode[ctype][n],sdia,diaspc);
+           
+   make_celseg (ctype, n, sn, celnode[ctype][n],	cd1=sdia*mdia,
+						cd2=edia*mdia,DEND);
+
+     /* make higher order dendrite */
+
+    if (cumleng+shortlen < rad * 0.9)
+      mak_gc_branch (ctype,n,nsn,cumleng+shortlen,angl,
+			shsumang,xden1,yden1,ord+1,edia);
+
+	/* make side branch */
+
+   shortlen  = rrange (0.6,1.0) * (rad*1.2-cumleng)*1.0;
+   if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+   shortang = angl * rrange(0.5,1) * 0.5; // * (rad*0.4)/shortlen;
+   shsumang = sumangl - shortang * brdir;
+
+   xden1 = cos(shsumang/DEG) * shortlen + cxden;
+   yden1 = sin(shsumang/DEG) * shortlen + cyden;
+   at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ));
+   nsn = celnode[ctype][n];
+   edia = taperdia(ctype,n,sn,ctype,n,celnode[ctype][n],sdia,diaspc);
+
+   make_celseg (ctype, n, sn, celnode[ctype][n],	cd1=sdia*brdia,
+						cd2=edia*brdia,DEND);
+
+     /* make higher order dendrite */
+
+ //    if (cumleng+shortlen < rad * 1.0)
+ //      mak_gc_branch (ctype,n,nsn,cumleng+shortlen,angl,
+ //    			shsumang,xden1,yden1,ord+3,edia);
+
+ };
+};
+
+/*-----------------------------------------*/
+
+proc mak_am_branch (ctype,n,sn,cumleng,angl,sumangl,cxden,cyden,ord,sdia)
+
+  /* Make a branch on an amacrine cell dendrite */
+
+{
+        local shortang, shortlen, shsumang;
+        local nsn, xden1, yden1;
+        local brdir,brdia,edia,mdia;
+
+ if (ord < 5) {
+
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);
+   diaspc = getn(ctype,TAPERSPC);
+   stratd  = getn(ctype,STRATDIA); /* inside radius of stratified dend. annulus */
+
+   brdir = ffs();		/* branch direction */
+   mdia   = rrange(0.6, 0.9);	/* dia of "main" side of branch */
+   brdia  = rrange(0.3, 0.6);	/* dia of side branch */
+
+	/* make first order branch */
+
+   shortlen  = rrange (0.6,1) * (rad-cumleng) * (1-stratd) * 0.6;
+   shortlen  = rrange (0.6,1) * (rad*1.5-cumleng) *  0.3;
+   if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+   shortang = angl * rrange(0.3,1) * 0.5; // * (rad*0.4 + rad)/shortlen;
+   shsumang = sumangl + shortang * brdir;
+
+   xden1 = cos(shsumang/DEG) * shortlen + cxden;
+   yden1 = sin(shsumang/DEG) * shortlen + cyden;
+   at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ));
+   nsn = celnode[ctype][n];
+   edia = taperdia(ctype,n,sn,ctype,n,celnode[ctype][n],sdia*mdia,diaspc);
+
+   make_celseg (ctype, n, sn, celnode[ctype][n],	cd1=sdia*mdia,
+						cd2=edia,DEND);
+     /* make higher order dendrite */
+
+    if (cumleng+shortlen < rad * 0.8)
+      mak_gc_branch (ctype,n,nsn,cumleng+shortlen,angl,
+			shsumang,xden1,yden1,ord+1,edia);
+
+	/* make side branch */
+
+   shortlen  = rrange (0.6,1.0) * (rad-cumleng)*.8;
+   if (shortlen+cumleng > rad) shortlen = rad - cumleng;
+   shortang = angl * rrange(0.5,1) * 0.5; // * (rad*0.4)/shortlen;
+   shsumang = sumangl - shortang * brdir;
+
+   xden1 = cos(shsumang/DEG) * shortlen + cxden;
+   yden1 = sin(shsumang/DEG) * shortlen + cyden;
+   at [ctype][n][++celnode[ctype][n]] loc (xden1,yden1,getn(ctype,DENDARBZ));
+   nsn = celnode[ctype][n];
+   edia = taperdia(ctype,n,sn,ctype,n,celnode[ctype][n],sdia*brdia,diaspc);
+   make_celseg (ctype, n, sn, celnode[ctype][n],	cd1=sdia*brdia,cd2=edia,DEND);
+
+     /* make higher order dendrite */
+
+     if (cumleng+shortlen < rad * 1.0)
+       mak_gc_branch (ctype,n,nsn,cumleng+shortlen,angl,
+     			shsumang,xden1,yden1,ord+3,edia);
+
+ };
+};
+
+/*-----------------------------------------*/
+
+proc mak_aii(ctype,n,nden,xpos,ypos)
+
+{
+   local i;
+   local angl,sumangl;
+   local xden, yden;
+   local leng, thisangl;
+   local crm,cvrest;
+   local diabs,diaspc,edia;
+   local stratd,pd,sn;
+   
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);
+   diaspc = getn(ctype,TAPERSPC);
+   stratd  = getn(ctype,STRATDIA); /* inside radius of stratified dend. annulus */
+
+   celnode[ctype][n] = pd = 0;
+   at [ctype][n][soma] loc (xpos,ypos,getn(ctype,SOMAZ));
+   at [ctype][n][soma] sphere dia 10;
+   make_celseg (ctype, n, soma, soma, cd1=getn(ctype,SOMADIA),cd2=0,SOMA);
+
+   angl = 360 / nden;
+   sumangl = 0;
+   for (i=1; i<=nden; i++) {
+     thisangl = angl * rrange (0.9, 1.1);
+     sumangl += thisangl;
+     leng = rrange(0.2,.5) * rad * stratd;
+//printf ("angle %g length %g\n", angl, leng);
+
+     xden = cos(sumangl/DEG) * leng + xpos;
+     yden = sin(sumangl/DEG) * leng + ypos;
+//printf ("loc %g %gi\n", xden, yden);
+     at [ctype][n][++celnode[ctype][n]] loc (xden,yden,getn(ctype,DENDARBZ));
+
+     sn = celnode[ctype][n];
+     edia = taperdia(ctype,n,pd,ctype,n,celnode[ctype][n],diabs,diaspc);
+     make_celseg (ctype, n, pd, celnode[ctype][n],cd1=diabs,cd2=edia,DEND);
+
+     if (leng < rad * 0.5) {                  /* make secondary dendrite */
+	   mak_am_branch (ctype,n,sn, leng,angl,sumangl,xden,yden,2,edia);
+      };
+
+   };
+};
+
+/*-----------------------------------------*/
+
+proc mak_amac(ctype,n,nden,xpos,ypos,morph)
+
+{
+   local i;
+   local angl,sumangl;
+   local xden, yden;
+   local leng, thisangl;
+   local crm,cvrest;
+   local diabs,diaspc,edia;
+   local stratd,pd,sn;
+
+   crm    = getn(ctype,RM);
+   cvrest = getn(ctype,VSTART);
+   rad    = getn(ctype,DTREEDIA)/2;
+   diabs  = getn(ctype,TAPERABS);
+   diaspc = getn(ctype,TAPERSPC);
+   stratd  = getn(ctype,STRATDIA); /* inside radius of stratified dend. annulus */
+
+   celnode[ctype][n] = pd = 0;
+   at [ctype][n][soma] loc (xpos,ypos,getn(ctype,SOMAZ));
+   make_celseg (ctype, n, soma, soma, cd1=getn(ctype,SOMADIA),cd2=0,SOMA);
+
+   angl = 360 / nden;
+   sumangl = 0;
+   for (i=1; i<=nden; i++) {
+     thisangl = angl * rrange (0.9, 1.1);
+     sumangl += thisangl;
+     leng = rrange(0.2,.5) * rad * stratd;
+//printf ("angle %g length %g\n", angl, leng);
+
+     xden = cos(sumangl/DEG) * leng + xpos;
+     yden = sin(sumangl/DEG) * leng + ypos;
+//printf ("loc %g %gi\n", xden, yden);
+     at [ctype][n][++celnode[ctype][n]] loc (xden,yden,getn(ctype,DENDARBZ));
+
+     sn = celnode[ctype][n];
+     edia = taperdia(ctype,n,pd,ctype,n,celnode[ctype][n],diabs,diaspc);
+     make_celseg (ctype, n, pd, celnode[ctype][n],cd1=diabs,cd2=edia,DEND);
+
+     if (leng < rad * 0.5) {                  /* make secondary dendrite */
+	   mak_am_branch (ctype,n,sn, leng,angl,sumangl,xden,yden,2,edia);
+      };
+
+   };     /* for (i=0;i<nden;) */
+};
+
+/*-------------------------------------------------------------*/
+
+/* Diameter of AXON_THIN region is set to "ath_dia" in anatfile.
+   Then when read in, the value of ath_dia determines the
+   diameter used.  The advantage of this is that we can test
+   the effect of different diameters easily. */
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc mak_real_cel(ct,cn,xpos,ypos,theta,dendn)
+
+/* make real cell from anatomy file */
+
+{
+    local i, r, cd1, cd2, nod, maxnod, somaoffset;
+    local dia_factor;
+
+
+  if (notinit(ath_dia)) ath_dia = 0.6667;    /* default dia of thin segment */
+
+  if (notinit(confdir)) confdir = "runconf";	/* default conf dir */
+  fread (anatfiles[ct], gccabldata, clines, ccols);	/* read anatomy file */
+
+  if (notinit(clines)) {			/* if not found, try with confdir */
+     fread (confdir + "/" + anatfiles[ct], gccabldata, clines, ccols);	/* read anatomy file */
+     if (notinit(clines)) {			/* if not found, try with confdir */
+       fprintf (stderr,"Missing anatomy file '%s'.\n",anatfiles[ct]);
+       clines = 0;
+       exit;
+     };
+  };
+
+  for (i=0; i<clines; i++) {	/*find soma, and set offset (used below)*/
+    if(gccabldata[i][REG]==SOMA)
+      somaoffset = gccabldata[i][AZ];
+  };
+
+  maxnod = 0;
+  for (i=0; i<clines; i++) {				/* locate nodes first */
+
+    if ((gccabldata[i][REG]==DEND) ||
+        (gccabldata[i][REG]==DEND_PROX)) 
+    	if (!getn(ct,MAKE_DEND)) continue;		/* skip dendrites */
+
+    if ((gccabldata[i][REG]==AXON) ||
+        (gccabldata[i][REG]==AXON_THIN) ||
+        (gccabldata[i][REG]==AXON_LONG) ||
+        (gccabldata[i][REG]==HILLOCK)) 
+       if (!getn(ct,MAKE_AXON)) continue;		/* skip axon */
+
+    if (gccabldata[i][REG]==AXON_LONG)
+        if (!getn(ct,MAKE_LONG)) continue;		/* skip long axon */
+
+    /* If "dendn" is set non-negative, */
+    /* skip all dendrites except the one specified by dendn */
+
+    if (ccols>DENDN) {
+      dend = gccabldata[i][DENDN];	/* get the dendrite number */
+      if ((dendn>=0) && (dend > soma) && (dendn!=dend)) continue;	
+    };
+
+    nod= gccabldata[i][NODE];		/* node number of segment */
+    ax = gccabldata[i][AX];		/* assume soma at (0,0) */
+    ay = gccabldata[i][AY];
+    az = gccabldata[i][AZ]-somaoffset;  /* make soma zero relative z coord */
+
+    dt = theta;
+    dx = ax * cos(dt) + ay * sin(dt);
+    dy = ax * sin(dt) - ay * cos(dt);
+
+    at [ct][cn][nod]                        	/* locate the nodes */
+      loc(xpos+dx, ypos+dy, getn(ct,SOMAZ)+az);	/* set soma z coord */ 
+
+   /* For starburst amacrine, set additional dia factor */
+   /*   but only for sb1 for now. */
+
+    if (ct==sb) {
+      r = sqrt(ax*ax + ay*ay);
+      if (i>0 && r < dia_prox_rad && sbfile=="sb1")
+        dia_factor = dia_prox_factor
+      else
+        dia_factor = 1;
+    } else
+        dia_factor = 1;
+
+    //fprintf(stderr, "dsgc nod %g: x=%g  y=%g z=%g\n",
+    //                      nod, xpos+dx, ypos+dy, getn(ct,SOMAZ)-az);
+
+    /* somaoffset is added to AZ, making it zero for soma;  */
+    /*   adding getn then makes z-coords. */
+
+    /* make the dendritic tree and axon */
+
+    make_celseg (ct, cn, nod, gccabldata[i][PAR],
+                 cd1=gccabldata[i][DIA]*dia_factor,cd2=0,
+                 gccabldata[i][REG]);
+    if (maxnod < nod) maxnod = nod;
+
+  }; /* for (i;;) */
+
+  celnode[ct][cn] = maxnod;
+};
+
+/*-------------------------------------------------------------*/
+
+proc mak_gc(ctype,n,nden,xpos,ypos,theta,morph)
+
+/* make gc dendrites according to parameters */
+
+/* diabs  = starting size of dendrite for taper */
+/* diaspc = space constant of dendrite taper */
+
+{
+   local i, brnum, d1,d2;
+   local angl,sumangl;
+   local xden, yden;
+   local leng, thisangl;
+   local diabs,diaspc,edia;
+   local stratd,pd,sn;
+   local csteps,nconn;
+
+  if (notinit(theta)) theta = 0; 
+  if (notinit(gcdendn)) gcdendn = -1;
+  if (morph==MORPH_REAL) { 		/* realistic gc morphology */
+    mak_real_cel(ctype,n,xpos,ypos,theta,gcdendn);
+  }
+  else if (morph==MORPH_A1) {		/* alpha-like gc artif morphology */
+    crm    = getn(ctype,RM);
+    cvrest = getn(ctype,VSTART);
+    rad    = getn(ctype,DTREEDIA)/2;
+    diabs  = getn(ctype,TAPERABS);
+    diaspc = getn(ctype,TAPERSPC);
+    stratd  = getn(ctype,STRATDIA); /* inside rad of stratified dend. annulus */
+
+    celnode[ctype][n] = 0;
+    at [ctype][n][soma] loc (xpos,ypos,getn(ctype,SOMAZ));
+
+    /* make the dendritic tree and axon */
+    make_celseg (ctype, n, soma, soma, d1=getn(ctype,SOMADIA),d2=0,SOMA);
+
+    /* make primary dendrite */
+    pd = celnode[ctype][n] = 1;		/* soma is start of primary dend */
+    pdz = (getn(ctype,DENDARBZ) + getn(ctype,SOMAZ)) * 0.5;
+
+    at [ctype][n][pd] loc (xpos,ypos,pdz);
+    celnode[ctype][n] = taperdistden (ctype,n,0,pd,diabs,diaspc,pd);
+
+    angl = 360 / nden;
+    sumangl = 0;
+    for (i=1; i<=nden; i++) {
+      thisangl = angl * rrange (0.9, 1.1);
+      sumangl += thisangl;
+      leng = rrange(0.3,1) * rad * stratd;
+//printf ("angle %g length %g\n", angl, leng);
+
+      xden = cos(sumangl/DEG) * leng + xpos;
+      yden = sin(sumangl/DEG) * leng + ypos;
+      at [ctype][n][++celnode[ctype][n]] loc (xden,yden,getn(ctype,DENDARBZ));
+      sn = celnode[ctype][n];
+//printf ("sn %g loc %g %gi\n", sn, xden, yden);
+      edia = taperdia(ctype,n,pd,ctype,n,celnode[ctype][n],diabs,diaspc);
+      make_celseg (ctype, n, pd, celnode[ctype][n],cd1=diabs,cd2=edia,DEND);
+
+      if (leng < rad * 0.5)   		/* make secondary dendrite */
+ mak_gc_branch (ctype,n,sn, leng,angl,sumangl,xden,yden,2,edia);
+    };     /* for (i=0;i<nden;) */
+
+    /* This is the new part for "extending" gc branches */
+/*
+    csteps = 4;
+    for (j=0; j<csteps; j++) {
+      printf("cell step %g\n",j);
+      nconn = node [ctype][n][0] -> numconn;
+      for (i=1; i<=nconn; i++) {
+        brnum = node [ctype][n][0] -> i;
+        if (element brnum->ntype != ntype(cable))
+	  continue;
+        printf("den %g of %g, elem %g\n",i,nconn,brnum);
+        xden = node [ctype][n][soma] -> xloc;
+        yden = node [ctype][n][soma] -> yloc;
+        extend_gc_branch (brnum,brnum,ctype,n,0,leng,angl,2);
+      };
+    };
+*/
+
+  } 	/* morph==MORPH_A1) */
+
+  else if (morph==MORPH_A2) {			/* ds-like gc artif morphology */
+  }
+
+  else if (morph==MORPH3_SIMP){			/* simple straight cable */
+
+    at [ctype][n][soma] loc (xpos,ypos,z);
+    make_celseg(ctype, cellnum=n, soma, soma, gcdia=8, gcrm, gcregion=SOMA);
+
+  };
+};
+
+/*-------------------------------------------------------------*/
+
+proc makcell (ctype, n, xpos, ypos)
+
+/* Procedure to make the beginnings of a neuron. */
+
+{
+    local crm;
+    local rad, ct, cd1, cd2;
+    local bginten;
+
+  rad = getn(ctype,DTREEDIA) / 2;
+  if (rad <= 0) rad=1;
+  crm    = getn(ctype,RM);
+  cvrest = getn(ctype,VSTART);
+
+  if (ctype==xrod) { 		/* procedure to make rod */
+
+    /* simple rod: one compartment: */
+    at   [xrod][n][soma] rod (xpos,ypos,0) timec1 = 0.2
+                photnoise=pnoise darknoise=dnoise maxcond=20e-12;
+    at   [xrod][n][soma] loc (xpos,ypos,0)   sphere dia=2 rm=crm vrest=cvrest;
+    at   [xrod][n][axtrm]loc (xpos,ypos,0.5) sphere dia=2 rm=crm vrest=cvrest;
+    make_celseg (xrod, n, soma, axtrm, cd1=0.2,cd2=0,AXON);
+    celnode[ctype][n] = axtrm;
+
+    /* more realistic rod: OS, axon, terminal: 2 compartments */
+   /*
+    at   [xrod][n][0] rod (xpos,ypos,20) timec1 = 0.2 photnoise darknoise=0.2;
+    at   [xrod][n][0] loc (xpos,ypos,20) sphere dia 5 rm rodrm vrest=rodrest;
+    make_celseg (xrod, n, 0, 1, cd1=0.2,cd2=0,AXON);
+    at   [xrod][n][1] loc (xpos,ypos,0)  sphere dia=3 rm=crm vrest=cvrest;
+   /* */
+  }
+
+  else if (ctype==xcone) {	/* procedure to make cone */
+
+    if (notinit(bg_inten)) bginten = 1e4
+    else                   bginten = bg_inten;
+    /* simple cone: one compartment: */
+    at   [xcone][n][soma] loc (xpos,ypos,0) sphere dia=getn(ctype,SOMADIA)
+		vrev=getn(ctype,VREV) rm=crm vrest=cvrest;
+    at   [xcone][n][soma] cone (xpos,ypos,0) dia 3 
+		maxcond=1000e-12 linit=bginten //timec1 = 0.2
+                photnoise=pnoise darknoise=dnoise;
+    at   [xcone][n][axtrm] loc (xpos,ypos,0.5);
+    make_celseg (xcone, n, soma, axtrm, cd1=0.2,cd2=0,AXON);
+    celnode[ctype][n] = axtrm;
+
+    /* more realistic cone: OS, axon, terminal: 2 compartments */
+   /*
+    at   [xcone][n][0] cone (xpos,ypos,20) timec1 = 0.2 photnoise darknoise=0.2;
+    at   [xcone][n][0] loc (xpos,ypos,20) sphere dia 5 rm=crm vrest=cvrest;
+    make_celseg (xcone, n, 0, 1, cd1=0.2,cd2=0,AXON);
+    at   [xcone][n][1] loc (xpos,ypos,0)  sphere dia=3 rm=rodrm vrest=cvrest;
+   /* */
+  }
+
+  else if (ctype==rbp) {    		/* ctype == rbp ------------ */
+      local bp,bpzpos;
+
+    ct = ctype;
+    bpzpos = getn(ctype,SOMAZ);
+    at [ct][n][soma] loc (xpos,ypos,bpzpos);
+    make_celseg (ct, n, soma, soma, cd1=getn(ct,SOMADIA),cd2=0,SOMA);
+    arbz = getn (ct,AXARBZ);
+    axtrm = 1;
+    at [ct][n][axtrm] loc (xpos,ypos,arbz);
+    make_celseg (ct, n, soma, axtrm, cd1=1,cd2=0,AXON);
+    celnode[ctype][n] = axtrm;
+  }
+
+  else if (ctype==cbp) {        /* ctype == cbp ----------- */
+      local arbz,bp,bpzpos;
+
+    ct = ctype;
+    bpzpos = getn(ctype,SOMAZ);
+    at [ct][n][soma] loc (xpos,ypos,bpzpos);
+    make_celseg (ct, n, soma, soma, cd1=getn(ct,SOMADIA),cd2=0,SOMA);
+    arbz = getn (ct,AXARBZ);
+    axtrm = 1;
+    at [ct][n][axtrm] loc (xpos,ypos,arbz); 		    /* make node for axontip */
+    make_celseg (ct, n, soma, axtrm, cd1=0.8 ,cd2=0, AXON); /* connect to soma */
+    make_celseg (ct, n, axtrm, axtrm, cd1=1,cd2=0, AXON);   /* sphere at tip */
+
+    //at [ct][n][axtrm] loc (xpos,ypos,arbz);
+    //make_celseg (ct, n, 2, axtrm, cd1=1.2, cd2=0, AXON);
+    celnode[ctype][n] = 1;
+  }
+  else if (ctype==hbp) {        /* ctype == hbp ----------- */
+      local arbz,bp,bpzpos;
+
+    ct = ctype;
+    bpzpos = getn(ctype,SOMAZ);
+    at [ct][n][soma] loc (xpos,ypos,bpzpos);
+    make_celseg (ct, n, soma, soma, cd1=getn(ct,SOMADIA),cd2=0,SOMA);
+    arbz = getn (ct,AXARBZ);
+    axtrm = 1;
+    at [ct][n][axtrm] loc (xpos,ypos,arbz); /* make node for axontip */
+    make_celseg (ct, n, soma, axtrm, cd1=0.8 ,cd2=0, AXON); /* connect to soma */
+    make_celseg (ct, n, axtrm, axtrm, cd1=1,cd2=0, AXON);   /* sphere at tip */
+
+    //at [ct][n][axtrm] loc (xpos,ypos,arbz);
+    //make_celseg (ct, n, 2, axtrm, cd1=1.2, cd2=0, AXON);
+    celnode[ctype][n] = 1;
+  }
+
+  else if (ctype==ha) {		/* ha --------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    makhden(ctype,n,aden,xpos,ypos);
+  }
+
+  else if (ctype==hb) {		/* hb --------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    makhden(ctype,n,aden,xpos,ypos);
+  }
+
+  else if (ctype==hbat) {	/* hbat --------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    makhden(ctype,n,aden,xpos,ypos);
+  }
+
+  else if (ctype==aii) { 		 /* aii  -------------------- */
+      local nden,aden;
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    mak_aii(ctype,n,aden,xpos,ypos);
+  }
+
+  else if (ctype==a17) { 		 /* amac  -------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    mak_amac(ctype,n,aden,xpos,ypos);
+  }
+
+  else if (ctype==sb) { 		    /* sbac  -------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    mak_sbac(ctype,n,aden,xpos,ypos,getn(ctype,MORPH));
+
+  }
+
+  else if (ctype==am) { 		   /* amac  -------------------- */
+      local nden,aden;
+
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.8,nden*1.3));
+    /* mak_amac(ctype,n,aden,xpos,ypos,getn(ctype,MORPH)); */
+  }
+
+  else if (ctype==ams) {        	   /* ctype == ams ----------- */
+      local arbz,zpos;
+
+    ct = ctype;				/* small-field amacrine, like cbp */
+    zpos = getn(ctype,SOMAZ);
+    at [ct][n][soma] loc (xpos,ypos,zpos);
+    make_celseg (ct, n, soma, soma, cd1=getn(ct,SOMADIA),cd2=0,SOMA);
+    arbz = getn (ct,AXARBZ);
+    axtrm = 1;
+    at [ct][n][axtrm] loc (xpos,ypos,arbz); 	/* make node for axontip */
+    make_celseg (ct, n, soma, axtrm, cd1=0.8 ,cd2=0, AXON); /* connect to soma */
+    make_celseg (ct, n, axtrm, axtrm, cd1=1,cd2=0, AXON);   /* sphere at tip */
+
+    //at [ct][n][axtrm] loc (xpos,ypos,arbz);
+    //make_celseg (ct, n, 2, axtrm, cd1=1.2, cd2=0, AXON);
+    celnode[ctype][n] = 1;
+  }
+  else if (ctype >=gc && ctype <= gcoff) {    /* gc  --------------------- */
+      local nden,aden;
+
+    if (notinit(gctheta)) gctheta=0;
+    nden = getn(ctype,NDENDR);
+    aden = int(rrange(nden*.85,nden*1.2));
+    mak_gc(ctype,n,aden,xpos,ypos,gctheta,getn(ctype,MORPH));
+  }
+  else
+    fprintf(stderr, "makcel.n: proc makcell: cell type %g not available.", ctype);
+};
+
+/*-------------------------------------------------------------*/
+
+func trace_node (ct,cn,sn,tn)
+
+/* Given starting node "sn", trace back towards soma and stop 
+   if trace node "tn" is found. 
+   Based on the first element at a node being the parent.
+*/ 
+
+{
+   local nn, nelem, onn;
+
+   for (onn=nn=sn; nn!=tn; sn ) {  		/* trace path back to soma */
+     nelem = node [ct][cn][nn] -> 1;
+
+     nod1=element nelem->node1c;     /* first node */
+     nod2=element nelem->node2c;     /* second node */
+     //fprintf (stderr,"nod1 %g nod2 %g\n",nod1,nod2);
+     if (nod2 == nn)
+          nn = nod1
+     else nn = nod2;
+     //printf ("tracing from node %g to %g\n",onn,nn);
+     onn = nn;
+     if (nn==soma) break;
+   };  /* for (nn=sn;;) */
+   if (nn==tn) return 1
+   else        return 0;
+};
+
+/*-------------------------------------------------------------*/
+
+func trace_node_alt (ct,cn,sn,tn)
+
+/* Based on the first node on a cable connecting to the parent. */
+
+{
+   local n,nelem,nconn;
+
+ for (n=sn; n!=tn; n) {
+   nconn = node [ct][cn][n] -> numconn;
+   for (i=1; i<=nconn; i++) {  /* Find path back to soma */
+     nelem = node [ct][cn][n] -> i;
+
+     if (element nelem->ntype != ntype(cable))
+       continue;
+
+     if (ninfo>2)
+      printf ("tracing from node %g conn %g\n",n,i);
+
+     nod1=element nelem->node1c;     //nr of first node
+     nod2=element nelem->node2c;     //nr of second node
+     fprintf (stderr,"nod1 %g nod2 %g n %g\n",nod1,nod2,n);
+     if (nod2 == n)
+       continue;             /* descendent node */
+     if (nod1 == n) {
+       n = nod2;             /* follow parent node */
+       break;
+     };
+   };  /* for (i;;) */
+   if (n==soma) break;
+ };
+ if (n==tn) return 1
+ else       return 0;
+};
+
+/*-------------------------------------------------------------*/
+
+proc mak_sharp_electrode(ct,cn)
+
+/* Make circuit analog to sharp electrode. */
+
+/*  With sharp electrode recordings, spike height is attenuated,
+    spikes have little or no after-hyperpolarization, and spikes
+    are observed during rising edge of PSP.  
+
+    With patch recordings, spikes always have after-hyperpolarization,
+    and each spike leaves membrane voltage at the same potential
+    so spiking prevents the membrane voltage from rising.
+
+    The sharp electrode analog reduces spike height and after-hyperpolarization
+    but does not affect the low frequency response.
+    
+*/
+ 
+
+{
+    local recpnt, recpnt2, recpnt3;
+
+  recpnt2 = recpnt+2;
+  recpnt3 = recpnt+3;
+ 
+  if (notinit(elec_resist1)) elec_resist1 = 100e6;
+  if (notinit(elec_resist2)) elec_resist2 = 100e6;
+  if (notinit(elec_capac1))  elec_capac1 =  1e-12;
+  if (notinit(elec_capac2))  elec_capac2 =  100e-12;
+
+  //conn [ct][soma]    to [ct][recpnt3] vbuf;
+  //at   [ct][recpnt3]  gndcap elec_capac1 vrest=vstart;
+  conn [ct][soma] to [ct][recpnt] resistor elec_resist1;
+  at   [ct][recpnt]  gndcap elec_capac1 vrest=vstart;
+  //conn [gc][recpnt3] to [gc][recpnt] diode elec_resist1;
+
+  conn [ct][recpnt] to [ct][recpnt2] resistor elec_resist2;
+  at   [ct][recpnt2]  gndcap elec_capac2 vrest=vstart;
+
+};
+
+/*-------------------------------------------------------------*/

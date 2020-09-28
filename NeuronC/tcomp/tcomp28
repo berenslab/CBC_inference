@@ -1,0 +1,47 @@
+/* tcomp25:  test of conduction velocity in cable */
+
+debug=0; 
+
+timinc = 1e-4; 
+endexp = .01;
+complam=.1;
+relax = .1;
+crit=1e-6;
+ploti = .0001;
+implicit = 1;
+
+plmax = -.04;
+plmin = -.07;
+
+drm = 2500;
+dcap = 1e-6;
+
+seg = 250;
+
+conn 1 to 2 cable length seg dia 1;
+conn 2 to 3 cable length seg dia 1;
+conn 3 to 4 cable length seg dia 1;
+conn 4 to 5 cable length seg dia 1;
+conn 5 to 6 cable length seg dia 1;
+conn 6 to 7 cable length seg dia 1;
+
+
+rmyel = 5000;
+cmyel = 5e-6;
+mdia = 2;
+
+conn 21 to 22 cable length seg dia mdia rm rmyel cm cmyel; 
+conn 22 to 23 cable length seg dia mdia rm rmyel cm cmyel;
+conn 23 to 24 cable length seg dia mdia rm rmyel cm cmyel;
+conn 24 to 25 cable length seg dia mdia rm rmyel cm cmyel;
+conn 25 to 26 cable length seg dia mdia rm rmyel cm cmyel;
+conn 26 to 27 cable length seg dia mdia rm rmyel cm cmyel;
+
+stim node 1  vclamp -.01 start 0 dur .001;
+stim node 21 vclamp -.01 start 0 dur .001;
+
+
+plot V[7],V[7],V[6],V[5],V[4],V[3],V[2],V[1];
+plot V[27],V[26],V[25],V[24],V[23],V[22],V[21];
+
+run;

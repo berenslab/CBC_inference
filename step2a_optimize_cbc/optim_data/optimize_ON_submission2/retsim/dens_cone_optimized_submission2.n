@@ -1,0 +1,23 @@
+# Default membrane properties (density) file
+#
+# Densities of currents for the cell's different regions (S/cm2). */
+#
+#       dend dend_prox dend_dist soma  hillock  thin   axon   axon_dist node  varicos */
+#
+# Name  R1      R2      R3        R4      R5      R6      R7      R8     R9     R10
+#                                                 
+0       DENDD   DENDP   SOMA      HILLOCK  AXONT  AXON    AXOND   VARIC   R9     R10
+#
+_HCN1   0e-3    0e-3    5.0187e-05 0e-3    0e-3    0.00043526 0.00048659 0e-3    0e-3   0e-3   # HCN 
+_CLCA1  0e-3    0e-3   0e-3     0e-3    0e-3   0e-3      0        0e-3    0e-3   0e-3   # Chloride Calcium activated
+_K0     0e-3    0e-3   0.00010651 0e-3    0e-3   0e-3      0e-3    0e-3    0e-3   0e-3   # Kvx
+_CA0    0e-3    0e-3   0e-3     0e-3    0e-3   0e-3      0.0083184 0e-3    0e-3   0e-3   # Ca L
+_CAP    0e-7    0e-3    0e-3      0e-3    0e-3   0e-2     4.4496e-05 0e-7    0e-3   0e-3   # Ca Pump
+_CAPK   0e-7    0e-3    0e-3      0e-3    0e-3   0e-2     2.6293e-05 0e-7    0e-3   0e-3   # Ca Pump half velocity.
+_VST    -0.04   -0.04   -0.04     -0.04   -0.04   -0.04      -0.04    -0.04   -0.04  -0.04  # vstart
+_VRV    -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 -0.077278 # vrev
+_RM     37243   37243   37243    37243   37243   37243     37243    37243   37243  37243  # Rm
+_RI     132     132     132      132     132     132       132      132     132    132    # Ri
+_CM     1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 1.0152e-06 # Cm
+_COL    yellow  yellow  red       yellow  yellow  ltred     green    yellow  yellow yellow # color
+_CPL    0.1     0.1     0.1       0.1     0.1     0.0059534 0.1      0.1     0.1    0.1    # cplam

@@ -1,0 +1,392 @@
+#
+#  nval.n
+#
+#  Neuron parameters for retsim.n simulation script
+#
+#    Modify this file to change parameter values.
+#
+#    Original created by "maknval.n > nval.n"
+#    To add parameters, edit "maknval.n", run "maknval.n > nval.n",
+#    then edit "makcel.n" and read in "nval.n" for these param defs.
+#    Last, edit "nvals.n" and remove these param defs.
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #   0 MAKE      /* whether to make this cell type */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #   1 MAKE_DEND /* whether to make dendrites */
+        1       1       0       0       0       1       1       1       0       0       0       0       0       1       1       1  #   2 MAKE_AXON /* whether to make axon */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #   3 NMADE     /* number of cells made */
+    2e+04   5e+04     100     100     400   2e+03   1e+04   1e+04     400     400     400     400     400     100     100     100  #   4 MAXNUM    /* maximum number of cells of this type */
+        4       5       1       3       2       4      14       9      11      12       2       8      15       2      13      13  #   5 COLOR     /* color of this cell type for display */
+        0       0      10      20      20      10      10      10      50      10      30      30      30      10      10      10  #   6 MAXCOV    /* maximum coverage factor (for arrays) */
+       20       2   1e+03     200     100      50      50      50     500     500     500     500     500   1e+03   1e+03   1e+03  #   7 MAXSYNI   /* maximum number of input syns per celltype */
+       20       2   1e+03     200     100      50      50      50     500     500     500     500     500       0       0       0  #   8 MAXSYNO   /* maximum number of output syns per celltype */
+  2.5e+04   4e+05 1.5e+03     600   2e+03   3e+04 6.5e+03 6.5e+03   8e+03   2e+04   1e+04   8e+03   8e+03      50     100     100  #   9 DENS      /* density of this type (per mm2) */
+       10      20       6       6       6       8       8       8       6       6       8       0       6       6       6       6  #  10 REGU      /* regularity (mean/stdev) of spacing */
+        1       1       1       1       1       1       1       1       0       0       0       0       0       0       0       0  #  11 MORPH     /* morphology (=0 -> file, or artificial */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       1       1       1  #  12 BIOPHYS   /* add biophys properties (chan dens file) */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  13 RATIOK    /* set K density values as ratio from Na */
+  -0.0275  -0.034   -0.04   -0.04   -0.04   -0.05 -0.0407  -0.042   -0.05   -0.05  -0.058   -0.05   -0.05  -0.058   -0.07   -0.07  #  14 VSTART    /* initial resting potential */
+    -0.06   -0.07   -0.07   -0.07   -0.07   -0.07   -0.06   -0.06   -0.07   -0.07   -0.06   -0.07   -0.07   -0.07   -0.07   -0.07  #  15 VREV      /* membrane potential for Rm (VCl) */
+    1e+03   5e+03   2e+04   1e+04   1e+04   1e+04   2e+04   2e+04   5e+04   5e+04   5e+04   5e+04   5e+04   1e+04   5e+03   5e+03  #  16 RM        /* the cell's Rm */
+        3       5       2      12       9       7       7       7       9       9       8       7       7      20      15      15  #  17 SOMADIA   /* Soma diameter */
+        0       0      -4      -8      -6      -8      -8      -8     -10     -10     -29     -10     -10     -40     -40     -40  #  18 SOMAZ     /* Z location (x,y loc determ. by array) */
+        0       0       1       1       1       0       0       0       0       1       3       1       1       1       1       1  #  19 DENDARB   /* type of dendritic tree */
+        0       0      -4      -6      -5      -1      -1      -1     -20     -20     -20     -20     -20     -30     -30     -30  #  20 DENDARBZ  /* dendritic arborization level */
+        0       0       0       0       0     0.3     0.3     0.3     0.2     0.2     0.2     0.2     0.2    0.25    0.95    0.95  #  21 STRATDIA  /* stratif. annulus dia (fract of treedia) */
+        0       0     0.2     0.2     0.2     0.2     0.4     0.4     0.2     0.2     0.5     0.2     0.2     0.2     0.2     0.2  #  22 DTIPDIA   /* diameter of dendritic tips */
+        3       5      50     100      70       8      20      20     500      50     300     500     500     200      40      40  #  23 DTREEDIA  /* diameter of dendritic tree */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  24 AXARBT    /* type of axonal tree */
+        0       0       0       0       0     -25     -25     -25       0       0       0       0       0     -60     -60     -60  #  25 AXARBZ    /* axonal arborization level */
+        0       0       0       0       0     0.4     0.4     0.4       0       0       0       0       0       0       0       0  #  26 AXTIPDIA  /* diameter of axonal tips */
+        0       0       0       0       0       5      30      30       0       0       0       0       0       0       0       0  #  27 AXARBDIA  /* diameter of axonal arbor */
+        1       1      30      30      20      10      10      10      50     100     300      50      50      60      20      20  #  28 TAPERSPC  /* space constant of diameter taper */
+        1       1       2       4       3       1       1       1     0.2     0.3     0.2     0.2     0.2       6       3       3  #  29 TAPERABS  /* abs diameter for taper */
+        1       1       8       5       8       1       2       2      12       4       5       5       5       7       8       8  #  30 NDENDR    /* number of first-order dendrites */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       3       3       3  #  31 GROWTHR   /* distance thresh for growth of dendrites */
+        0       0       0       0       0       1       0       0       0       0       0       0       0       0       0       0  #  32 GROWPRE   /* grow when making conn to postsyn cell */
+        0       0       1       1       1       1       1       1       0       1       0       1       1       0       0       0  #  33 GROWPOST  /* grow when making conn from presyn cell */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+       ha    hbat    xrod   xcone   xcone    xrod   xcone   xcone     rbp     rbp     cbp     cbp     hbp     cbp     cbp     hbp  #  34 CELPRE1   /* cell type to connect to (neg, no conn) */
+        1       1       2       3       4       1       1       2       2       1       3       4       3       1       2       1  #  35 CONPRE1   /* connection number of presyn cell */
+        1       1       1       1       1       1       8       8       1       1       1       1       1       1       1       1  #  36 CELCONV1  /* number of presyn cells to connect to */
+       hb      -1      -1      -1      -1     a17      ha      ha      -1      -1     hbp      -1      -1      am      am     amh  #  37 CELPRE2   /* cell type to connect to (neg, no conn) */
+        1       1       1       1       1       1       2       3       1       1       2       1       1       2       2       2  #  38 CONPRE2   /* connection number of presyn cell */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  39 CELCONV2  /* number of presyn cells to connect to */
+       -1      -1      -1      -1      -1      -1      hb      hb      -1      -1      -1      -1      -1      -1      -1      -1  #  40 CELPRE3   /* cell type to connect to (neg, no conn) */
+        1       1       1       1       1       1       2       3       1       1       1       1       1       1       1       1  #  41 CONPRE3   /* connection number of presyn cell */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  42 CELCONV3  /* number of presyn cells to connect to */
+       -1      -1      -1      -1      -1      -1      sb     amh      -1      -1      -1      -1      -1      -1      -1      -1  #  43 CELPRE4   /* cell type to connect to (neg, no conn) */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  44 CONPRE4   /* connection number of presyn cell */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  45 CELCONV4  /* number of presyn cells to connect to */
+       -1      -1      -1      -1      -1      -1      am      -1      -1      -1      -1      -1      -1      -1      -1      -1  #  46 CELPRE5   /* cell type to connect to (neg, no conn) */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  47 CONPRE5   /* connection number of presyn cell */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  48 CELCONV5  /* number of presyn cells to connect to */
+       -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1  #  49 CELPRE6   /* cell type to connect to (neg, no conn) */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  50 CONPRE6   /* connection number of presyn cell */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  51 CELCONV6  /* number of presyn cells to connect to */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+      cbp     rbp    xrod   xcone   xcone     aii      gc   gcoff     rbp      -1      -1     cbp     hbp      -1      -1      -1  #  52 CELPOST1  /* cell type to connect to (neg, no conn) */
+        1       1       1       1       2       1       1       1       2       0       2       5       5       0       0       0  #  53 CONPOST1  /* connection number for postsyn cell */
+        1       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  #  54 CELDIV1   /* number of postsyn cells to connect to */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  55 SYNNUM1   /* number of synapses per connection */
+  xmglur6 xmglur6   xampa   xgaba   xgaba   xampa   xampa   xampa   xgaba   xampa   xgaba   xgaba   xgaba   xampa   xampa   xampa  #  56 SRESP1    /* synaptic response (ampa,gaba,gj,etc. */
+        6       2       2       2       2       2       3       3       2       2       2       2       2       2       2       2  #  57 SGAIN1    /* synaptic gain */
+        2       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  58 SVGAIN1   /* synaptic vgain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  59 SCGAIN1   /* synaptic second messenger gain */
+    3e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10   2e-10   1e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10  #  60 SCOND1    /* synaptic conductance */
+        0       0       0   -0.06   -0.06       0       0       0   -0.06       0   -0.06   -0.06   -0.06       0       0       0  #  61 SVREV1    /* synaptic reversal potential */
+   -0.036   -0.05   -0.05   -0.05   -0.05   -0.05  -0.043  -0.045   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  #  62 STHRESH1  /* synaptic threshold */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  63 SVNOISE1  /* 1->allow vesicle noise, override, vnoise=0 */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  #  64 SDUR1     /* synaptic event time const. */
+        2       1       2       2       2       2       2       2       2       2       1       2       2       2       2       2  #  65 SNFILT1   /* synaptic vesicle nfilt */
+       10      20       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  66 SCDUR1    /* second mesng. time const. */
+        2       2       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  67 SCNFILT1  /* second mesng. nfilt */
+       10      10      10      10      10      10      10      10      10      10      10      10      10      10      10      10  #  68 SVSIZ1    /* synaptic vesicle size */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  69 SCNOISE1  /* 1->allow channel noise, override, cnoise=0 */
+       20      20      20      20      20      20      20      20      20      20      20      20      20      20      20      20  #  70 SNCHAN1   /* number of channels */
+  2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11  #  71 SUNIT1    /* synaptic channel unitary conductace */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+      hbp    hbat      -1     cbp     cbp     a17    dsgc      sb      -1      -1    dsgc      gc   gcoff      -1      -1      -1  #  72 CELPOST2  /* cell type to connect to (neg, no conn) */
+        1       1       0       2       3       1       1       1       0       0       2       2       2       0       0       0  #  73 CONPOST2  /* connection number for postsyn cell */
+        1       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  #  74 CELDIV2   /* number of postsyn cells to connect to */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  75 SYNNUM2   /* number of synapses per connection */
+    xglut   xampa   xampa   xgaba   xgaba   xampa   xampa   xampa   xampa   xampa   xgaba   xgaba   xgaba   xampa   xampa   xampa  #  76 SRESP2    /* synaptic response (ampa,gaba,gj,etc. */
+        4       2       2       2       2       2       2       3       2       2       3       2       2       2       2       2  #  77 SGAIN2    /* synaptic gain */
+        2       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  78 SVGAIN2   /* synaptic vgain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  79 SCGAIN2   /* synaptic second messenger gain */
+    1e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10  #  80 SCOND2    /* synaptic conductance */
+        0       0       0   -0.06   -0.06       0       0       0       0       0   -0.06   -0.06   -0.06       0       0       0  #  81 SVREV2    /* synaptic reversal potential */
+   -0.043   -0.05   -0.05   -0.05   -0.05   -0.05   -0.03  -0.041   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  #  82 STHRESH2  /* synaptic threshold */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  83 SVNOISE2  /* 1->allow vesicle noise, override, vnoise=0 */
+        2       2       2       2       2       2       2     0.2       2       2       2       2       2       2       2       2  #  84 SDUR2     /* synaptic event time const. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  #  85 SNFILT2   /* synaptic vesicle nfilt */
+       10       1       1       1       1       2       1       1       1       1       1       1       1       1       1       1  #  86 SCDUR2    /* second mesng. time const. */
+        2       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  87 SCNFILT2  /* second mesng. nfilt */
+       10      10      10      10      10      20      10      10      10      10      10      10      10      10      10      10  #  88 SVSIZ2    /* synaptic vesicle size */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  #  89 SCNOISE2  /* 1->allow channel noise, override, cnoise=0 */
+       20      20      20      20      20      20      20       5      20      20      20      20      20      20      20      20  #  90 SNCHAN2   /* number of channels */
+  2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11  #  91 SUNIT2    /* synaptic channel unitary conductace */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+       ha      -1      -1     hbp     hbp      -1      sb     amh      -1      -1      -1      -1      -1      -1      -1      -1  #  92 CELPOST3  /* cell type to connect to (neg, no conn) */
+        1       0       0       2       3       0       1       1       0       0       0       0       0       0       0       0  #  93 CONPOST3  /* connection number for postsyn cell */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  #  94 CELDIV3   /* number of postsyn cells to connect to */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  95 SYNNUM3   /* number of synapses per connection */
+    xampa   xampa   xampa   xgaba   xgaba   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa  #  96 SRESP3    /* synaptic response (ampa,gaba,gj,etc. */
+        2       2       2       2       2       2       3       2       2       2       2       2       2       2       2       2  #  97 SGAIN3    /* synaptic gain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  98 SVGAIN3   /* synaptic vgain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  #  99 SCGAIN3   /* synaptic second messenger gain */
+  2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10  # 100 SCOND3    /* synaptic conductance */
+        0       0       0   -0.06   -0.06       0       0       0       0       0       0       0       0       0       0       0  # 101 SVREV3    /* synaptic reversal potential */
+    -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  -0.041   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  # 102 STHRESH3  /* synaptic threshold */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 103 SVNOISE3  /* 1->allow vesicle noise, override, vnoise=0 */
+        2       2       2       2       2       2     0.2       2       2       2       2       2       2       2       2       2  # 104 SDUR3     /* synaptic event time const. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 105 SNFILT3   /* synaptic vesicle nfilt */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 106 SCDUR3    /* second mesng. time const. */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 107 SCNFILT3  /* second mesng. nfilt */
+       10      10      10      10      10      10      10      10      10      10      10      10      10      10      10      10  # 108 SVSIZ3    /* synaptic vesicle size */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 109 SCNOISE3  /* 1->allow channel noise, override, cnoise=0 */
+       20      20      20      20      20      20       5      20      20      20      20      20      20      20      20      20  # 110 SNCHAN3   /* number of channels */
+  2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11  # 111 SUNIT3    /* synaptic channel unitary conductace */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+       hb      -1      -1      -1      -1      -1      am      -1      -1      -1      -1      -1      -1      -1      -1      -1  # 112 CELPOST4  /* cell type to connect to (neg, no conn) */
+        1       0       0       0       0       0       1       0       0       0       0       0       0       0       0       0  # 113 CONPOST4  /* connection number for postsyn cell */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 114 CELDIV4   /* number of postsyn cells to connect to */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 115 SYNNUM4   /* number of synapses per connection */
+    xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa  # 116 SRESP4    /* synaptic response (ampa,gaba,gj,etc. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 117 SGAIN4    /* synaptic gain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 118 SVGAIN4   /* synaptic vgain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 119 SCGAIN4   /* synaptic second messenger gain */
+  2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10  # 120 SCOND4    /* synaptic conductance */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 121 SVREV4    /* synaptic reversal potential */
+    -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  # 122 STHRESH4  /* synaptic threshold */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 123 SVNOISE4  /* 1->allow vesicle noise, override, vnoise=0 */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 124 SDUR4     /* synaptic event time const. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 125 SNFILT4   /* synaptic vesicle nfilt */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 126 SCDUR4    /* second mesng. time const. */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 127 SCNFILT4  /* second mesng. nfilt */
+       10      10      10      10      10      10      10      10      10      10      10      10      10      10      10      10  # 128 SVSIZ4    /* synaptic vesicle size */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 129 SCNOISE4  /* 1->allow channel noise, override, cnoise=0 */
+       20      20      20      20      20      20      20      20      20      20      20      20      20      20      20      20  # 130 SNCHAN4   /* number of channels */
+  2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11  # 131 SUNIT4    /* synaptic channel unitary conductace */
+#
+#   xcone    xrod    hbat      ha      hb     rbp     cbp     hbp     a17     aii      sb      am     amh      gc    dsgc   gcoff 
+#
+       -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1      -1  # 132 CELPOST5  /* cell type to connect to (neg, no conn) */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 133 CONPOST5  /* connection number for postsyn cell */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 134 CELDIV5   /* number of postsyn cells to connect to */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 135 SYNNUM5   /* number of synapses per connection */
+    xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa   xampa  # 136 SRESP5    /* synaptic response (ampa,gaba,gj,etc. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 137 SGAIN5    /* synaptic gain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 138 SVGAIN5   /* synaptic vgain */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 139 SCGAIN5   /* synaptic second messenger gain */
+  2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10 2.2e-10  # 140 SCOND5    /* synaptic conductance */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 141 SVREV5    /* synaptic reversal potential */
+    -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05   -0.05  # 142 STHRESH5  /* synaptic threshold */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 143 SVNOISE5  /* 1->allow vesicle noise, override, vnoise=0 */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 144 SDUR5     /* synaptic event time const. */
+        2       2       2       2       2       2       2       2       2       2       2       2       2       2       2       2  # 145 SNFILT5   /* synaptic vesicle nfilt */
+        1       1       1       1       1       1       1       1       1       1       1       1       1       1       1       1  # 146 SCDUR5    /* second mesng. time const. */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 147 SCNFILT5  /* second mesng. nfilt */
+       10      10      10      10      10      10      10      10      10      10      10      10      10      10      10      10  # 148 SVSIZ5    /* synaptic vesicle size */
+        0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0  # 149 SCNOISE5  /* 1->allow channel noise, override, cnoise=0 */
+       20      20      20      20      20      20      20      20      20      20      20      20      20      20      20      20  # 150 SNCHAN5   /* number of channels */
+  2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11 2.2e-11  # 151 SUNIT5    /* synaptic channel unitary conductace */
+
+
+/*  Neuron parameters for makcel.n simulation script */
+
+/* To add parameters, edit "maknval.n", run "maknval.n > nval.n",
+   then edit "makcel.n" and read in "nval.n" for these param defs.
+   Last, edit "nvals.n" and remove these param defs.
+*/
+
+ MAKE       =   0;	/* whether to make this cell type */
+ MAKE_DEND  =   1;	/* whether to make dendrites */
+ MAKE_AXON  =   2;	/* whether to make axon */
+ NMADE      =   3;	/* number of cells made */
+ MAXNUM     =   4;	/* maximum number of cells of this type */
+ COLOR      =   5;	/* color of this cell type for display */
+ MAXCOV     =   6;	/* maximum coverage factor (for arrays) */
+ MAXSYNI    =   7;	/* maximum number of input syns per celltype */
+ MAXSYNO    =   8;	/* maximum number of output syns per celltype */
+ DENS       =   9;	/* density of this type (per mm2) */
+ REGU       =  10;	/* regularity (mean/stdev) of spacing */
+ MORPH      =  11;	/* morphology (=0 -> file, or artificial */
+ BIOPHYS    =  12;	/* add biophys properties (chan dens file) */
+ RATIOK     =  13;	/* set K density values as ratio from Na */
+ VSTART     =  14;	/* initial resting potential */
+ VREV       =  15;	/* membrane potential for Rm (VCl) */
+ RM         =  16;	/* the cell's Rm */
+ SOMADIA    =  17;	/* Soma diameter */
+ SOMAZ      =  18;	/* Z location (x,y loc determ. by array) */
+ DENDARB    =  19;	/* type of dendritic tree */
+ DENDARBZ   =  20;	/* dendritic arborization level */
+ STRATDIA   =  21;	/* stratif. annulus dia (fract of treedia) */
+ DTIPDIA    =  22;	/* diameter of dendritic tips */
+ DTREEDIA   =  23;	/* diameter of dendritic tree */
+ AXARBT     =  24;	/* type of axonal tree */
+ AXARBZ     =  25;	/* axonal arborization level */
+ AXTIPDIA   =  26;	/* diameter of axonal tips */
+ AXARBDIA   =  27;	/* diameter of axonal arbor */
+ TAPERSPC   =  28;	/* space constant of diameter taper */
+ TAPERABS   =  29;	/* abs diameter for taper */
+ NDENDR     =  30;	/* number of first-order dendrites */
+ GROWTHR    =  31;	/* distance thresh for growth of dendrites */
+ GROWPRE    =  32;	/* grow when making conn to postsyn cell */
+ GROWPOST   =  33;	/* grow when making conn from presyn cell */
+ CELPRE1    =  34;	/* cell type to connect to (neg, no conn) */
+ CONPRE1    =  35;	/* connection number of presyn cell */
+ CELCONV1   =  36;	/* number of presyn cells to connect to */
+ CELPRE2    =  37;	/* cell type to connect to (neg, no conn) */
+ CONPRE2    =  38;	/* connection number of presyn cell */
+ CELCONV2   =  39;	/* number of presyn cells to connect to */
+ CELPRE3    =  40;	/* cell type to connect to (neg, no conn) */
+ CONPRE3    =  41;	/* connection number of presyn cell */
+ CELCONV3   =  42;	/* number of presyn cells to connect to */
+ CELPRE4    =  43;	/* cell type to connect to (neg, no conn) */
+ CONPRE4    =  44;	/* connection number of presyn cell */
+ CELCONV4   =  45;	/* number of presyn cells to connect to */
+ CELPRE5    =  46;	/* cell type to connect to (neg, no conn) */
+ CONPRE5    =  47;	/* connection number of presyn cell */
+ CELCONV5   =  48;	/* number of presyn cells to connect to */
+ CELPRE6    =  49;	/* cell type to connect to (neg, no conn) */
+ CONPRE6    =  50;	/* connection number of presyn cell */
+ CELCONV6   =  51;	/* number of presyn cells to connect to */
+
+ CELPOST1   =  52;	/* cell type to connect to (neg, no conn) */
+ CONPOST1   =  53;	/* connection number for postsyn cell */
+ CELDIV1    =  54;	/* number of postsyn cells to connect to */
+ SYNNUM1    =  55;	/* number of synapses per connection */
+ SRESP1     =  56;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN1     =  57;	/* synaptic gain */
+ SVGAIN1    =  58;	/* synaptic vgain */
+ SCGAIN1    =  59;	/* synaptic second messenger gain */
+ SCOND1     =  60;	/* synaptic conductance */
+ SVREV1     =  61;	/* synaptic reversal potential */
+ STHRESH1   =  62;	/* synaptic threshold */
+ SVNOISE1   =  63;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR1      =  64;	/* synaptic event time const. */
+ SNFILT1    =  65;	/* synaptic vesicle nfilt */
+ SCDUR1     =  66;	/* second mesng. time const. */
+ SCNFILT1   =  67;	/* second mesng. nfilt */
+ SVSIZ1     =  68;	/* synaptic vesicle size */
+ SCNOISE1   =  69;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN1    =  70;	/* number of channels */
+ SUNIT1     =  71;	/* synaptic channel unitary conductace */
+
+ CELPOST2   =  72;	/* cell type to connect to (neg, no conn) */
+ CONPOST2   =  73;	/* connection number for postsyn cell */
+ CELDIV2    =  74;	/* number of postsyn cells to connect to */
+ SYNNUM2    =  75;	/* number of synapses per connection */
+ SRESP2     =  76;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN2     =  77;	/* synaptic gain */
+ SVGAIN2    =  78;	/* synaptic vgain */
+ SCGAIN2    =  79;	/* synaptic second messenger gain */
+ SCOND2     =  80;	/* synaptic conductance */
+ SVREV2     =  81;	/* synaptic reversal potential */
+ STHRESH2   =  82;	/* synaptic threshold */
+ SVNOISE2   =  83;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR2      =  84;	/* synaptic event time const. */
+ SNFILT2    =  85;	/* synaptic vesicle nfilt */
+ SCDUR2     =  86;	/* second mesng. time const. */
+ SCNFILT2   =  87;	/* second mesng. nfilt */
+ SVSIZ2     =  88;	/* synaptic vesicle size */
+ SCNOISE2   =  89;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN2    =  90;	/* number of channels */
+ SUNIT2     =  91;	/* synaptic channel unitary conductace */
+
+ CELPOST3   =  92;	/* cell type to connect to (neg, no conn) */
+ CONPOST3   =  93;	/* connection number for postsyn cell */
+ CELDIV3    =  94;	/* number of postsyn cells to connect to */
+ SYNNUM3    =  95;	/* number of synapses per connection */
+ SRESP3     =  96;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN3     =  97;	/* synaptic gain */
+ SVGAIN3    =  98;	/* synaptic vgain */
+ SCGAIN3    =  99;	/* synaptic second messenger gain */
+ SCOND3     = 100;	/* synaptic conductance */
+ SVREV3     = 101;	/* synaptic reversal potential */
+ STHRESH3   = 102;	/* synaptic threshold */
+ SVNOISE3   = 103;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR3      = 104;	/* synaptic event time const. */
+ SNFILT3    = 105;	/* synaptic vesicle nfilt */
+ SCDUR3     = 106;	/* second mesng. time const. */
+ SCNFILT3   = 107;	/* second mesng. nfilt */
+ SVSIZ3     = 108;	/* synaptic vesicle size */
+ SCNOISE3   = 109;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN3    = 110;	/* number of channels */
+ SUNIT3     = 111;	/* synaptic channel unitary conductace */
+
+ CELPOST4   = 112;	/* cell type to connect to (neg, no conn) */
+ CONPOST4   = 113;	/* connection number for postsyn cell */
+ CELDIV4    = 114;	/* number of postsyn cells to connect to */
+ SYNNUM4    = 115;	/* number of synapses per connection */
+ SRESP4     = 116;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN4     = 117;	/* synaptic gain */
+ SVGAIN4    = 118;	/* synaptic vgain */
+ SCGAIN4    = 119;	/* synaptic second messenger gain */
+ SCOND4     = 120;	/* synaptic conductance */
+ SVREV4     = 121;	/* synaptic reversal potential */
+ STHRESH4   = 122;	/* synaptic threshold */
+ SVNOISE4   = 123;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR4      = 124;	/* synaptic event time const. */
+ SNFILT4    = 125;	/* synaptic vesicle nfilt */
+ SCDUR4     = 126;	/* second mesng. time const. */
+ SCNFILT4   = 127;	/* second mesng. nfilt */
+ SVSIZ4     = 128;	/* synaptic vesicle size */
+ SCNOISE4   = 129;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN4    = 130;	/* number of channels */
+ SUNIT4     = 131;	/* synaptic channel unitary conductace */
+
+ CELPOST5   = 132;	/* cell type to connect to (neg, no conn) */
+ CONPOST5   = 133;	/* connection number for postsyn cell */
+ CELDIV5    = 134;	/* number of postsyn cells to connect to */
+ SYNNUM5    = 135;	/* number of synapses per connection */
+ SRESP5     = 136;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN5     = 137;	/* synaptic gain */
+ SVGAIN5    = 138;	/* synaptic vgain */
+ SCGAIN5    = 139;	/* synaptic second messenger gain */
+ SCOND5     = 140;	/* synaptic conductance */
+ SVREV5     = 141;	/* synaptic reversal potential */
+ STHRESH5   = 142;	/* synaptic threshold */
+ SVNOISE5   = 143;	/* 1->allow vesicle noise, override, vnoise=0 */
+ SDUR5      = 144;	/* synaptic event time const. */
+ SNFILT5    = 145;	/* synaptic vesicle nfilt */
+ SCDUR5     = 146;	/* second mesng. time const. */
+ SCNFILT5   = 147;	/* second mesng. nfilt */
+ SVSIZ5     = 148;	/* synaptic vesicle size */
+ SCNOISE5   = 149;	/* 1->allow channel noise, override, cnoise=0 */
+ SNCHAN5    = 150;	/* number of channels */
+ SUNIT5     = 151;	/* synaptic channel unitary conductace */
+
+ NPARAMS    = 152;	/* number of neuron parameters */
+
+ CELPRE     =   0;	/* cell type to connect to (neg, no conn) */
+ CONPRE     =   1;	/* connection number of presyn cell */
+ CELCONV    =   2;	/* number of presyn cells to connect to */
+ NCONNP     =   3;	/* number of connection parameters */
+
+ CELPOST    =   0;	/* cell type to connect to (neg, no conn) */
+ CONPOST    =   1;	/* connection number for postsyn cell */
+ CELDIV     =   2;	/* number of postsyn cells to connect to */
+ SYNNUM     =   3;	/* number of synapses per connection */
+ SRESP      =   4;	/* synaptic response (ampa,gaba,gj,etc. */
+ SGAIN      =   5;	/* synaptic gain */
+ SVGAIN     =   6;	/* synaptic vgain */
+ SCGAIN     =   7;	/* synaptic second messenger gain */
+ SCOND      =   8;	/* synaptic conductance */
+ SVREV      =   9;	/* synaptic reversal potential */
+ STHRESH    =  10;	/* synaptic threshold */
+ SVNOISE    =  11;	/* 1 -> vesicle noise */
+ SDUR       =  12;	/* synaptic vesicle time const. */
+ SNFILT     =  13;	/* synaptic vesicle nfilt */
+ SCDUR      =  14;	/* second mesng. time const. */
+ SCNFILT    =  15;	/* second mesng. nfilt */
+ SVSIZ      =  16;	/* synaptic vesicle size */
+ SCNOISE    =  17;	/* synaptic channel noise */
+ SNCHAN     =  18;	/* number of channels */
+ SUNIT      =  19;	/* synaptic channel unitary conductace */
+ NSYNP      =  20;	/* number of synaptic parameters */
+
+ NCONNI     =   6;	/* number of input connection cell types */
+ NCONNO     =   5;	/* number of output connection cell types  */
+
+ xglut      =   1;	/* generic glutamate response */
+ xampa      =   2;	/* AMPA synaptic response */
+ xkainate   =   3;	/* Kainate synaptic response */
+ xmglur6    =   4;	/* mGluR6 synaptic response */
+ xgaba      =   5;	/* GABA synaptic response */
+ xgly       =   6;	/* Glycine synaptic response */
+ xgj        =   7;	/* gap junction synaptic response */
+ xdyad      =   8;	/* dyad synapse (uses other resp type) */
+

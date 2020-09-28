@@ -1,0 +1,12 @@
+#XFM
+Xterm:::terminal.xpm:exec rxvt -ls:
+Tin:::news.xpm:exec rxvt -T tin -n tin -e tin :
+Xrn:::news.xpm:exec xrn:
+Mail:~/.xfm:Mail:mail.xpm:LOAD:exec xmail
+text:~/.xfm:Text:edit.xpm:LOAD:exec xedit $2
+Printer:::printer.xpm:lpq >/dev/console:lpr $*
+Home::.:citadel.xpm:OPEN:
+Root:/:.:citadelroot.xpm:OPEN:
+Trash::.trash:recycle.xpm:OPEN:shift; mv -f -b -V numbered $* $HOME/.trash
+A\::/disk:a:disk.xpm:OPEN:
+B\::/disk:b:floppy.xpm:OPEN:

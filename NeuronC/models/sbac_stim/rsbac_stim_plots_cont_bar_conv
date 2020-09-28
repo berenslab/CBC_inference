@@ -1,0 +1,86 @@
+#! /usr/bin/perl
+#
+#
+#  run variable contrast with/without inhibition
+#
+@inhvals = (0, 1);
+$inhnum = $#inhvals + 1;
+# $ristart = 200;
+# $ristop  = 800;
+# $ristep  = 100;
+
+# @sbspacvals = (115,135,155);
+@sbspacvals = (135,155);
+$sbspacnum = $#sbspacvals + 1;
+
+# @sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+# 167,171,113
+@sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+$sbcondnum = $#sbcondvals + 1;
+
+# @barvals = (70,150,300);  # bar length
+@barvals = (70,300);  # bar length
+$barnum = $#barvals + 1;
+
+@contvals = (0.0030, 0.0035, 0.0040, 0.0045, 0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080, 0.0085, 0.0090, 0.0095, 0.0100);
+$contnum = $#contvals + 1;
+# $nastart = 600;
+# $nastop  = 2000;
+# $nastep  = 100;
+
+$relangle = 300;
+# $sdia = 0.22;
+$sdia = 0.3;
+$noinh = 0;
+$sbarr = 107;
+$sbspac = 155;
+$barlength = 70;
+$cadist = 2.2e-3;
+$velocity = 2000;
+
+# $synanpo = 110;
+$synanpo = 90;
+
+
+# $dbp1_cond = 5e-10;
+# $dbp1_cond = 3e-10;
+$dbp1_cond = 2.3e-10;
+# $sb_inhib  = $sbac_inhib= 100e-12;
+$sb_inhib = $sbac_inhib = 80e-12;
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+	     "cadist=f"    => \$cadist,
+	     "synanpo=f"   => \$synanpo,
+	     "dbp1_cond=f" => \$dbp1_cond,
+	     "sb_inhib=f"  => \$sb_inhib
+	    );
+
+# $synanpov = $synanpo;
+$synanpov = sprintf("%.3d",$synanpo);
+$vel = $velocity;
+$sd = sprintf("%4.2f",$sdia);
+
+for ($i=0; $i<$inhnum; $i++) {
+   $noinh = $inhvals[$i];
+   for ($s=0; $s<$sbspacnum; $s++) {
+      $sbspac = sprintf("%.3d",$sbspacvals[$s]);
+      $sb_inhib = $sbcondvals[$s] * $sbac_inhib;
+      for ($b=0; $b<$barnum; $b++) {
+         $barlength = sprintf("%.3d",$barvals[$b]);
+         for ($c=0; $c<$contnum; $c++) {
+             $cont = sprintf("%6.4f",$contvals[$c]);
+             system ("echo contrast $cont inh $noinh barlength $barlength synanpo $synanpov sdia $sd");
+             system ("mv sbac7_midbp_ca.$relangle.$cont.$noinh.$sbspac.$barlength.$synanpo.$sdia.r sbac7_midbp_ca.$relangle.$cont.$noinh.$sbspac.$barlength.$synanpov.$sd.r &");
+         }
+      }
+   }
+}
+
+

@@ -1,0 +1,14 @@
+
+endexp = .02;
+ploti = 1e-4;
+
+at 1 sphere dia 10;
+conn 1 to 2 cable length 100 dia 1;
+at 2 sphere dia 10;
+conn 2 to 3 cable length 100 dia 1;
+at 3 sphere dia 10;
+
+stim node 1 vclamp .04 start 0 dur .001;
+stim node 3 vclamp -.07 start 0 dur .001;
+plot V[3],V[2],V[1];
+run;

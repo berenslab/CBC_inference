@@ -1,0 +1,13 @@
+
+synapse maxcond=1e-10 chnoise                    set N from default unitary
+synapse maxcond=1e-10 chnoise unit=100e-12       set N from unitary
+synapse maxcond=1e-10 chnoise N=10               set unitary from N
+
+synapse resp maxcond=1e-10 chnoise               use default unitary
+synapse resp maxcond=1e-10 chnoise unit=100e-12  set N from unitary
+synapse resp maxcond=1e-10 chnoise N=10          set unitary from N
+
+synapse resp chnoise N=10 unit=1e-12             set maxcond from N, unitary
+synapse      chnoise N=10 unit=1e-12             set maxcond from N, unitary
+
+synapse chnoise unit=1e-12                       set N from default maxcond 

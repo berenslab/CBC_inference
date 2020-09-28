@@ -1,0 +1,294 @@
+#! /usr/bin/perl
+#
+#
+#  run variable contrast with/without inhibition
+#
+@inhvals = (0, 1);
+$inhnum = $#inhvals + 1;
+# $ristart = 200;
+# $ristop  = 800;
+# $ristep  = 100;
+
+# @sbspacvals = (115,135,155);
+@sbspacvals = (135,155);
+$sbspacnum = $#sbspacvals + 1;
+
+# @sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+# 167,171,113
+@sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+$sbcondnum = $#sbcondvals + 1;
+
+# @barvals = (70,150,300);  # bar length
+@barvals = (70,300);  # bar length
+$barnum = $#barvals + 1;
+
+@contvals = (0.0030, 0.0035, 0.0040, 0.0045, 0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080, 0.0085, 0.0090, 0.0095, 0.0100);
+$contnum = $#contvals + 1;
+# $nastart = 600;
+# $nastop  = 2000;
+# $nastep  = 100;
+
+$relangle = 360;
+# $sdia = 0.22;
+# $sdia = 0.27;
+$sdia = 0.3;
+$spdia = 0.6;
+$noinh = 0;
+$sbarr = 107;
+$sbspac = 250;
+$barlength = 70;
+$barwidth = 30;
+$cadist = 1e-3;
+$nadist = 3e-3;
+$velocity = 100;
+$stimtype = 3;
+# $wac_g = 8e-10;
+$wac_g = 0;
+$minten = -0.034;
+$cont_mult = 15;
+$ncycles = 6;
+$nsb = 7;
+$annrad = 1000;
+$makenv = 0;
+$sb1mul = 0.5;
+
+$predur = 0.5;
+# $synanpo = 90;
+$synanpo = 150;
+$synanpov = $synanpo;
+$isynanpo = 150;
+
+# $dbp1_cond = 5e-10;
+# $dbp1_cond = 3e-10;
+$dbp1_cond = 2.3e-10;
+# $sb_inhib  = $sbac_inhib= 100;
+$sb_inhib = $sbac_inhib = 80;
+$wac_g = 0;
+$wacg = sprintf("%3.1f",$wac_g*1e10);
+
+$set_vclamp = 0;
+
+$stimtime = 0.1;
+
+$edist = 75;
+$idist = 1000;
+
+$use_stimfile = 0;
+$makestim = 0;
+
+$densfile2 = "dens_sbacd.n";            # 50% conductance for inhibitory input to cell 1
+
+# $mosrun = "mosrun -l";
+$mosrun = "";
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f"  => \$relangle,
+             "nsb=f"       => \$nsb,
+             "sdia=f"      => \$sdia,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "barwidth=f"  => \$barwidth,
+             "velocity=f"  => \$velocity,
+	     "cadist=f"    => \$cadist,
+	     "synanpo=f"   => \$synanpo,
+	     "isynanpo=f"  => \$isynanpo,
+	     "annrad=f"    => \$annrad,
+	     "dbp1_cond=f" => \$dbp1_cond,
+	     "set_vclamp=f"=> \$set_vclamp,
+	     "sb_inhib=f"  => \$sb_inhib,
+	     "dri=f"       => \$dri,
+	     "sb_rm=f"     => \$sb_rm,
+	     "vhold=f"     => \$vhold
+	    );
+
+
+sub rerun_grating
+{
+      $set_vclamp  = $_[0];
+         $contval  = $_[1];
+           $sb_inh = $_[2];
+         $barwidth = $_[3];
+         $sbspacx  = $_[4];
+        $stimtype  = $_[5];
+               $ca = $_[6];
+               $na = $_[7];
+         $synanpov = $_[8];
+              $dri = $_[9];
+            $sb_rm = $_[10];
+            $vhold = $_[11];
+         $velocity = $_[12];
+
+
+         $sbarr = 107;
+   if ($sb_inhib==0) { $sbarr = 0; };
+   if ($sbarr==0) {$nsb = 1;}
+   if ($sbarr==107) {$nsb = 7;}
+          $cont = sprintf("%6.4f",$contval);
+        $sbspac = sprintf("%.3d",$sbspacx);
+       $synanpo = sprintf("%.3d",$synanpov);
+            $sd = sprintf("%4.2f",$sdia);
+           $vel = $velocity;
+     $sb_inhib  = sprintf("%g",$sb_inh*1e-12);
+           $cad = sprintf("%3.1f",$ca);
+           $nad = sprintf("%3.1f",$na);
+       $cadist  = sprintf("%g",$cad*1e-3);
+       $nadist  = sprintf("%g",$nad*1e-3);
+            $vh = sprintf("%d",-$vhold*1000);
+
+if ($sbspac<=125) {$set_synspac = 10;};
+if ($sbspac>=135) {$set_synspac = 8;};
+if ($sbspac>=145) {$set_synspac = 7;};
+if ($sbspac>=155) {$set_synspac = 5;};
+
+if ($synanpo>=150) {$dbp1_cond = 1.2e-10;};
+if ($sbspac>=200)  {$sb1mul = 0.5; $isynanpo = 150;};
+if ($makestim > 0) { $nanum = $canum = 1; }           # don't repeat navals when making stimfile
+
+              system ("echo nsb $nsb contrast $cont inh $sb_inh barwidth $barwidth sbspac $sbspac stimtype $stimtype cadist $cadist nadist $nadist synanpo $synanpov sdia $sd  dri $dri rm $sb_rm vhold $vhold velocity $vel");
+
+#             if ($set_vclamp==1) { $filename = "sbac$nsb.vclamp.$cont.$sb_inh.$barwidth.$sbspac.$stimtype.$cad.$nad.$synanpov.$sd.$dri.$sb_rm.$vh.$vel.r"; }
+#	     else {                $filename = "sbac$nsb.cclamp.$cont.$sb_inh.$barwidth.$sbspac.$stimtype.$cad.$nad.$synanpov.$sd.$dri.$sb_rm.$vh.$vel.r"; }
+
+             if ($set_vclamp==1) { $filename = sprintf ("sbac%d-vclamp-%5.4f-%d-%d-%d-%d-%3.1f-%3.1f-%3d-%3.1g-%g-%g-%2d-%g.r", $nsb,$cont,$sb_inh,$barwidth,$sbspac,$stimtype,$cad,$nad,$synanpov,$sd,$dri,$sb_rm,$vh,$vel); }
+	     else {                $filename = sprintf ("sbac%d-cclamp-%5.4f-%d-%d-%d-%d-%3.1f-%3.1f-%3d-%3.1g-%g-%g-%2d-%g.r", $nsb,$cont,$sb_inh,$barwidth,$sbspac,$stimtype,$cad,$nad,$synanpov,$sd,$dri,$sb_rm,$vh,$vel); }
+
+
+              $run_string  = "$mosrun retsim --sineann 1 --expt sbac_stim --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --sbac_densfile2 $densfile2 --sb_rm $sb_rm --sbarr $sbarr --sbspac $sbspac --set_synspac $set_synspac --sb1mul $sb1mul --sb_vs -0.049 --sb_vr -0.060 --radincr 20 --soma_z -50 --sbac_thetax 2 --sbac_thetay -2 --predur $predur --stimtime $stimtime --vhold $vhold --minten $minten --scontrast $cont --outward 0 --iscal 2e-9 --dri $dri --ninfo 2 --set_vclamp $set_vclamp --sdia $sd --spdia $spdia --dSomaDia 10 --sbac_dend1 1 --sbac_dend_cplam 0.1 --stimtype $stimtype --ncycles $ncycles --barwidth $barwidth --barlength $barlength --velocity $vel --waveshape 0 --annrad $annrad --makenv $makenv --use_stimfile $use_stimfile --makestim $makestim --stimdur 0.5 --nadist $nadist --namid $nadist --kdist 2e-3 --kmid 2e-3 --kprox 2e-3 --ksoma 3e-3 --cadist $cadist --camid $cadist --plotlabel $filename -r 12346 --n_hpb1 0 --dbp1_cond $dbp1_cond --dbp1_nscale -2.1 --sbac_nscale -3.05 --sbaclm 0.1 --no_excit 1 --set_inhib $sb_inhib --no_inhib $noinh --wac_g $wac_g --sbac_isynanpo $isynanpo --sbac_isynrngi -1$relangle --sbac_isynanni 80 --dbp1_anpi 20 --dbp1_anpo $synanpov --edist $edist --idist $idist --sbac_ithr -0.051 --stim_theta 0 --mxrot 0 --make_movie 0 --space_time 1 --frame_int 0.0002 --Vmin -0.06 --Vmax -0.045";
+
+	      $system_string = $run_string . " >& " . $filename . " &\n";
+	      system ("$system_string");
+	      # system ("echo $run_string");
+     sleep(1);
+}
+
+# sbac$nsb.midbp_ca.$relangle.$cont.$sb_inh.$barwidth.$sbspac.$barlength.$stimtype.$cad.$nad.$synanpov.$sd.$wacg.r &");
+
+# sbac7.midbp_ca.360.0.0800.160.150.145.3.1.0.3.0.090.0.30.0.0.r
+#      &rerun_grating(0.0800,160,150,145,3,1.0,3.0,90);
+#
+# 
+# $velocity = 500; $makenv = 1;
+# sbac7.midbp_ca.360.0.0750.160.150.125.3.1.0.3.0.090.0.30.0.0.r
+#       &rerun_grating(0.0750,160,150,125,3,1.0,3.0,90);
+
+$velocity = 1000; $makenv = 0;
+
+#   sbac7-vclamp-0.0650-160-300-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0650,160,300,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#    sbac7-vclamp-0.0850-160-350-250-3-1.0-1.5-150-0.3-30-20000-45-1000.r
+#    sbac7-vclamp-0.0850-160-350-250-3-1.0-1.5-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0850,160,350,250,3,1.0,1.5,150,30,20000,-0.045,1000);
+#
+#    sbac7-vclamp-0.0850-160-300-250-3-1.0-1.5-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0850,160,300,250,3,1.0,1.5,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0750-160-350-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0750,160,350,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0950-160-300-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0950,160,300,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0650-160-200-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0650,160,200,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0750-160-200-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0750,160,200,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0550-160-200-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#   &rerun_grating(1,0.0550,160,200,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0950-160-200-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+#
+#
+#   sbac7-vclamp-0.0550-160-250-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r
+#   &rerun_grating(1,0.0550,160,250,250,3,1.0,1.5,150,50,20000,-0.070,1000);
+#
+#   sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-50-20000-45-1000.r
+#   &rerun_grating(1,0.0550,160,350,250,3,1.0,1.5,150,50,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r
+#   &rerun_grating(1,0.0550,160,350,250,3,1.0,1.5,150,50,20000,-0.070,1000);
+#
+#   sbac7-vclamp-0.0750-160-200-250-3-1.0-0.0-150-0.3-50-20000-60-1000.r
+#   &rerun_grating(1,0.0750,160,200,250,3,1.0,0.0,150,50,20000,-0.060,1000);
+#
+#   sbac7-vclamp-0.0750-160-250-250-3-1.0-1.5-150-0.3-50-20000-40-1000.r
+#   &rerun_grating(1,0.0750,160,250,250,3,1.0,1.5,150,50,20000,-0.040,1000);
+#
+#   sbac7-vclamp-0.0750-160-350-250-3-1.0-1.5-150-0.3-50-20000-50-1000.r
+#   &rerun_grating(1,0.0750,160,350,250,3,1.0,1.5,150,50,20000,-0.050,1000);
+#
+#   sbac7-vclamp-0.0850-160-250-250-3-1.0-1.5-150-0.3-50-20000-45-1000.r
+#   &rerun_grating(1,0.0850,160,250,250,3,1.0,1.5,150,50,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0850-160-300-250-3-1.0-0.0-150-0.3-50-20000-45-1000.r
+#   &rerun_grating(1,0.0850,160,300,250,3,1.0,0.0,150,50,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0850-160-350-250-3-1.0-0.0-150-0.3-50-20000-45-1000.r
+#   &rerun_grating(1,0.0850,160,350,250,3,1.0,0.0,150,50,20000,-0.045,1000);
+#
+#   sbac7-vclamp-0.0950-160-300-250-3-1.0-1.5-150-0.3-50-20000-40-1000.r
+#   &rerun_grating(1,0.0950,160,300,250,3,1.0,1.5,150,50,20000,-0.040,1000);
+#
+#   sbac7-vclamp-0.0950-160-300-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r
+#   &rerun_grating(1,0.0950,160,300,250,3,1.0,1.5,150,50,20000,-0.070,1000);
+#
+#   sbac7-vclamp-0.0950-160-350-250-3-1.0-0.0-150-0.3-50-20000-40-1000.r
+#   &rerun_grating(1,0.0950,160,350,250,3,1.0,0.0,150,50,20000,-0.040,1000);
+#
+#
+# mv   sbac7-vclamp-0.0550-160-250-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-50-20000-45-1000.r sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r sbac7-vclamp-0.0750-160-200-250-3-1.0-0.0-150-0.3-50-20000-60-1000.r sbac7-vclamp-0.0750-160-250-250-3-1.0-1.5-150-0.3-50-20000-40-1000.r sbac7-vclamp-0.0750-160-350-250-3-1.0-1.5-150-0.3-50-20000-50-1000.r sbac7-vclamp-0.0850-160-250-250-3-1.0-1.5-150-0.3-50-20000-45-1000.r sbac7-vclamp-0.0850-160-300-250-3-1.0-0.0-150-0.3-50-20000-45-1000.r sbac7-vclamp-0.0850-160-350-250-3-1.0-0.0-150-0.3-50-20000-45-1000.r sbac7-vclamp-0.0950-160-300-250-3-1.0-1.5-150-0.3-50-20000-40-1000.r sbac7-vclamp-0.0950-160-300-250-3-1.0-1.5-150-0.3-50-20000-70-1000.r sbac7-vclamp-0.0950-160-350-250-3-1.0-0.0-150-0.3-50-20000-40-1000.r ../..
+# 
+
+#    sbac7-vclamp-0.0550-160-250-250-3-1.0-0.0-150-0.3-30-20000-45-1000.r
+ &rerun_grating(1,0.0550,160,250,250,3,1.0,0.0,150,30,20000,-0.045,1000);
+
+#    sbac7-vclamp-0.0550-160-300-250-3-1.0-1.5-150-0.3-30-20000-60-1000.r
+# &rerun_grating(1,0.0550,160,300,250,3,1.0,1.5,150,30,20000,-0.060,1000);
+
+#    sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-30-20000-45-1000.r
+# &rerun_grating(1,0.0550,160,350,250,3,1.0,1.5,150,30,20000,-0.045,1000);
+
+#    sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-30-20000-50-1000.r
+# &rerun_grating(1,0.0550,160,350,250,3,1.0,1.5,150,30,20000,-0.050,1000);
+
+#    sbac7-vclamp-0.0550-160-350-250-3-1.0-1.5-150-0.3-30-20000-60-1000.r
+# &rerun_grating(1,0.0550,160,350,250,3,1.0,1.5,150,30,20000,-0.060,1000);
+
+#    sbac7-vclamp-0.0650-160-250-250-3-1.0-0.0-150-0.3-30-20000-50-1000.r
+# &rerun_grating(1,0.0650,160,250,250,3,1.0,0.0,150,30,20000,-0.050,1000);
+
+#    sbac7-vclamp-0.0650-160-350-250-3-1.0-1.5-150-0.3-30-20000-40-1000.r
+# &rerun_grating(1,0.0650,160,350,250,3,1.0,1.5,150,30,20000,-0.040,1000);
+
+#    sbac7-vclamp-0.0750-160-300-250-3-1.0-0.0-150-0.3-30-20000-70-1000.r
+# &rerun_grating(1,0.0750,160,300,250,3,1.0,0.0,150,30,20000,-0.070,1000);
+
+#    sbac7-vclamp-0.0750-160-350-250-3-1.0-1.5-150-0.3-30-20000-60-1000.r
+# &rerun_grating(1,0.0750,160,350,250,3,1.0,1.5,150,30,20000,-0.060,1000);
+
+#    sbac7-vclamp-0.0750-160-350-250-3-1.0-1.5-150-0.3-30-20000-70-1000.r
+# &rerun_grating(1,0.0750,160,350,250,3,1.0,1.5,150,30,20000,-0.070,1000);
+
+#    sbac7-vclamp-0.0850-160-200-250-3-1.0-0.0-150-0.3-30-20000-60-1000.r
+# &rerun_grating(1,0.0850,160,200,250,3,1.0,0.0,150,30,20000,-0.060,1000);
+
+#    sbac7-vclamp-0.0850-160-200-250-3-1.0-1.5-150-0.3-30-20000-40-1000.r
+# &rerun_grating(1,0.0850,160,200,250,3,1.0,1.5,150,30,20000,-0.040,1000);
+
+#    sbac7-vclamp-0.0850-160-250-250-3-1.0-0.0-150-0.3-30-20000-50-1000.r
+# &rerun_grating(1,0.0850,160,250,250,3,1.0,0.0,150,30,20000,-0.050,1000);
+
+#    sbac7-vclamp-0.0850-160-300-250-3-1.0-1.5-150-0.3-30-20000-40-1000.r
+# &rerun_grating(1,0.0850,160,300,250,3,1.0,1.5,150,30,20000,-0.040,1000);
+
+#    sbac7-vclamp-0.0850-160-350-250-3-1.0-0.0-150-0.3-30-20000-70-1000.r
+# &rerun_grating(1,0.0850,160,350,250,3,1.0,0.0,150,30,20000,-0.070,1000);
+
+#    sbac7-vclamp-0.0950-160-200-250-3-1.0-0.0-150-0.3-30-20000-40-1000.r
+# &rerun_grating(1,0.0950,160,200,250,3,1.0,0.0,150,30,20000,-0.040,1000);
+
+

@@ -1,0 +1,39 @@
+/* tcomp24:  transfer function for synapse */
+
+crit = 1e-8;
+endexp = .1;
+ploti=.0001;
+
+drm=5000;
+
+at 1 sphere dia 10 vrest -.08;
+conn 1 to 2 synapse open expon 5 maxcond 1e-9 thresh -.04;
+at 2 sphere dia 10;
+conn 1 to 3 synapse open linear 1 maxcond 1e-9 thresh -.04;
+at 3 sphere dia 10;
+conn 1 to 4 synapse open expon 5 maxcond 1e-9 thresh -.04 
+        nfilt1 1 timec1 5
+        nfilt2 2 timec2 10 ename syn1;
+at 4 sphere dia 10;
+
+plot V[1] max .04 min -.07;
+plot FA0 syn1 max .04 min -.07;
+plot FA1 syn1 max .04 min -.07;
+plot FB0 syn1 max 1 min 0;
+plot FB1 syn1 max 1 min 0;
+plot FB2 syn1 max 1 min 0;
+plot V[4] max .04 min -.07;
+
+/* plot V[1] max .04 min -.07;
+plot V[2] max .04 min -.07;
+*/
+
+stimlen = .015;
+
+stim node 1 vclamp -.00 start .01 dur .01;
+
+stim node 1 vclamp -.07 start .02 dur .1;
+
+
+run;
+

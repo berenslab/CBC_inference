@@ -1,0 +1,43 @@
+#! /usr/mont/bin/nc -c
+
+# subtract constant from filename
+# usage: make_movie_cut --filename dsgc_model --begin 218 --end 361
+#
+# moves filecntb to filecnta
+#
+if (notinit(filename)) filename = "file";
+
+if (notinit(begin)) begin = 218;
+if (notinit(end))     end = 361;
+
+sprintf (buf,"ls -l %s_????.ppm | wc -l\n",filename);
+x = system (buf);
+nfiles = atof (x);
+print "nfiles: ",nfiles;
+
+// erase the files past the end
+
+for (i=end+1; i<=nfiles; i++) {
+   sprintf (buf,"rm %s_0%03g.ppm\n",filename,i);
+   system (buf);
+   printf (buf);
+};
+
+// erase the files before the beginning
+
+dest=1;
+
+for (i=dest; i<begin; i++) {
+   sprintf (buf,"rm %s_0%03g.ppm\n",filename,i);
+   system (buf);
+   printf (buf);
+};
+
+// copy files from beginning to end
+
+for (i=src=begin; i<=end; i++,src++,dest++) {
+   sprintf (buf,"mv %s_0%03g.ppm %s_0%03g.ppm\n",filename,src,filename,dest);
+   system (buf);
+   printf (buf);
+};
+

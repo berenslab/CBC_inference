@@ -1,0 +1,1527 @@
+<html>
+<title>NeuronC User's Manual Part III</title>
+<body bgcolor="#ffe7c7">
+
+<h2><a name = "E">Constructing Neural Circuits</a></h2>
+
+<ul><li><a href ="#1">Logging In</a>
+<li><a href ="#2">Running the Editor</a>
+<li><a href ="#3">Constructing neural circuits</a> 
+<li><a href ="#4">Model design philosophy</a>
+<li><a href ="#5">Digitizing cell morphologies</a>
+<li><a href ="#6">Calibration Runs</a>
+</ul>
+
+<hr>
+<h3><a name = "1">Logging in</a></h3>
+
+   First, you need to turn on the computer.  Be patient 
+while the computer checks its memory and wait for the 
+"login:" prompt.  Sign on with your assigned login name.  
+Once you have logged in, the computer prints a "%" at the 
+beginning of every command line, as a prompt to you that it 
+is finished the previous command and is waiting for the 
+next.  Some simple commands are:
+<pre>
+   %
+   % ls                  ( directory listing )
+   % cp file1 file2      ( copy file1 to make file2 ) 
+   % logout              ( logs you off the computer )
+</pre>
+<hr>
+<h3><a name = "2">Running the editor</a></h3>
+
+You may choose any of several editors (Star-Office (soffice)
+vi, joe, jove, emacs) to make a NeuronC script file.  
+If you don't know how to use any of these editors, 
+ask for help.  Run the editor by typing its name (e.g. "joe") 
+and a file name (the "%" is the computer's prompt):
+<p>
+For example:
+<pre>
+   % vi circuit1
+</pre>
+   After you enter the code for a NeuronC script, run the script by 
+entering one of the following commands:
+<pre>
+     neurc file.n                  Displays graph on screen.
+     nc file.n                     Displays only numbers on output.
+                                    Used for "debugging" a model.
+     nc file.n > file.r            Saves numbers in file.
+                                    Used for running long simulations.
+     nc -v file.n   | vid          (equivalent to "neurc file.n")
+     plotmod file.r | vid          Displays graph on screen from file.
+     plotmod file.r | 8by11        Draws graph on color plotter.
+</pre>
+
+<hr>
+<h3><a name = "3">Constructing neural circuits</a></h3>
+
+   NeuronC defines a neural circuit with a sequence of 
+statements much like any programming language.  Each 
+statement is either 1) a neural element statement, or 
+2) a standard programming statement (as in "C") which 
+controls how many neural elements will be created.  The 
+analogy to a programming language is that NeuronC 
+elements are like the printed output from a program; if 
+a print statement is included inside a "for" loop, many
+printed lines will appear in the output.  To create 
+many neural elements, include their definition in a 
+"for" loop in NeuronC.<p>
+
+   To build a neural circuit, you need to include at 
+least one neural element statement and some stimulus 
+and plot or print statements:
+<pre>
+      conn 1 to 2 cable length 100 dia 1 rm 5000;
+      stim node 1 vclamp -.01 start .05 dur .01;
+      plot 1,2;
+      step .1;
+</pre>
+   This simple NeuronC program builds a cable and 
+defines a stimulus of a voltage clamp to minus 10 mv, 
+starting at 50 msec into the experiment and stopping 
+after 60 msec.  The voltage at each end of the cable is 
+plotted.  The plotting stops at 0.1 seconds.
+
+<hr>
+<h3><a name = "4">Design principles</a></h3>
+
+"Keep it simple!"
+<p>
+   When setting up a neural circuit model, remember that a 
+simple model is easier to understand and possibly more 
+believable than a complex one.  This is generally true 
+because the utility of a computational model is often that 
+it quantitatively assists (stretches) our imagination.   If 
+a model is so complex that we don't understand it, then it's 
+not helping us.  If a model uses many parameters for which 
+numerical values are not known, then it may be a focus for 
+disbelief.
+<p>
+<h4>Set the integration method and time step</h4>
+
+  When setting up a model of a neural circuit, one of the 
+first things to do is determine which combination of 
+integration method and time step is the best for the 
+particular model.  You must decide which of the 3 methods of 
+numerical integration (Euler, Implicit, Crank-Nicolson) and 
+what value of time step to use.  For most simulations, use 
+the standard Crank-Nicolson method with a time step of 0.1 
+msec (timinc = 1e-4).   For simulations with action 
+potentials, use time step maybe a little smaller, e.g. 25-50 
+usec (timinc = 5e-5),  If better stability is required, then 
+switch over to the implicit mode by setting the variable 
+"implicit" to 1 (implicit = 1).  For extreme cases of 
+instability, reduce the time step to 1e-5 sec.<p>
+
+   The Euler integration method (euler = 1) normally 
+requires a time step on the order of 1 usec (1e-6 sec) so it 
+is usually slower than the Crank-Nicolson method.  It is 
+instructive, however, to experiment using different Euler 
+time steps to see under what conditions instability occurs.
+
+<h4>"Do it in stages"</h4>
+
+   It is best to first make a simple model to verify the 
+operation of the model's components.  Then enlarge the model 
+after it gives a threshold of confidence.  For instance, to 
+model a large circuit with many neurons involved in negative 
+synaptic feedback, it is best to start with one cell and get 
+its anatomy and membrane properties worked out.  Next set up 
+2 cells and their synaptic feedback and verify that the 
+feedback is working properly using appropriate stimulus and 
+recording sites.<p>
+
+   After the anatomy and basic synaptic model is all working 
+properly, you should expand the model to include more cells 
+and complexity.  The advantage of this technique is that any 
+problems that occur can usually be localized to the addition 
+of a few neural circuit elements, because everything was 
+developed and verified in successive stages.
+
+<h4>Static modeling</h4>
+
+   Often, in the early stages of setting up a model, it is 
+helpful to look at the static responses of a circuit to a 
+simple stimulus, without the time element.  This allows a 
+simple spatial analysis to confirm our intuitive ideas about 
+the low-frequency circuit operation.  NeuronC can be run in 
+"static" mode by starting the stimulus at time=0 and giving 
+a very long time step (timinc = 1e9).  This produces the 
+circuit's response at the steady state of "infinite" time, 
+and saves about 50% to 70% of the computation time for a 
+typical neural circuit.  The NeuronC synaptic model normally 
+runs with a series of time functions, but whenever the 
+numerical integration time step is set to longer than 1 
+second, these time functions are removed so that synapses 
+become static transfer functions between pre- and post-
+synaptic cells.  NeuronC numerical integration is stable for 
+long time steps if the implicit mode (implicit=1) is set in 
+the program (see Hines, 1989).
+
+<h4>Developmental rules</h4>
+
+   When a large neural circuit is modeled, often several 
+cell types of neurons need to make specific connections with 
+cells of the same or different type.  To simulate 
+connections between several layers of cells, each with a 
+different cell density, it is helpful to create procedures 
+which define "developmental rules", or rules for connecting 
+any two cell types, based on their proximity and type, but 
+not on their node number.  Such a rule simplifies the job of 
+designing a neural circuit because the node numbers need not 
+be a part of the thought process used to design the circuit.
+<p>
+   Several features of NeuronC facilitate the use of 
+"developmental rules".  Node numbers (used to define 
+connections between neural elements) may have up to 3 
+dimensions, and these dimensions are appropriate to define: 
+(dimension 1) neuron types, (dimension 2) neuron number 
+(dimension 2) and (dimension 3) neural morphology.  Three 
+dimensional locations and the "ndist" function are useful 
+for finding the distance between two nodes.  Finally, it is 
+possible to define stimulus and recording nodes on the basis 
+of cell type and location, by creating a "smart" function 
+that scans the neural circuit and automatically finds the 
+appropriate node.
+
+<h4>Standard morphology format</h4>
+
+To model a neuron that has been digitized, you need a way to
+specify the anatomical information about the cell's morphology. A
+simple way is to break apart the neuron's dendritic tree branches
+into cable segments. A branch's end point, called a "node" is
+defined by a 3D location and a unique number (its "node number").
+Since neuronal morphology is like a tree, a branch starts at the
+soma and divides into multiple branches.  Each branch segment is
+defined uniquely by the node at one end, and the node at the
+other end is called the "parent node". Several branch segments
+may come together at the same parent node.  The only other
+information necessary is the diameter of the branch segment, and
+its membrane properties.  Here is a typical morphology file format:
+<p>
+
+<pre>
+-----------------------start of morphology file---------------------
+#
+#  beta cell morphology file.
+#
+#    node     parent   dia      xbio     ybio    zbio     region  dendr
+#
+       0        0       21        0        0      -25     SOMA    0
+       1        0     2.17       21    -2.47       -8     PROX    1
+       2        1    0.833     22.8   0.0287       -5     DEND    1
+       3        2     1.33     23.3    0.776        0     DEND    1
+       4        3      0.5     23.9     6.32        0     DEND    1
+       5        0      1.5    -3.25    -33.6      -30  HILLOCK    2
+       6        5      0.5    -6.81    -37.6      -30  AXON_THIN  2
+       7        6      0.5    -25.5    -66.4      -30  AXON_THIN  2
+       8        7      0.5    -121.2  -160.2      -30     AXON    2
+
+      and so on.
+--------------------------end of morphology file----------------------
+</pre>
+
+Each point where 2 or more cables connect is a "node", which
+is defined on one line.  The line contains the node's position
+(xbio,ybio,zbio), its diameter, and its parent node, as well a
+label defining what region of the cell to assign it to (for
+membrane channels, colors, etc.). The "dendr" column is a dendrite
+number useful for analyzing the properties of each separate dendrite.
+The list of points is read into an array by the "fread" statement 
+in the main script file. Comments start with "#". You could readily 
+modify or add to this format to better suit your needs. Note that
+for sequentially-labeled nodes along a dendrite, each node's 
+parent is the previous node. At a branch point, two or more
+nodes have the same parent.
+<p>
+
+Any value in the morphology file can also be specified by a
+parameter, which must be defined before the file is read by the
+simulator.
+
+For example:
+
+<pre>
+#    node     parent   dia      xbio     ybio    zbio     region  dendr
+#
+       0        0       21        0        0      -25     SOMA    0
+       1        0     d_dia      21    -2.47       -8     PROX    1
+       2        1     d_dia      22.8   0.0287     -5     DEND    1
+
+ Where "d_dia" is the dendritic diameter, defined in the simulation
+script before the morphology file is read. Then this parameter can
+be set automatically according to the specific simulation. 
+</pre>
+
+An advantage of this format is that it can represent any type of
+morphology, including tree-structured neurons and also syncytial
+networks of neurons connected by gap junctions.  
+<p>
+
+
+<h3><a name = "5">Digitizing cell morphologies</a></h3>
+
+There are several ways to digitize a cell's morphology. If you
+have a photograph or drawing of a cell that provides a good 
+representation of the dendritic tree, you can digitize the (x,y)
+locations of the dendritic tree and then manually add the z-positions.
+<p>
+
+<h4>Digitize dendritic tree using xfig</h4>
+
+You can digitize the positions using "xfig", an illustration
+program. You include the image of the file as a "picture" in
+xfig. Set the depth to be 100 (greater than the default depth of
+50). Then you manually enter node numbers superimposed on top
+of the image of the neuron's dendritic tree. Xfig then remembers
+the (x,y) position of each node number along with its label.
+<p>
+
+The node numbers should be fairly sparse but dense enough that
+they capture the essential details of the dendritic tree. You may
+need to experiment a bit with the number and density of nodes to
+find the appropriate level of detail you want to preserve. For
+each node, you label its position with a "text" number with depth
+50 (i.e. closer than the cell image).  The number labels are
+arbitrary, but it helps to start by labeling the soma with a
+zero, then label the first dendrite with sequentially increasing
+numbers. Each branch starts non-sequentially. After all the
+points are entered, you can save the information as a .fig file,
+and convert it to the Neuron-C format using "fig2nc".  <p>
+
+As a second step, you must edit the file using a text editor to
+correct the parent node numbers.  Normally for a sequentially
+labeled dendrite each node's parent starts out correctly set as
+the previous node number. However you must correct the parent
+node for the the first node of each new branch. You must also add
+the dendritic diameters for each node.  This can be done by
+measuring with a ruler (making sure to convert to the correct
+scale), or by adding variable(s) in the file instead of numbers
+(as described above for "d_dia"), then define the variable in the
+simulation script.  When the file is read into the simulation,
+the previously defined value is substituted. 
+
+You can find the "fig2nc" script in "nc/models/retsim/runconf".  
+<p>
+
+<pre>
+-----------------------start of fig2nc script---------------------
+#
+#  fig2nc
+#
+# Script to convert .fig file data to standard anatomy format for Neuron-C
+#  when a photograph of a cell is labeled with "text" numbers to represent
+#  the node numbers in nc.
+#
+# The parent node is assumed here to be the previous one, which is not
+#  always correct but since many nodes follow an unbranched dendrite it
+#  is best to start.  Parent nodes then need to be corrected by hand.
+#
+#  original scale is 19200 per 100 um (scale=192), more recently reduced to scale=40
+#
+awk 'BEGIN {scale = 40; 
+	    par   = 0;
+            dia   = "amdia"
+            reg   = "DEND";
+            dend = 0;
+            z = 0;
+      printf ("#    node  parent   dia     xbio     ybio     zbio    region   dendr\n#\n");
+            }
+
+     NR>10 && $1=="4" { 
+             x = $12/scale; y = $13/scale; n=substr($14,1,length($14)-4); 
+             if (n=="0") { xs=x; ys=y; }
+             printf ("  %4s     %4s    %4s    %-8.4g   %-8.4g   %g       %s      %d\n",
+	              n, par, dia, x-xs, y-ys, z, reg, dend); 
+	     par = n;
+	}
+    ' $1
+-----------------------end of fig2nc script---------------------
+</pre>
+
+<h4>IJ-MorphDig reconstruction system</h4>
+
+If you have a confocal stack of images of a cell's morphology, you can
+digitized it with "IJ-MorphDig". The IJ-MorphDig package is a Java plugin for
+ImageJ, which is an image processing program inspired by NIH Image. ImageJ can
+be downloaded from:
+<p>
+
+<a href="http://rsb.info.nih.gov/ij/download.html">http://rsb.info.nih.gov/ij/download.html</a>
+<p>
+
+The MorphDig plugin can be built and run using a java tool called "ant",
+which is a Java-based build tool (like "make" , but portable with Java).
+Ant can be downloaded from:
+<p>
+<a href="http://ant.apache.org">http://ant.apache.org</a>
+<p>
+
+IJ-MorphDig can be used with the Retsim retinal simulation package included in
+the Neuron-C distribution. MorphDig allows the user to trace a cell's morphology
+from a stack of confocal images by positioning points on the images. Each
+point consists of an (x,y,z) location, the dendritic diameter, measured by a
+"caliper tool" set by the user. The data is output in the form of Neuron-C morphology
+files (see above). IJ-MorphDig was written by Mike Schachter
+(mike.schachter@gmail.org). <p>
+
+<h4>Converting from NeuroLucida format</h4>
+
+If you have neuron morphology files digitized by the NeuroLucida
+reconstruction software, you can convert them to the Neuron-C format
+defined above using "dsconv2" or "dsconv3". They require "bash"
+and "gawk" in Linux. They are located in "nc/models/ds/ds3".
+
+
+<h4>Density files</h4>
+
+To define different membrane parameters in different regions of a neuron,
+it is possible to define an array in a file which is read by
+the simulation script file with an "include" statement. 
+For example, "stddens.n" is a file that contains:<p>
+
+<pre>
+--------------------start of density file---------------------------
+densdata = {
+
+/* Densities for the cell's different regions (n/um2). */
+
+/*
+dend    prox     soma     hillock   thin     axon */
+
+50,     60,      80,      100,      100,     50,     /* Na  */
+2,      2,       3,       0,        0,       0,      /* Ca  */
+0,      0,       0,       0,        0,       30,     /* Kdr */
+3,      5,       6,       0,        0.1,     0.1,    /* KCa */
+30,     30,      30,      0,        0.1,     0.1     /* Ka */
+
+};
+---------------------end of density file----------------------------
+</pre>
+
+Example of a simulation script to read these morphology and density files:<p>
+
+<pre>
+---------------------start of definition file----------------
+/*  gcdefs.n */
+
+/*  Definition of columns for "anatfile" which defines cell anatomy:*/
+
+NODE = 0;
+PAR  = 1;
+DIA  = 2;
+AX   = 3;
+AY   = 4;
+AZ   = 5;
+REG  = 6;
+
+/* Regions: Column numbers */
+
+DEND         = 0;
+PROX         = 1;
+SOMA         = 2;
+HILLOCK      = 3;
+AXON_THIN    = 4;
+AXON         = 5;
+nregions     = 6;
+
+/* Channel types: Row numbers */
+
+NA  = 0;        /* noise type 1 */
+CA  = 1;
+KDR = 2;        /* type 0 , noise: type 1 */
+KCA = 3;        /* type 2 , noise: type 6 */
+KA  = 4;        /* type 3 , noise: type 5 */
+nchans = 5;
+
+dim chname[] = { "Na", "Ca", "Kdr", "KCa", "KA" };
+
+dim regname[] = { "dend", "prox", "soma", "hillock", "thin",
+"axon" };
+
+dim densdata [nchans][nregions];
+
+proc printdens (label)         /* procedure to print out densities */
+
+{
+printf ("# \n");
+printf ("#   Channel densities (%s)\n",label);
+printf ("# \n");
+printf ("#   ");
+   for (ch=0; ch&lt;nregions; ch++)
+     printf ("%-8s ",regname[ch]);
+
+printf ("\n");
+printf ("# \n");
+
+   for (ch=0; ch&lt;nchans; ch++) {
+     printf ("#   ");
+     for (region=0; region&lt;nregions; region ++) {
+        printf ("%-8.4g ",densdata[ch][region]);
+     };
+     printf (" %s\n",chname[ch]);
+   };
+ printf ("# \n");
+};
+
+-------------------------end of definition file--------------------------
+</pre>
+
+This scheme allows you to read in different densities by defining
+a different density file to replace "stddens.n", and different
+anatomies by defining a different anatomy file.<p>
+
+<pre>
+-------------------------start of main script file-----------------------
+/* main script file */
+/* main.n */
+
+timinc = 1e-4;             /* simulation variables */
+ploti  = 1e-3;             /*  these are defined by the simulator */
+endexp = 1.0;
+
+expt = 2;                  /* which experiment to run, */
+                           /*  defined only in this script */
+
+x = setvar();               /* set values from command line */
+
+                     /*  You can change "expt", or "anatfile", etc. */
+                     /*  like this:
+                     /*             nc --expt 3 --anatfile alpha2 main.n */
+
+if (notinit(deffile)) deffile = "gcdefs.n";
+include (deffile);             /* definition file */
+
+if (notinit(densfile)) densfile = "stddens.n"
+include (densfile);             /* define channel densities for cell regions */
+
+if (notinit(anatfile)) anatfile = "betagc";
+
+fread (anatfile, cabldata, clines, ccols);      /* read anatomy file */
+                     /* "fread" sets clines = number of lines in file */
+                     /*               ccols = number of lines in file */
+
+printdens("N/um2");      /* print out densities actually used */
+
+na_type = 0;
+proc makseg(nod1, nod2, d, region)     /* procedure to make soma/dendrites */
+{
+     if (region == SOMA){
+          at   [gang][nod1] 
+                sphere dia d vrest=vstart      /* this is just the soma */
+                chan Na type na_type 
+                ndensity=densdata[NA][region]
+
+     else conn [gang][nod1] to [gang][nod2]    /* else make dendritic segment */
+                cable dia d vrest=vstart;
+                chan Na type na_type 
+                ndensity=densdata[NA][region]  /* add more chans if wanted */
+};
+
+  /* Now, make the cell */
+
+for (i=0; i&lt;clines; i++) {                        /* locate the nodes */
+    n = cabldata[i][0];
+    at [gang][n]
+            loc(cabldata[i][AX],
+                cabldata[i][AY],
+                cabldata[i][AZ]);
+};
+
+for (i=0; i&lt;clines; i++) {                      /* make the dendritic tree */
+        makseg (cabldata[i][NODE],
+                cabldata[i][PAR],
+                cabldata[i][DIA],
+                cabldata[i][REG]);
+};
+
+  /* Code to make stimuli, set up electrode recordings,
+      and run the experiment. */
+
+ if (notinit(expt)) expt = 1;
+
+ if (expt==1)  {
+
+  "code to test simple stimulus for calibration"
+ }
+ else if (expt==2) {
+
+  "code to run standard stimulus"
+ }
+ 
+
+--------------end of main script file ------------------------------
+</pre>
+
+The idea is to have standard values and definitions that have
+default values but which the user can modify at will.
+
+
+<h4>Edge effects</h4>
+
+   When a neural circuit model simulates a large biological 
+circuit array with an interconnected array of cells limited 
+in size, there often is a problem associated with the array 
+edges, called the "edge effect".  In such a model, cells 
+near the edge of an array do not receive the same number of 
+inputs as others near the array center, because of the 
+connections "missing" from outside the array.  This 
+difference in the circuit connections associated with its 
+edges can cause resting voltages and responses in edge cells 
+to be different than those in the more central cells.  One 
+cannot simply eliminate the edge cells with these 
+"erroneous" responses, because that would leave a smaller 
+array with the same "edge effect" problem.  The edge cells 
+are necessary to provide inputs to the more central cells. 
+<p>
+   There are several ways to deal with edge effects.  One 
+way, the simplest, is to "live with" edge effects and try to 
+analyze the simulation data in a way that minimizes their  
+influence.  Another way is to construct a larger model than 
+necessary, so that data can be taken exclusively from a 
+central region without edge effects.   A third way is to 
+"wrap around" one edge's connections to the opposite edge of 
+the array.  The resulting model then simulates a large array 
+with a repeating structure, such that a single stimulus 
+"looks like" a stimulus that is spatially repeated over the 
+biological tissue.
+<p>
+   A fourth way to deal with edge effects is to connect to 
+each of the edge neurons a small circuit that simulates the 
+effect of an infinite network.  If it is not possible to do 
+this exactly, an approximation is better than nothing.  In 
+the case of an interconnected array of passive neurons, the 
+effect of an infinite network can be simulated by an 
+impedance equivalent to the impedance "seen" by one neuron 
+"looking" laterally at its neigbor in one direction.  This 
+can be accomplished in several ways, depending on the type 
+of neural interactions.
+<p>
+   An easy way to simulate an impedance in a steady-state 
+network is to ignore any capacitance and simply attach a 
+load resistor to the edge neurons.  The exact value for the 
+load resistor can be calculated by an interative procedure 
+where the input resistance of a centrally located cell is 
+measured from its neighbor through their common connection 
+(e.g a gap junction).  One then connects this resistance to 
+the edge cells, and then repeats the measurement at the 
+central cells.  After a few iterations of this procedure, 
+the value of resistance settles down and then represents 
+accurately the resistance of an infinite network.  Then a 
+stimulus applied in the center of the array will decay 
+towards the edge through the interconnections in a way that 
+accurately simulates an infinite network. 
+<p>
+   However, if each cell in a network has an identical but 
+nonzero resting voltage, the passive resistor scheme 
+outlined above won't work because the resistor shunts the 
+signal from edge cells.  The solution in this case is to 
+connect a "battery" identical to the resting voltage to the 
+appropriate passive resistor.  This can be accomplished 
+conveniently by a "buffer amplifier" or "voltage follower" 
+that causes the voltage in one cell to follow the voltage 
+somewhere else in the array.  In this case, one connects a 
+voltage follower from each cell one row inside the edge to 
+its neighboring edge cell.  Then the edge cells follow their 
+central neighbors and no edge effect is apparent. 
+<p>
+   In a more complex neural circuit with many neuron types 
+of various sizes and interconnections, it may be very 
+difficult to eliminate edge effects with the "impedance" 
+method outlined above.  There are few rows of larger cells 
+in the array, and their edge effect perturbs more rows of 
+smaller cells.  The solution is to use a network large 
+enough to include one extra row of the largest cells at the 
+edge, and then use the voltage buffer idea to make these 
+cells "mirror" their inside neighbors.  
+
+<hr>
+<h3><a name = "6">Calibration Runs</a></h3>
+
+   It is often useful to run a small network for the purpose 
+of calibrating or finding equilibrium potentials, so an 
+analogous larger network may be run with its initial resting 
+potentials equal to the equilibrium potentials computed.  
+This technique can save a lot of computation when the 
+network is slow to equilibrate.  The method here is to 
+construct a small network that is a "chunk" of the larger 
+one and run it to equilbrium.  Then find the equilibrium 
+voltages needed, and construct the larger network, setting 
+its resting voltages with the "vrest" parameter.  The 
+"vrest" parameter sets the inital voltage in spheres, cables 
+and synapses. 
+
+<pre>
+   statements to create first network...
+
+   run;
+   
+   statements to save voltages from first network...
+   statements to create second network...
+   statements to reset "time" and "endexp" 
+ 
+   run;
+</pre>
+   Several other housekeeping chores must also be done to 
+get this scheme to work.  After the first run, the first 
+network is left intact, so voltages may be read from any 
+node.  Before the second network is run, the variables 
+"time" and "endexp" must be reset to their proper values.  
+The "time" variable represents what value of 
+absolute time to start the next run.  The "endexp" 
+value represents the absolute time to stop the 
+run.  It is possible to set "time" negative, so 
+that zero time corresponds to a point delayed 
+after the start of the simulation.  This is 
+useful, for instance, when a network is run to 
+give some time for equilibrium and then a stimulus 
+is given.
+
+<hr>
+<h2><a name = "F">Adding New Channel Types</a></h2>
+
+<ul><li><a href ="#10a">Several ways to add new channel types</a>
+<li><a href = "#10b">Basic Steps</a>
+<li><a href ="#11">Data Structures</a>
+<li><a href ="#12">Defining the Channel Type</a>
+<li><a href ="#13">HH Channels</a>
+<li><a href ="#14">Sequential State Channels</a>
+</ul>
+<hr>
+<p>
+<h3><a name = "10a">Ways to add new channel types</a></h3>
+
+<h4>
+<li> Shift the activation/inactivation functions of an existing channel.<br>
+<li> Rewrite the rate functions for the state variables or transition functions.
+<li> Copy an existing type and/or modify it with the "setchan...() functions." 
+<li> Add a new type in the source code.
+</h4>
+
+<p>
+Explanation:
+
+<p> 1) The easiest way to make a new channel type is to define
+the closest type, and then shift the rate functions, either by
+offsetting the voltage activation curves or by a changing the
+rate function multiplier.  You can change voltage offsets with
+the "offset, offsetm, offseth" parameters, and the multipliers
+with the "taua, taub, tauc, ... tauf" parameters. The advantages
+of this method is that it is simple and is done separately for
+each channel.  This allows you to define several "channel types"
+each with different but closely related rate functions. </p>
+
+<p>
+The "tau" parameters define a "time constant" (1/rate) which
+multiplies the default rate function to make it faster or slower.
+For HH channels, the "taua" parameter is for the forward activation
+function (alpham), and "taub" is for the reverse function, "tauc"
+is for inactivation, and "taud" is reverse inactivation. The
+"tauf" parameter is for flicker rate (channel noise in the
+conducting state).  </p>
+
+<p>
+For Markov sequential-state channels, to find the which "tau"
+parameter to use, look at the source code for the channel. The
+"rateo" parameter defines which one (rateo=0 -> taua, rateo=1
+->taub, ... rateo=5 -> tauf).</p>
+
+<p> 2) A an easy way to change the behavior of all the channels
+of a channel type is to redefine the rate functions.  This
+provides more precise control of the rate functions than changing
+only the voltage offset and the multipler (as above).  To rewrite
+the rate functions, look at the existing default rate function in
+the source code for the channel, and copy it.  For the
+interpreted version of the simulator, rename the new function in
+the script (".n") file to one of the predefined names "calcna1",
+"calcna2", "calck1", etc. (see the source code for the channel
+type to find the "user defined" rate function's name).  When the
+"nc" interpreter sees a function defined with such a name in the
+script file, that function is called instead of the default one
+when calculating the rates for the channel. For the compiled
+version, you call "set_chancalc()" to define a different rate
+function. This way you can modify the functions during a run if
+necessary.  One drawback of this method is that it modifies the
+rate function for all the channels of that type. Another drawback
+is that the rate function in the script file is run by the
+interpreter so it runs slower than if it were compiled. Therefore
+this method is best used for rate functions that are
+precalculated and stored in lookup tables [i.e. those (such as HH
+functions) that are functions of only one parameter such as
+voltage].</p>
+
+<p> 3) A slightly more involved method is to copy an existing
+channel type to make a new channel type, and then modify the new
+type to your requirements.  You can change the number of states,
+their conductances, transitions to other states, their rate
+functions and multipliers.  This is the easiest way to change a
+channel type's exact behavior:</p>
+
+<pre>
+ copychan (source name, source type, new name, new type, number_of_states) 
+  setchan_ntrans (name, type, state, number_of_transitions)
+    setchan_cond (name, type, state, conductance)
+   setchan_trans (name, type, state, transition, trans_state)
+   setchan_trate (name, type, state, transition, rate_function)
+     setchan_mul (name, type, state, transition, rate_multiplier)
+   setchan_rateo (name, type, state, transition, rate_mul_number)
+</pre>
+
+<p> These functions (in "chanfunc.cc") allow you to copy a
+channel type and to set all of the channel type's state
+information that defines the channel's behavior.  You can read
+more about how to do this below or you can look to see how it's
+done in the source code. To change the number of states, you can
+set the number_of_states to be greater than the old channel type.
+Then you must add all the parameters for the new states. If you
+set "number_of_states" to 0, the number of states for the new
+channel is set the same as the old.
+
+<p> 4) Finally, you can add a new channel type in the source
+code.  To understand how to do this, the easiest way is to copy
+the source code for an existing channel type and modify it.
+Several source code files are relevant, "ncomp.cc", where
+compartment currents are calculated,  "chanfunc.cc" (where
+function look-up tables are computed), "initchan.c", where some
+useful functions are defined and all the channel tables are
+created, and the channel definitionnn files, "channa1.cc",
+channa2.cc", "channa3.cc", "chank1.cc", etc.  </p>
+
+<H3>Explanation of channel types</H3>
+
+<p>
+    Nc contains two classes of channels: the pure HH type 
+and the "sequential-state" type.  The HH type is traditional 
+but the  sequential-state type is more flexible and is being 
+used more by  physiologists in recent literature to describe 
+new channels once they have been characterized.  Both use 
+first-order differential equations to describe the kinetics 
+(i.e. the m,n, and h and also the "states" in the 
+sequential-state model all have alpha and beta "rate 
+constants" which are functions of something; usually just 
+voltage, but can be calcium conc., etc.).  <p>
+
+   The HH (Type 0) class of channel runs faster because fewer
+state  variables need to be modified, and there are no "state
+transitions" as there are with the "sequential-state" channels.
+However, the "sequential-state" channels are much more flexible.
+<hr>
+
+<h3><a name = "10b">Basic Steps</a></h3>
+ 
+<ol><li> Define new channel types in "ncomp.cc".  
+
+  <li> Define new channel type in a chan??.cc file.  Check the
+      existing files and copy the appropriate one to make a new
+      file with an appropriate name.  The "mak??()" procedure is
+      responsible for creating all tables to store information
+      about the channel, and the "calc???(double v, int func)"
+      procedure defines the rate functions.
+
+  <li> Add calculations for new channel type in "ncomp.cc", in the
+      runcomp() procedure, possibly with new state variables, or
+      different combinations of them.  Sequential-state channels
+      require a new "case" statement but no other changes to
+      "ncomp.cc".
+
+  <li> Modify "initchan()" for correct number of channel subtypes.
+      If channel is sequential-state, add the new "mak???()"
+      routine (described in 1 above) to define the states for the
+      new subtype.
+ 
+</ol>
+<hr>
+<h3><a name = "11">Data structures</a></h3>
+
+  Each channel type has a data structure describing it that
+can be referred to at run time, called a "chanconst":<p>
+
+<pre>
+struct chanconst {                      /* master struct for chan constants */
+        short int ctype;                /* type of channel: NA, K, etc. */
+        short int stype;                /* subtype of channel: 0=HH, 1=SS,etc*/
+        short int numstate;             /* number of states used */
+        short int numparm;              /* number of params,set to 2 for HH */
+        double qc;                      /* Q10 factor for conductance */
+        double qt;                      /* base temp for conductance */
+        double qcond;                   /* Q10 multiplier for conductance */
+        float vrev;                     /* default reversal potential */
+        double *perm;                   /* rel permeability to ions */
+        float unitary;                  /* default unitary conductance */
+        float trconc;                   /* default tr conc multiplier */
+        chanstate *state;               /* state definitions */
+        chanparm *parm;                 /* rate params */
+        float *respamp;                 /* response amplitudes */
+        };
+</pre>
+
+The chanconst structure is set at the beginning of a NeuronC run
+and does not change during run time. It defines which tables
+contain the rate functions, the states and a few other important
+variables.  Every channel has a pointer to its chanconst
+structure that defines its type.<p>
+
+The "ctype" field contains the type (NA, K, etc), and the
+"stype" field contains the subtype number.  The "numstate" and
+"numparm" fields contain the number of states and "parameter
+sets", and the basetemp parameter is the temperature at which the
+rate functions and channel conductances are defined.  You set
+these fields when you run the "makchanconst(ctype, stype,
+numstate, numparm, basetemp)" procedure in the "mak???()" routine
+that makes defines your channel. The "state" and "parm" fields
+are pointers to the channel's state and parameter set definitions
+that will be created automatically.  "States" define the Markov
+channel's sequential states. The "vrev" parameter is the
+default reversal potential and will be used if vrev is not
+specified individually for the channel.<p>
+
+Several fields are used primarily for synaptic channels.  The
+"trconc" field is a default parameter to set the sensitivity of a
+synapse to a ligand.  Since a NeuronC synapse response is
+normalized (by the binding and saturation mechanism) to range
+between 0 and 1, the trconc paramter multiplies this value to set
+an absolute concentration of neurotransmitter for a synaptic
+Markov sequential state channel.  Normally the "trconc" parameter
+is a "synaptic" parameter but its value will be taken from the
+channel's data structure if not specified individually for the
+synapse.<p>
+
+The "respamp" field provides a way to specify the relative
+response to a set of neurotransmitters or ligands for a channel.
+For each channel type that you want to respond differently to
+different ligands, you need to define the response amplitudes by
+placing them in the respamp array (see the "Markov synaptic"
+example below).  At runtime, the channel's response will be
+calculated from a weighted sum of the ligand concentrations.
+These can be set by the "mesgout" parameter of a synapse, or by
+the "stim puff" statement.<p>
+
+The "perm" field specifies the relative permeability of the
+channel to different ions.  An Na channel is slightly permeable
+to K ions, and a K channel slightly permeable to Na ions.
+Typically NMDA and AMPA channels carry Ca currents, with a
+fraction typically about 10-20%.  These channels are connected to
+the Ca diffusion mechanism at a node (the "calcium compartment")
+and you can specify Ca flux and shell options for these channel
+types as you can with Ca channels.<p>
+
+
+<h4> Parameter Sets</h4>
+
+The "chanparm" structure contains the "parameter set" (shown
+below).  Each channel normally has several rate functions which
+are used to calculate activation, inactivation, etc.  The rate
+functions can be functions of voltage, ligand concentration, or
+of any other arbitrary state variable.  The functions of voltage
+are often exponential functions that are costly to compute in CPU
+time, so their values are pre-computed at the beginning of run
+time and placed in lookup tables.  In addition, the rate
+functions have temperature coefficients that vary between
+different channels and functions. To make things more organized,
+each set of rate functions that behaves in a similar way is
+placed in a "parameter set" structure and a standard set of
+channel procedures automatically sets up the tables and computes
+the lookup tables. Note that if all the rate functions have
+similar temperature coefficients they may all be placed in the
+same "parameter set" chanparm structure.
+
+The "chanparm" structure contains space for a parameter's (e.g.
+m, h, etc.) lookup tables for the function values and for their
+implicit tables. The "nfval" field sets how many function value
+tables will be created (normally 2 for HH, but can be more for
+Markov), and the "nival" field sets how many implicit tables will
+be created (normally set this to 2 for HH-type channels).  The
+"fval" and "ival" fields are small tables that hold the values
+that have been looked up and interpolated from the function value
+tables.  The "chanftab" and "chanitab" fields are pointers to the
+tables, which can be arbitrarily long, set by "nfval" and
+"nival". The nfval number should agree with the number of
+functions generated in the "calc???()" rate function.<p>
+
+  For an HH-type channel (m3h, n4, ca3, etc), each state
+variable "m", "h", "c", "d", etc. needs to have an "implicit
+lookup table".  The table is created automatically at run
+time, but you need define how many to make. This is done by
+defining a separate "parameter set" and a Q10 value for
+parameter "m", "h", "n", "d", "c", etc, and defining 2
+"implicit lookup-tables" per parameter. You must set the
+number of implicit tables (see below.) For example, a m3h
+channel would have 2 "parameter sets", and a n4 channel
+would have only 1 parameter set.<p>
+
+For a Markov sequential-state channel types you normally
+create one "parameter set", but you would use more than one
+if you want to have different Q10 values for the some of the
+rate functions.  Markov channel types don't use implicit
+lookup-tables so you don't need to set them up.<p>
+
+The "chancalc" and "funcname" fields are the default and
+user-defined functions that define the rate function.  Both
+must be set in the "chanparm" structure, but if the user-
+defined function is not defined by the user, the rate comes
+from the default function.  The "qt" and "dq" fields define
+what Q10 temperature coefficient are used.  "qt" defines the
+Q10, and "dq" defines a starting temperature for the rate
+function definition (by default set to 22). The "oldv",
+"oldtiminc", and "oldtempcel" fields are temporary storage for
+the "v", "timinc", and "tempcel" variables when the table was
+most recently created.  When these variables change, the lookup
+table for the parmeter may need to be regenerated.<p>
+
+The "dqca", "qcao" and "qcavoff" fields allow the simulator to
+keep track of how external Ca "cao" affects membrane potential.
+An increase in external Ca tends to remove the negative surface
+charge of the membrane and so tends to increase the polarization
+of the membrane, as if it were hyperpolarized.  Thus an increase
+in "cao" causes Na channels to reduce their open probability.  To
+keep track of this effect, the "dqca" field sets how many mV the
+membrane voltage is offset by a factor of 10 increase in Ca
+(normally about 18 mV but varies between channel types).  The
+"qcao" field sets the base cao at which the channel rate
+functions were originally specified.  The "qcavoff" is a
+temporary storage area for the voltage offset for each rate
+function ("m", "h", etc.) for a channel type. <p>
+
+<pre>
+struct chanparm {                       /* structure for channel rate params */
+        short int nfval;                /* number of alpha, beta, etc. values */
+        short int nival;                /* number of implicit values */
+        double *fval;                   /* alpha, beta, etc. vals for integ. */
+        double *ival;                   /* implicit values for integration */
+        float *chanftab;                /* rate func tables */
+        float *chanitab;                /* implicit tables if required */
+        double (*chancalc)(double,int); /* default rate function */
+        char *funcname;                 /* user-defined rate function */
+        double qrate;                   /* Q10 rate calculated from dq, qt */
+        double dq;                      /* Q10 factor for rate calc */
+        double qt;                      /* factor to normalize temp to 22 degC */
+        double dqca;                    /* Q10 for cao offset on chan voffset */
+        double qcao;                    /* base cao for chan offset: 2.3 mM */
+        double qcavoff;                 /* voltage offset calc from dqca,qcao */
+        double oldvf;                   /* Variables that need to be checked */
+        double oldvi;
+        double oldtimincf;              /*  to see if table needs to be */
+        double oldtiminci; 
+        double oldtempcel;              /*  regenerated. */
+        double oldcao;
+        };
+</pre>
+
+<h3><a name = "12">Defining the Channel Type</a></h3>
+
+The channel is defined in a "chan???.cc" file.  You can copy
+one to a different file name and modify it. The definition
+is created in a "mak???() channel definition procedure.
+First the "makchanconst" procedure is called to allocate
+space for a new chanconst and the "parameter sets" and
+[optionally] states.  Each channel needs at least one
+"parameter set", but can have more if there are different
+Q10 values.  Hodgkin-Huxley Na channels should have 2
+parameter sets (for m and h) and K channels should have 1
+parameter set.  The separate parameter sets allow different
+temperature sensitivities (Q10 values) for each parameter. 
+<p>
+
+Each parameter set should have 2 values "nfval" for its alpha and
+beta functionns, and also 2 implicit values "nival" for the
+implicit integration method (see runcomp() in "ncomp.h"). You set
+the number of function and implicit values (and tables) for each
+parameter individually after the parameters are defined:<p>
+
+
+For a HH-type channel:<p>
+
+<pre>
+makna0()
+{
+   nstate = 2;                          /* 2 Markov states (for noise) */
+   nparm = 2;                           /* make 2 sets of params, m, h */
+   ch=makchanconst(NA,0,nstate,nparm,dbasetc);/* make chan state const, parm */
+   ch->unitary = 6e-12;                 /* conductance measured at BASETC. */
+
+   ch->perm[PNA] = 1.0;                 /* rel permeability to Na+ ions */
+   ch->perm[PK]  = dpkna;               /* permeability to K+ ions / perm Na */
+   ch->vrev = vna;                      /* default reversal potential */
+
+   spnt = ch->state;
+   parm = ch->parm;
+
+   parm = ch->parm;
+   parm[0].nfval    = 2;                /* number of func vals (am, bm, etc.) */
+   parm[0].nival    = 2;                /* number of implicit vals (m1, m2) */
+   parm[0].chancalc =  calcna0m;        /* default rate function */
+   parm[0].funcname = "calcna0m";       /* user rate function */
+   parm[0].dq = dqm;                    /* Q10 for m rate function */
+
+   parm[1].nfval    = 2;                /* number of func vals (ah, bh, etc.) */
+   parm[1].nival    = 2;                /* number of implicit vals (h1, h2) */
+   parm[1].chancalc =  calcna0h;        /* default rate function */
+   parm[1].funcname = "calcna0h";       /* user rate function */
+   parm[1].dq = dqh;                    /* Q10 for h rate function */
+
+   mak2state(spnt,rchanf,rchanr,CHANRATE);  /* make 2 Markov states for noise */
+
+   return ch;
+}
+</pre>
+
+For a Markov channel:<p>
+
+<pre>
+makna1()
+
+{
+   nstate = 8;                          /* 8 Markov states */
+   nparm = 2;                           /* make 2 sets of params, m, h */
+   ch=makchanconst(NA,1,nstate,nparm,dbasetc); /* make chan state const, parms */
+   ch->unitary = 6e-12;                 /* conductance measured at BASETC. */
+   spnt = ch->state;
+   parm = ch->parm;
+
+   ch->perm[PNA] = 1.0;                 /* rel permeability to Na+ ions */
+   ch->perm[PK]  = dpkna;               /* permeability to K+ ions / perm Na */
+   ch->vrev = vna;                      /* default reversal potential */
+
+   parm[0].nfval    = 2;                /* number of func vals (am, bm, etc.) */
+   parm[0].nival    = 0;                /* number of implicit vals (m1, m2) */
+   parm[0].chancalc =  calcna1m;        /* default rate function */
+   parm[0].funcname = "calcna1m";       /* user rate function */
+   parm[0].dq = dqm;                    /* Q10 for m rate function */
+
+   parm[1].nfval    = 2;                /* number of func vals (ah, bh, etc.) */
+   parm[1].nival    = 0;                /* number of implicit vals (h1, h2) */
+   parm[1].chancalc =  calcna1h;        /* default rate function */
+   parm[1].funcname = "calcna1h";       /* user rate function */
+   parm[1].dq = dqh;                    /* Q10 for h rate function */
+   .
+   .
+   .
+   followed by a description of the states and their transitions
+   .
+   .
+   .
+   return ch;
+ }
+</pre>
+
+Note the "mak2state()" procedure that is invoked by the
+"makna0()" procedure above.  It is called with the state pointer
+"spnt", 2 rate functions (forward, reverse) and a rate
+multiplier.  If you use the "rchanf", "rchanr" functions, you'll
+get a channel that is driven by either its own HH conductance
+(i.e. for Na and K type 0, 2,3) or the conductance of its
+controlling synapse (RSYN2, etc):<p>
+
+
+For a Markov synaptic channel:<p>
+
+<pre>
+makampa1()
+
+{
+
+   nstate = 7;                          /* 7 Markov states */
+   nparm = 1;                           /* make 1 set of params */
+   ch=makchanconst(AMPA,1,nstate,nparm,dbasetsyn);/* make chan const, parm */
+   ch->unitary = dampau;
+   ch->trconc = dstr;
+   ch->perm[PNA] = 2.0/3;               /* rel permeability to Na+ ions */
+   ch->perm[PK]  = DPK;                 /* rel permeability to K+ ions */
+                                        /*  set to give vrev=0 */
+   ch->perm[PCA] = .1;                  /* permeability to Ca++ ions */
+   ch->vrev = 0;                        /* default reversal potential */
+
+   spnt = ch->state;
+   parm = ch->parm;
+   respamp = ch->respamp;
+
+   parm[0].nfval    = 0;                /* num of func vals (am, bm, etc.) */
+   parm[0].nival    = 0;                /* don't use implicit vals (yet) */
+   parm[0].chancalc =  calcampa1;       /* default rate function (dummy) */
+   parm[0].funcname = "calcampa1";      /* user rate function */
+   parm[0].dq = dqsyn;                  /* Q10 for m rate function */ 
+
+   respamp[GLU-GLU] = 0.8;              /* response to glutamate */
+   respamp[AMPA-GLU] = 1.0;             /* response to AMPA */
+   respamp[NMDA-GLU] = 1e-3;            /* response to NMDA */
+   respamp[CNQX-GLU] = -1.0;            /* response to CNQX */
+   .
+   .
+   .
+   followed by a description of the states and their transitions
+   .
+   .
+   .
+  return ch;
+}
+</pre>
+
+
+<pre>
+   mak2state(spnt,rchanf,rchanr,CHANRATE);  /* make 2 Markov states for noise */
+</pre>
+
+<h3><a name = "13">HH channels</a></h3>
+
+  Run-time calculations are performed in "ncomp.cc". All the
+compartments are computed by "runcomp()".  Inside this
+routine, the HH class of channel calls "calcchanval()" once
+per time step (see below).  Each Na or K channel has a
+structure that describes it in "ncomp.h".<p>
+
+<pre>
+struct hhchan {                         /* structure for membrane channel */
+        short int ctype;                /* type of channel: na, k, etc. */
+        short int stype;                /* subtype of channel: na, na2, etc.*/
+        hhchan *cnext;                  /* pointer to next channel */
+        float conduct;                  /* conductance of channel */
+        comp *comp1;                    /* channel compartment */
+        comp *comp2;                    /* possible calcium compartment */
+        float maxcond;                  /* maximum total channel conductance*/
+        float voffsm;                   /* activation offset voltage */
+        float voffsh;                   /* inactivation offset voltage */
+        float vrev;                     /* reversal potential */
+        chanconst *consts;              /* channel constants */
+        char *cstate;                   /* channel random state */
+        float cafrac;                   /* fractional Ca conductance */   
+        int nchan;                      /* total number of channels */
+        int cno;                        /* number of channels actually open */
+        float arate;                    /* activation rate */
+        float brate;                    /* inactivation rate */
+        float crate;                    /* deactivation rate */
+        float drate;                    /* re-activation rate */
+        short int numstate;             /* number of states used */
+        stconc *conc;                   /* used for markov channels */
+        double m;                       /* m,n activation, range 0 - 1 */
+        double h;                       /* h inactivation  range 0 - 1 */
+} hhchan;
+
+ </pre>
+  To add a new HH channel to "runcomp()", you add a new case
+statement for it. You can modify the calculation of m*m*m*h
+or n*n*n*n in "ncomp.cc" (look inside "runcomp()"). You can
+also modify the calculation of the rate constants alpha and
+beta  for m,h, or n.<p>
+
+Note that the original Hodkin-Huxley rate functions were defined
+at 6.3 deg Celsius, and ordinarily need to be normalized to the
+temperature at which a model is run.  By default, HH rate
+functions are normalized to 22 deg assuming a Q10 for m of 2 and
+a Q10 for h of 3.  Defaults for other Q10 values are also set to
+3, allowing the default rate function definition to be for 22 deg
+C.  
+<p>
+
+<h4>Calcium channel</h4>
+
+  The calcium channel uses the same data structure as the HH 
+channel.  However there is a difference in the way the 
+calcium current is computed at run time.  If the voltage 
+compartment has connections to calcium channels, then it 
+also has a pointer to a calcium compartment.  Before the 
+membrane currents (e.g. for Na, K) are computed, the calcium 
+channel currents must be known because some membrane 
+currents are calcium-sensitive (e.g. the KCa channel). 
+Therefore all calcium channels connected to the voltage 
+compartment are computed along with the calcium fluxes and 
+diffusion before other membrane currents.  <p>
+
+<h4>KCa channel</h4>
+
+  The calcium-sensitive potassium channel uses a data 
+structure that is similar to the HH channel but with a few 
+extra parameters that control the alpha and beta rate 
+functions.  These functions are not placed in lookup tables 
+(as all the other rate functions are) because they depend on 
+both voltage and calcium concentration.<p>
+
+
+<h4>New rate functions</h4>
+
+  To define alternate functions for calculating the rate
+constants, you need to add a new "calc???()" function.  Each
+"chan???.cc" file has one of these. I originally used the
+exact definitions of the rate functions defined by Hodgkin
+and Huxley (1952).  However, since their definition for
+membrane voltage is antiquated, these have been updated to
+their modern equivalents.  The voltage parameter used as
+input to these functions is the membrane voltage (the modern
+one: extracellular space is ground) multiplied by 1000 to
+give calibration in millivolts.  The rate is specified per
+sec, so the original HH definitions need to be multiplied by
+1000 ("MSSEC").  <p>
+
+  Each rate function is called with 2 parameters, 1) the
+membrane voltage and 2) the function subtype (alpha, beta,
+etc.).  The function subtype must be less than or equal to
+the "nfval" field in the chanparm. To add a new subtype for
+a rate function, make a new "case" statement and put your
+new definition of the rate function after the case. Remember
+to place a "break" after the end of your addition.<p>
+
+
+<h4>User-defined rate functions</h4>
+
+  As described in the section on "channels", it is possible to
+define the rate functions from a user program given to "nc".  If
+you would like to try out a change to one of a channel's rate
+functions temporarily, this is a good way to start.  If you
+define the rate function in the user program, you must define the
+function for all the channel subtypes that use the subtype.
+Probably the best way to do this is to copy the appropriate rate
+function routine from "initchan.c" into your user ".n" program
+and then modify it.<p>
+
+  Some simulators allow interactive modification of the rate
+functions.  However, it is easy enough in "nc" to write a
+function and graph it.<p>
+
+<h4> HH-type lookup tables </h4>  
+
+   A fast method for computing the next value of "m" and
+"h"' for Hodgkin-Huxley channels is the implicit method
+given by Hines (1984) [ Int. J. Biomed. Comput. 15: 69-76.]
+This method calculates the new values of m, n and h with one
+multiplication and one addition instead of requiring an
+iterative method for repeatedly integrating m, n and h until
+their values converge.<p>
+
+  The function "calcchanval(chan)" is used at run time to
+return implicit values for the HH equations. It computes
+function values by interpolating the implicit tables
+"chanival" and placing the values in "parm->ival".
+These interpolated values are generated automatically at run
+time for the alpha and beta rate constants from predefined
+tables. All the tables are generated at the start of a run
+by the "makchanconst(ctype,cnum,nstate,nparm)" procedure.
+Each channel subtype has its own individual tables generated
+by individual calls to the rate functions. This allows
+different subtypes to have different rate functions.
+The lookup tables are tabulated from -150 to +150 mV, in
+steps of 1 mV.  At run time, they are interpolated with a
+simple linear appoximation algorithm.<p>
+
+  The function "calcchanval(v-voffset, tau, parm)" is used
+at run time to return implicit values for the HH equations.
+It computes the value of one state variable ("m") by
+interpolating the implicit tables "chanival" and placing the
+values in "parm->ival".  It must be called once for each
+state variable (i.e parameter set).
+   
+<hr>
+<h3><a name = "14">Sequential-state channels.</a></h3>
+
+  To make a sequential-state channel that duplicates the
+corresponding Hodgkin-Huxley type channel, write down a set
+of states, one more than the number of gating particles
+(i.e. 4 states for m3 or 5 states for n4), and duplicate
+these states if there is an inactivation gate.  The
+transition functions between the states are the standard
+Hodgkin-Huxley "alpham" rate function multiplied by 3,2,1
+for activation functions and the "betam" rate function
+multiplied 1,2,3 for deactivation functions. The
+inactivation rate constants "alphah" and "betah" are the
+transition functions between one of the 4 activated states
+and the corresponding "inactivated state". For a good
+description of sequential state channel models, see
+Armstrong and Matteson, (1984)  Curr. Topics Membranes
+Transport 22: 331-352.<p> 
+
+  The sequential-state class calls "dochan()" and "dochan2()",  
+defined in the top of "ncomp.cc".  The sequential-state algorithm  
+(in dochan2()) looks complicated but it is really very simple. 
+Each sequential-state channel has a structure that defines it 
+somewhat like the HH channels above but containing a little more  
+information:  <p>
+
+<pre>
+(taken from ncomp.h:)
+
+struct chan {                           /* structure for membrane channel */
+        short int ctype;                /* type of channel: na, k, etc. */
+        short int stype;                /* subtype of channel: na, na2, etc.*/
+        hhchan *cnext;                  /* pointer to next channel */
+        float conduct;                  /* conductance of channel */
+        comp *comp1;                    /* channel compartment */
+        comp *comp2;                    /* possible calcium compartment */
+        float maxcond;                  /* maximum total channel conductance*/
+        float voffsm;                   /* activation offset voltage */
+        float voffsh;                   /* inactivation offset voltage */
+        float vrev;                     /* reversal potential */
+        chanconst *consts;              /* channel constants */
+        float cdur;                     /* duration of channel event */
+        char *cstate;                   /* channel random state */
+        int nchan;                      /* total number of channels */
+        int cno;                        /* number of channels actually open */
+        float taum;                     /* activation tau */
+        float tauh;                     /* inactivation tau */
+        float tauc;                     /* deactivation tau */
+        float taud;                     /* re-activation tau */
+        short int numstate;             /* number of states used */
+        stconc *conc;                   /* state concentr (variable size arr) */
+        };
+
+struct stconc {                         /* structure for state concentration */
+        double cval;                    /* state concentr */
+        double cest;                    /* state concentr estimate */
+        double nchan;                   /* number of channels in this state */
+        };
+ </pre>
+
+  Each channel state has a concentration and the
+concentrations change  according to transitions (defined in
+"initchan.c") in proportion  to alpha and beta, times a
+constant, times the state concentration.  The "stconc"
+structure holds the concentration and delta for each  state.
+The number of states must be at least MINSTATE but may be as
+large as MAXSTATE.  Of course these limits may easily be
+altered.  Each individual channel has a "chan" structure
+that defines it and also the appropriate number of "stconc"
+structures that define the individual values of the state
+concentrations. The channel also has a pointer to a table
+(array) of "chanpar" structures.  Each chanpar structure
+contains an array of "chanstate" structures which define the
+number of transitions, the states to which the transitions
+are defined, the function returning the rate (alpha, beta),
+a rate multiplier, and which compartment's voltage should be
+used to calculate the rate:<p>
+
+<pre>
+
+(taken from "ncomp.h":)
+     struct chanstate {
+
+/* structure for chan state constants*/
+        float cond;                     /* normalized conductance of state */
+        short int numtrans;             /* number of transitions from state */
+        char     trans[NUMTRANS];       /* four possible state transitions */
+        double (*trate[NUMTRANS])();    /* function returning rate for trans */
+        float  ratemul[NUMTRANS];       /* rate multiplier for transition */
+        char   rateo[NUMTRANS];         /* comp. for transition volt sens */
+        };                              /* rateo=0 -> taua; rateo=1 -> taub */
+ </pre>
+
+   To set up a new sequential-state channel, you can  modify or
+copy the "makna1()" or "makk1()" subroutines.  The "makna3()"
+subroutine is a copy of the "makna1()" subroutine, except that it
+has 6 states instead of 8 and the transitions are a little
+different.  <p>
+
+  First you should draw the state diagram, and label the
+states with numbers starting with 0, and draw the allowable
+transitions. Then you set up the type, number of states, and
+a chanstate pointer "spnt".<p>
+
+<pre>
+   nstate = 8;                          /* 8 Markov states */
+   nparm = 2;                           /* make 2 sets of params, m, h */
+   ch=makchanconst(NA,1,nstate,nparm,baset);  /* make chan const, parm */
+   spnt = ch->state;
+   parm = ch->parm;
+</pre>
+
+  Then you set up the states.  For each state, put in the number
+of allowable transitions, and the conductance.  Then for each
+transition,  (labeled starting with zero for each state) put in
+the  state the transition goes to, the function returning  the
+rate constant for the transition (e.g. "alm" or "alh", etc),
+a possible multiplier for the rate constant, and a number (either
+0 or 1)  defining which user-defined offset and rate to use (i.e.
+offsm or offsh) to pass to the rate function).  A zero means use
+offsm.  
+
+<pre>
+   m = 2;
+      state       trans  
+   spnt[0].numtrans   = 1;
+   spnt[0].cond       = 0; 
+   spnt[0].trans  [0] = 1; 
+   spnt[0].trate  [0] = alm; 
+   spnt[0].ratemul[0] = 3.0 * m; 
+   spnt[0].rateo  [0] = 0; 
+
+   spnt[1].numtrans   = 2;
+   spnt[1].cond       = 0; 
+   spnt[1].trans  [0] = 2;                      /*   0 <-> 1 <-> 2 <-> 3   */
+   spnt[1].trate  [0] = alm;
+   spnt[1].ratemul[0] = 2.0 * m;
+   spnt[1].rateo  [0] = 0;
+   spnt[1].trans  [1] = 0;                      /*               ^     |   */
+   spnt[1].trate  [1] = betm;
+   spnt[1].ratemul[1] = 1.0 * m;
+   spnt[1].rateo  [1] = 0;                      /*                     4   */  
+
+   etc, etc. 
+</pre>
+   Once you have defined the states and transitions, the 
+next change is to modify the alpha and beta rate functions. 
+You can use any of the existing ones but you can also make 
+up arbitrary new functions.  To do this, see the discussion 
+of HH functions above.  <p>
+
+<h4>Sequential-state lookup tables</h4>
+
+The "chanrate" function can be used by a sequential-state
+channel to calculate the function values at run time.  The
+sequential-state channel also uses an "implicit" method for
+calculating the new values of the states, but the implicit
+method is done inside "dochan2()" inside "ncomp.cc" at run
+time. The function values are placed in the "parm->fval"
+structure and are accessed there by the rate functions
+defined for each state transition (e.g. "alm", "alh", =
+"al0", "al1", etc.).  The rate functions can be any C
+function that takes a pointer to a chan and returns a
+"double", so they are not required to access the function
+values calculated by "chanrate".<p>
+
+<h4>Non-standard rate functions</h4>
+
+The rate functions for a sequential-state channel can be any
+C function that takes a pointer to a chan and returns a
+"double", so they are not required to access the function
+values calculated by "chanrate".  The rate functions in
+chank2.cc can not easily be placed in small lookup tables
+because they are functions of both voltage and calcium.<p>
+
+For a different way to set up a sequential-state channel,
+look in "channa2.cc".  The Na type 2 channel has 10 rate
+functions but some of them are "activation" parameters and
+others are "inactivation parameters".  All the parameters
+that have the same Q10 are part of one "parameter set":<p>
+
+<pre>
+   nstate = 9;                          /* 9 Markov states */
+   nparm = 2;                           /* make 2 sets of seq. state states */
+   ch = makchanconst(NA,2, nstate, nparm, baset); /* make chan const, parm */
+   ch->unitary = 6e-12;                 /* conductance measured at BASETC. */
+   spnt = ch->state;
+   parm = ch->parm;
+   ch->perm[PNA] = 1.0;                 /* rel permeability to Na+ ions */
+   ch->perm[PK]  = dpkna;               /* permeability to K+ ions / perm Na */
+   ch->vrev = vna;                      /* default reversal potential */
+
+
+   parm[0].nfval    = 6;                /* num of func vals (am, bm, etc.) */
+   parm[0].nival    = 0;                /* don't use implicit vals (yet) */
+   parm[0].chancalc =  calcna2m;        /* default rate function */
+   parm[0].funcname = "calcna2h";       /* user rate function */
+   parm[0].dq = dqm;                    /* Q10 for m rate function */
+
+   parm[1].nfval    = 4;                /* num of func vals (ah, bh, etc.) */
+   parm[1].nival    = 0;                /* don't use implicit vals (yet) */
+   parm[1].chancalc =  calcna2h;        /* default rate function */
+   parm[1].funcname = "calcna2h";       /* user rate function */
+   parm[0].dq = dqh;                    /* Q10 for m rate function */
+ 
+</pre>  
+
+   If you have designed a new channel type that you believe 
+others would be interested in, please send the source code to
+allow others to share it.<p>
+
+
+</body>
+</html>
+

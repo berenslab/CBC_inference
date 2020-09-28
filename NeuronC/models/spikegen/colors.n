@@ -1,0 +1,18 @@
+
+black = 0;
+blue  = 1;
+green = 2;
+cyan  = 3;
+red   = 4;
+magenta = 5;
+yellow = 6;
+white  = 7;
+gray   = 8;
+ltblue = 9;
+ltgreen = 10;
+ltcyan  = 11;
+ltred   = 12;
+ltmagenta = 13;
+ltyellow = 14;
+brtwhite = 15;
+

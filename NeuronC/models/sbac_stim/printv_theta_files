@@ -1,0 +1,77 @@
+#! /usr/bin/perl
+#
+#  printvt_files 
+#
+
+@contvals = (0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080);
+$contnum = $#contvals + 1;
+
+@sbspacvals = (135);         # cell spacing
+$sbspacnum = $#sbspacvals + 1;
+
+@barvals = (70,300);             # bar length
+$barnum = $#barvals + 1;
+
+# @synanvals = (90,100,110,150);       # synanpo
+@synanvals = (90);       # synanpo
+$synannum = $#synanvals + 1;
+
+@thetavals = (0, 30, 60, 90, 120, 150);
+$thetanum = $#thetavals + 1;
+
+@inhvals = (0, 1);
+$inhnum = $#inhvals + 1;
+
+
+ $relangle = 300;
+     $sdia = 0.3;
+    $noinh = 0;
+    $sbarr = 107;
+   $sbspac = 155;
+$barlength = 70;
+   $cadist = 2.2e-3;
+  $synanpo = 90;
+     $cont = 0.0075;
+$dbp1_cond = 2.3e-10;
+
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "synanpo=f"   => \$synanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib
+            );
+
+ $sd = sprintf("%4.2f",$sdia);
+
+ for ($s=0; $s<$sbspacnum; $s++) {
+     # $sbspac = sbspacvals[$s];
+      $sbspac = sprintf("%.3d",$sbspacvals[$s]);
+      for ($b=0; $b<$barnum; $b++) {
+         $barlength = sprintf("%.3d",$barvals[$b]);
+         for ($a=0; $a<$synannum; $a++) {
+	   $synanpo = sprintf("%.3d",$synanvals[$a]);
+	    for ($c=0; $c<$contnum; $c++) {
+	         $cont = sprintf("%6.4f",$contvals[$c]);
+                 system ("rm -f sbac_theta.$relangle.$cont.$sbspac.$barlength.$synanpo.$sd.txt");
+                 system ("echo contrast $cont sbspac $sbspac barlength $barlength synanpo $synanpo");
+                 for ($t=0; $t<$thetanum; $t++) {
+	              $theta = sprintf("%.3d",$thetavals[$t]);
+                      for ($i=0; $i<$inhnum; $i++) {
+	                   $noinh = $inhvals[$i];
+
+system ("printv sbac7_midbp_ca.$relangle.$cont.$noinh.$sbspac.$barlength.$synanpo.$sd.$theta.r >> sbac_theta.$relangle.$cont.$sbspac.$barlength.$synanpo.$sd.txt");
+                     }
+                 }
+             }
+         }
+      }
+  }
+

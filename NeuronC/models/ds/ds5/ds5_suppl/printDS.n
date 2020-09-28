@@ -1,0 +1,178 @@
+//this file was made 6-4-2003 for use with the NeuronC script ds4jt.n
+//it contains a procedure for printing certain DS values onto the screen
+
+proc printDS() {
+
+  local recpoint,DSindex,DSabs,DSI_soma,DSabs_soma,DSCa,deltaCa,currentDS,lambda;
+
+  if (notinit(disp_thresh))
+     disp_thresh = 0.0001;
+  recpoint = findnode();
+
+  if(!notinit(somaclamp)) {
+    /* somaclamp experiment: compute DS in the current */
+    currentds = (imaxresp[FUG][soma] - imaxresp[PET][soma])/
+	        (imaxresp[FUG][soma] + imaxresp[PET][soma]);
+    /* print out results */
+    fprintf (stdout, "#Freq(Hz) spat.P(um) dscurrent@soma somaclamp(V)\n");
+    fprintf (stdout, "%-10.3g%-11.3g%-15.3g%-12.3g\n",
+             stfreq, speriod, currentds, somaclamp);
+  }
+  else {
+    /* compute DS for voltage signal */
+    DSindex = ((Vmaxresp[FUG][recpoint] - Vmaxresp[PET][recpoint])/
+               (Vmaxresp[FUG][recpoint] + Vmaxresp[PET][recpoint]));
+    DSabs = (Vmaxresp[FUG][recpoint] - Vmaxresp[PET][recpoint])*1000;	//in mV
+
+    if (addca) {	/* if cell has ca-chans, compute DS in [Ca] */
+
+      DSCa = ((camaxresp[FUG][recpoint] - camaxresp[PET][recpoint])/
+                 (camaxresp[FUG][recpoint] + camaxresp[PET][recpoint]));
+      deltaCa = camaxresp[FUG][recpoint] - camaxresp[PET][recpoint];
+    };
+
+    if (somamode) {	/* in somamode, also compute DS at soma */
+      DSI_soma = ((Vmaxresp[FUG][soma] - Vmaxresp[PET][soma])/
+              (Vmaxresp[FUG][soma] + Vmaxresp[PET][soma]));
+      DSabs_soma = (Vmaxresp[FUG][soma] - Vmaxresp[PET][soma])*1000;	//in mV
+    };
+
+    /* print out results, different printouts for different stimuli */
+    if (expt=="sb_cc_sine" || expt=="sb_cc_sineann" || expt=="sb_cc_sine_simp") {
+
+      //set the DSI to be zero if responses are too small to be reliable
+      if (Vmaxresp[FUG][recpoint]<disp_thresh && Vmaxresp[PET][recpoint]<disp_thresh)
+        DSindex = 0;
+      if (Vmaxresp[FUG][soma]<disp_thresh && Vmaxresp[PET][soma]<disp_thresh)
+        DSI_soma = 0;
+
+      if (expt=="sb_cc_sine_simp" && somamode) {
+	fprintf(stdout,
+	"#Freq(Hz) spat.P(um) DSindex DSIsoma |CF:Vmx  t_mxbpam t_mxV |CP:Vmx t_mxbpam t_mxV\n");
+	fprintf (stdout, "%-10.3g%-11.3g%-10.3g%-10.3g%-8.3g%-6.3g%-6.3g%-10.3g%-6.3g%-6.3g \n",
+	stfreq, speriod, DSindex, DSI_soma,
+	Vmaxresp[FUG][recpoint],peakVtimesCFCP[FUG][recpoint],peakbpamtimesCFCP[FUG][recpoint],
+	Vmaxresp[PET][recpoint],peakVtimesCFCP[PET][recpoint],peakbpamtimesCFCP[PET][recpoint]);
+      }
+      else if (addca && somamode) {
+	fprintf (stdout,
+        "#Freq(Hz) spat.P(um) DSindex   DS in mV DSIsoma  DSabs_soma DSCa      deltaCa(M)\n");
+        fprintf (stdout, "%-10.3g%-11.3g%-10.3g%-10.3g%-10.3g%-11.3g%-11.3g%-8.3g\n",
+                 stfreq, speriod, DSindex, DSabs, DSI_soma, DSabs_soma,DSCa,deltaCa);
+      }
+      else if (somamode) {
+	 fprintf (stdout,
+         "#F(Hz)  Cyc/rad DSindex   DS in mV  DSIsoma   DSabs_soma v(um/s) amth orient(deg)\n");
+	 fprintf (stdout, "%-8.3g%-8.2g%-10.3g%-10.3g%-10.3g%-11.3g%-8.4g%-5.3g%-7.3g\n",
+                  stfreq, cycperrad, DSindex, DSabs, DSI_soma, DSabs_soma, velocity, amtheta, angle);
+      }
+      else if (addca) {
+	fprintf (stdout,
+        "#Freq(Hz) cyc/rad DSindex   DS in mV  DSCa      v(um/s) deltaCa(M)\n");
+	 fprintf (stdout, "%-10.3g%-8.3g%-10.3g%-10.3g%-10.3g%-8.4g%-10.3g\n",
+                  stfreq, cycperrad, DSindex, DSabs, DSCa, deltaCa);
+      }
+      else {
+        fprintf (stdout, "#Freq(Hz) cyc/rad DSindex   DS in mV  v(um/s) amth orient(deg)\n");
+      	fprintf (stdout, "%-10.3g%-8.3g%-10.3g%-10.3g%-8.4g%-5.3g%-7.3g\n",
+                 stfreq, cycperrad, DSindex, DSabs,velocity,amtheta,angle);
+       };
+    }
+    else {
+      if (addca && somamode)
+       {
+	fprintf (stdout,
+        "#Velocity DSindex   DS in mV DSIsoma  	 DSabs_soma DSCa      deltaCa(M)\n");
+        fprintf (stdout, "%-10.3g%-10.3g%-10.3g%-10.3g%-11.3g%-11.3g%-8.3g\n",
+                 velocity, DSindex, DSabs, DSI_soma, DSabs_soma,DSCa,deltaCa);
+       }
+      else if (somamode)
+        {
+	 lambda=sqrt((amrm*.5*am_dend_dia*.0001)/(2*dri)) * 10000;
+	 fprintf (stdout,
+         "#Velocity DSindex   DS in mV  DSIsoma   DSabs_soma lambda (um) \n");
+	 fprintf (stdout, "%-10.3g%-10.3g%-10.3g%-10.3g%-11.3g%-10.3g\n",
+                  velocity, DSindex, DSabs, DSI_soma, DSabs_soma, lambda);
+       }
+      else if (addca)
+       {
+	fprintf (stdout,
+        "#Velocity DSI      DS in mV  DSCa      deltaCa(M)\n");
+	 fprintf (stdout, "%-10.3g%-10.3g%-10.3g%-10.3g%-10.3g\n",
+                  velocity, DSindex, DSabs, DSCa, deltaCa);
+       }
+      else
+       {fprintf (stdout, "#Velocity DSindex   DS in mV\n");
+      	fprintf (stdout, "%-10.3g%-10.3g%-9.3g\n",
+                 velocity, DSindex, DSabs);
+       };
+    };
+  };
+};
+
+dim Vtipvals[2] = {{BIGPOSVAL}};	//V at tip, for each of 2 stims
+dim Vsomvals[2] = {{BIGPOSVAL}};	//V at soma, for each of 2 stims
+dim phase_tipvals[2] = {{BIGNEGVAL}};	//phase at tip, for each of 2 stims
+dim phase_somvals[2] = {{BIGNEGVAL}};  //phase at soma, for each of 2 stims
+
+proc printdelays(recpoint,dir)
+{
+  local delay_som, phase_som, delay_tip, phase_tip;
+  local delay_somtip, phase_somtip, delay_tipsom, phase_tipsom;
+
+  /* calculate delays and phase */
+  if (recpoint==soma){
+    //delay and phase shift at soma
+    delay_som = peakVtimesCFCP[dir][soma] - peakbpamtimesCFCP[dir][soma];
+    phase_som = comp_phase(stfreq,delay_som); //phase shift in deg
+    //delay and phase shift from peak soma syn input to peak V at dend tip
+    delay_somtip = peakVtimesCFCP[dir][NDENDREC-1] - peakbpamtimesCFCP[dir][soma];
+    phase_somtip = comp_phase(stfreq,delay_somtip); //phase shift in
+
+    //store numbers in global arrays: 0 is somstim condition
+    Vtipvals[0] = Vmaxresp[dir][NDENDREC-1]; //V at tip, with somstim
+    Vsomvals[0] = Vmaxresp[dir][soma]; 	     //V at soma, with somstim
+    phase_somvals[0] = phase_som;            //phase at soma, with somstim
+    phase_tipvals[0] = phase_somtip;         //phase at tip, with somstim
+
+    print "## Input at soma ##";
+    //print "Delay at soma:", delay_som, "s";
+    print "#Phase shift soma syn-input vs Vsoma:", phase_som, "deg";
+    print "#Vsoma:", Vsomvals[0], "V";
+    //print "#Delay from soma syn-input to Vtip:", delay_somtip, "s";
+    print "#Phase shift soma syn-input vs Vtip:", phase_somtip, "deg";
+    print "#Vtip:", Vtipvals[0], "V";
+  }
+  else {
+    // measure delay from synapse to V at a recording point
+    delay_tip = peakVtimesCFCP[dir][recpoint] - peakbpamtimesCFCP[dir][recpoint];
+    phase_tip = comp_phase(stfreq,delay_tip); //phase shift in deg
+
+    delay_tipsom = peakVtimesCFCP[dir][soma] - peakbpamtimesCFCP[dir][recpoint];
+    phase_tipsom = comp_phase(stfreq,delay_tipsom); //phase shift in
+
+    //store numbers in global arrays: 1 is tipstim condition
+    Vtipvals[1] = Vmaxresp[dir][NDENDREC-1]; //V at tip, with tipstim
+    Vsomvals[1] = Vmaxresp[dir][soma]; 	     //V at soma, with tipstim
+    phase_somvals[1] = phase_tipsom;      //phase at soma, with tipstim
+    phase_tipvals[1] = phase_tip;         //phase at tip, with tipstim
+
+    if (recpoint==NDENDREC-1){
+      print "## Input at dendritic tip ##";
+      //print "#Delay at dend tip:", delay_tip, "s";
+      print "#Phase shift Vtip vs tip syn-input:", phase_tip, "deg";
+      print "#Vtip:", Vtipvals[1], "V";
+      //print "#Delay from tip syn-input to Vsoma:", delay_tipsom, "s";
+      print "#Phase shift tip syn-input vs Vsoma:", phase_tipsom, "deg";
+      print "#Vsoma:", Vsomvals[1], "V";
+    }
+    else {
+      print "# Input at recpoint ", recpoint, " #";
+      print "Delay at rec_pt", recpoint, ":", delay_tip, "s";
+      print "Phase shift Vrec_pt vs syn-input: ", phase_tip, "deg";
+      print "Vrec_pt", recpoint, ":", Vmaxresp[dir][NDENDREC-1], "V";
+      print "Delay from rec_pt syn-input to Vsoma: ", delay_tipsom, "s";
+      print "Phase shift Vsoma vs rec_pt syn-input: ", phase_tipsom, "deg";
+    };
+  };
+};

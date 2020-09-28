@@ -1,0 +1,129 @@
+
+/* 
+ Creates 1-D point spread function based on fit
+ of Campbell and Gubisch (1966) by Geisler (1984)
+ Values are in terms of minutes of visual angle.
+
+ Courtesy of A. Hsu, 1996
+
+ This is implemented in "pointspfov()" inside "stimsub.cc".
+
+*/
+
+minutes_degree = 60;
+microns_degree = 300;
+
+a1 = 0.684;
+b1 = 0.443;
+s1 = 0.443 / minutes_degree * microns_degree;  /* = 2.215 um radius */
+a2 = 0.587;
+b2 = 2.035;
+s2 = 2.035 / minutes_degree * microns_degree;  /* = 10.175 um radius */
+
+
+scale = 2;
+xwidth = 20*scale;
+xstart = 0;		/* microns */
+xstop  = 2*xwidth;
+xmid = (xstop - xstart) * 0.5;
+incr = 1;
+
+xarrsiz = xstop - xstart;
+yarrsiz = xstop*4;
+dim sarr[xarrsiz][yarrsiz];
+dim g2arr[xarrsiz][yarrsiz];
+
+//blur_rad = 2.215;
+//scatter_rad = 10.175;
+
+blur_rad = 2.215;
+scatter_rad = 10.175;
+
+ampl_scatter = (a2/b2)  / (a1/b1);
+ampl_overall = (a1/(2*b1) + a2/(2*b2)) / (1+ampl_scatter);
+
+//print ampl_scatter, ampl_overall;
+
+//ampl_scatter = 0.18681912;
+//ampl_overall = 0.77200903;
+ampl_overall = 0.95;
+
+//gfact = .146364;		/* without linespread normalization */
+gfact = 7.783265;		/*  with   linespread normalization */
+ampl_scatter = 0.04278007;
+
+/* initialize the array */
+
+ for (y=xstart; y<yarrsiz; y+= incr) {
+  for (x=xstart; x<xstop; x+= incr) {
+     sarr[x][y] = 0;
+    g2arr[x][y] = 0;
+  };
+ };
+
+  /* Fill up source array with single blur function */
+
+  /* The idea is, here we assume the smaller (dia) of the 2 Gaussians */
+  /*  is the "blur" function which always starts out with amplitude of 1. */
+  /*  The larger (dia) Gaussian is the "scatter" function which must be */
+  /*  set to the correct relative amplitude */
+
+ for (y=xstart; y<xstop; y+= incr) {
+  for (x=xstart; x<xstop; x+= incr) {
+
+   xpos = (x - xmid) / scale;
+   ypos = (y - xmid) / scale;
+   r = sqrt (xpos*xpos + ypos*ypos); 
+
+   g2 =     ampl_overall * ( 1.0 * exp (-0.5*(r/blur_rad)^2) +
+                 ampl_scatter * exp (-0.5*(r/scatter_rad)^2));
+
+   sarr[x][y] = g2;
+
+  };
+ };
+
+yo = 0;
+for (yo=xstart; yo<xstop*2; yo+= incr) {
+ for (y=xstart; y<xstop; y+= incr) {
+  for (x=xstart; x<xstop; x+= incr) {
+
+
+   g2arr[x][y+yo] += sarr[x][y];
+
+  };
+ };
+};
+
+/* Normalize line spread volume to 1 */
+/*  Do it here to make it similar to Geisler's fit */
+/*  But, no need to make absolute amplitude correct because */
+/*  blur volume is always normalized before use. */
+
+ total = 0;
+  y = xstop;
+  for (x=xstart; x<xarrsiz; x+= incr) {
+    total += g2arr[x][y];
+  };
+  total /= scale;
+  for (y=xstart; y<yarrsiz; y+= incr) {
+   for (x=xstart; x<xstop; x+= incr) {
+    g2arr[x][y] /= total;
+   };
+  };
+
+y = xstop;
+for (x=xstart; x<xarrsiz; x+= incr) {
+
+   xpos = (x - xmid) / scale;
+   r = sqrt (xpos*xpos + ypos*ypos); 
+   g1=(a1/(2*b1))*exp(-0.5*(xpos/s1)^2) +
+      (a2/(2*b2))*exp(-0.5*(xpos/s2)^2);
+
+   g2 = g2arr[x][y];
+
+  //print x/scale, g1, g2 * gfact;
+  print x/scale, g1 - g2 * gfact;
+};
+
+

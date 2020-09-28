@@ -1,0 +1,1205 @@
+#! /usr/bin/nc -c
+
+/* Creates ganglion cell with spike generator */
+
+/* Data file defines morphology, see "gcdefs.n" for format.  */
+
+/* general parameters */		
+
+sversion = 2.621;	/* script version */
+
+ploti    = 2e-5; /* >= 5e-5 gives problems with rate measurements */
+crit     = 1e-8; 
+tempcel  = 35;
+implicit = 0; 
+drm      = 20e3;
+dcai     = 100e-9;
+plsep    = 1;
+
+
+dqm = 3;
+dqh = 3;
+
+dpnak = 0;  	/* remove  non-specific permeability of channels */
+dpkna = 0;
+//dpcana = 0;
+//dpnaca = 0;
+//dpcak  = 0;
+//dpkca  = 0;
+
+ddca  = 1e-6;  	/* calcium diffusion coef, default =  2e-6 */
+
+dcavoff  = 0;
+calcnernst=0; 
+
+vcl = -0.060;
+vk  = -0.080;
+vna = +0.04;
+
+soma	= 0;
+gc 	= 1;
+bp	= 2;
+am	= 3;
+xcone	= 4;
+	
+/* synaptic parameters */	
+
+efracsyn= 1;  	  /* fraction of dendritic nodes with excitatory synapses */
+ifracsyn= 0;  	  /* fraction of dendritic nodes with inhibitory synapses */
+condf 	= 22e-12; /* unit conduntance of synapes */
+nchanf	= 10;     /* N postsynaptic chan, */
+sfdur 	= 2;
+srdur 	= .5;
+
+vrev_inh = -0.07;
+nchan_inh = 250;
+cond_inh = 22e-12; // roughly GABA conductance
+sfdur_inh =1.50;
+srdur_inh =50; //?
+
+vsiz	= 12.5;
+expon1	= 1;
+thresh1 = -0.045;
+exponbp = 3;
+nchanbpgc = 10;
+
+/* end: synaptic parameters */	
+
+/* experiment control variables */	
+
+Synapses	= 1; 	 	/* bipolar cell input synapses ?*/
+gc_channels	= 1; 		/* = 1 -> include membrane channels */
+gc_ca_system	= 1; 		/* = 1 -> include Ca and K_Ca */
+current_stim	= 1;
+
+postsyn_noise	= 0;
+ves_noise       = 1;
+
+ttx		= 0;
+multi_steps	= 0;
+Transducer	= 0;
+
+vstart = vcl;
+
+plot_freq = 0;			/* plot spike frequency */
+plot_denspike = 0;
+plot_syns = 1;		
+
+make_gc         = 1;            /* make ganglion cell */
+make_bp         = 0;            /* make bipolar cell *`/
+make_am         = 0;            /* make amacrine cell */
+make_bpam       = 1;            /* make bipolar cell -> am synapses */
+make_bpgc       = 1;            /* make bipolar cell -> GC synapses */
+make_amgc       = 1;            /* make amacrine cell -> GC synapses */
+
+expt = "Rin";			/* single spike */
+expt = "spike";			/* single spike */
+expt = "vclamp";		/* multiple vclamp stimuli. */
+expt = "spike_zone";		/* look for spike initiation zone, no dends. */
+expt = "f/i";			/* current stimulus, multiple amplitudes */
+expt = "istim_soma";		/* current stimulus, look at spike rate */
+expt = "istim_soma_den";	/* somatic current, look at dendrites */
+expt = "istim_dend";		/* dendritic current, look at dendrites */
+expt = "istim_noise";		/* current stimulus with noise*/
+expt = "isislow";		/* look at currents during ISI */
+expt = "isifast";		/* look at currents during ISI */
+expt = "synap";			/* synaptic stimulus */
+expt = "synap-f/i";		/* synaptic stimulus, test amplitude */
+expt = "synap_noise";		/* synaptic stimulus with noise */
+expt = "sine";			/* sine wave stimulus */
+expt = "spot";			/* spot with temporal sine wave */
+expt = "spot_short";		/* spot, short flash */
+expt = "spot_vclamp";		/* spot, short flash with vclamp to see epsc*/
+
+expt = "istim_soma";  		/* Set "expt" value on command line or here */
+				/*  to run different experiment. */
+
+dd = setvar();			/* set values from command line */
+
+if (notinit(info))  info = 0;   /* information printout for script debugging */
+
+if (notinit(phaseplot))  phaseplot  = 0;
+
+if (notinit(makfile))  makfile  = "makgc.n";	/* script file to make cell   */
+if (notinit(densfile)) densfile = "stddens.n";  /* defines channel densities */
+if (notinit(anatfile)) anatfile = "beta8";	/* defines cell anatomy */
+if (notinit(dispfile)) dispfile = "dispgc.n";	/* defines display of anatomy */
+if (notinit(spiketimesonly))  spiketimesonly  = 0;
+
+if (notinit(long_axon)) long_axon = 1;
+
+if (densfile=="hilldens.n") {
+  dark_release	= 20;
+  light_release	= 60;
+}
+else {
+  dark_release	= 1.5;
+  light_release	= 60;
+};
+
+if (spiketimesonly){
+  plot_freq = 1;			/* plot spike frequency */
+  plot_denspike = 0;
+  plot_syns = 0;  
+};
+
+if (expt == "spike") {			/* synaptic stimulus */
+
+}
+else if (expt == "spike_zone") {		/* synaptic stimulus */
+
+  vstart = -.070;
+  if (notinit(long_axon)) long_axon = 1;	/* make axon longer */
+  if (notinit(no_dendrites)) no_dendrites = 1;	/* make only axon */
+}
+else if (expt == "synap") {			/* synaptic stimulus */
+  Synapses = 1;
+  current_stim = 0;
+}
+else if (expt == "istim_soma_den") {	/* somatic current stimulus, one step */
+  //Synapses = 0;
+  current_stim = 1;
+  mult_step = 0;
+
+  if (notinit(istim)) istim = 100e-12;
+  if (notinit(stimdur)) stimdur = .06;
+  plot_denspike=0;
+}
+else if (expt == "istim_dend") {	/* dendritic current stimulus,one step*/
+  Synapses = 0;
+  current_stim = 1;
+  mult_step = 0;
+
+  if (notinit(istim)) istim = 100e-12;
+  if (notinit(stimdur)) stimdur = .06;
+  plot_denspike=1;
+  den_node0 = 596;
+  den_node1 = 598;
+  den_node2 = 709;
+  den_node3 = 711;
+  den_node4 = 732;
+  den_node5 = 768;
+  den_node6 = 755;
+  complam = .02;
+}
+else if (expt == "istim_multi") {	/* current stimulus, multi step */
+  Synapses = 0;
+  current_stim = 1;
+  mult_step = 1;
+
+}
+else if (expt == "istim_phase") {                /* for phase plot */
+  Synapses = 0;
+  current_stim = 1;
+  mult_step = 1;
+  Chnoise = 0;
+//  Chnoise = 1;
+
+}
+else if (expt == "istim_noise") {	/* current stimulus with noise */
+  Synapses = 0;
+  current_stim = 1;
+  plot_freq = 0;
+
+  tempcel = 35;
+  vstart = -.071;
+
+  stimlength = .3;
+  if (notinit(endexp)) endexp = stimlength + .2;
+
+  nablock = 1.0;
+  Chnoise = 0;
+  snoise = 1; 
+}
+else if (expt == "synap_noise") {	/* synaptic stimulus with noise */
+  Synapses = 1;
+  efracsyn  = .5;
+  current_stim = 0;
+  plot_freq = 0;
+  plot_syns = 1;		
+
+  tempcel = 35;
+  vstart = -.060;
+
+  stimlength = .3;
+  if (notinit(endexp)) endexp = stimlength + .2;
+
+  nablock = 1.0;
+  snoise = 1; 
+  if (notinit(Chnoise)) Chnoise = 0;
+
+  dark_release	= 2;
+  light_release	= 10;
+}
+else if (expt == "sine") {		/* sine wave stimulus */
+  implicit =  0;
+  if (notinit(endexp)) endexp   = 0.2;
+
+  Synapses      = 1;
+  current_stim  = 0;
+  Transducer    = 1;
+
+  expon1 = 3;
+  efracsyn = .5;
+  rseed  = 3342;
+  if (notinit(scontrast)) scontrast = 0.0001;
+}
+else if ((expt == "spot" || 
+	  expt == "spot_short" || 
+	  expt == "spot_vclamp"   )) {
+
+  implicit =  0;
+
+  Synapses      = 1;
+  current_stim  = 0;
+  Transducer    = 1;
+
+  expon1 = 3;
+  efracsyn = .5;
+  vstart = -.055;
+  
+  if (notinit(scontrast)) scontrast = 0.001;
+  if (notinit(temp_freq)) temp_freq = 2;
+  if (notinit(ntrials)) ntrials = 1;
+
+  rseed  = 461974991 + 10000 * scontrast;
+  if (temp_freq == 0) fprintf (stderr,"## spikegen.n: temp_freq = 0, STOPPING\n")
+  else dtrial = 1 / temp_freq;
+  stimdur = dtrial * ntrials;
+  if (notinit(endexp)) endexp   =  stimdur;
+
+}
+else if (expt == "isislow") {
+   complam = .1;
+};
+ 
+
+/* calculate presynaptic voltage required to give given release rate */
+
+v_bp_dark	= (log(dark_release *vsiz/.025/10000))/1000 + thresh1;
+v_bp_light	= (log(light_release*vsiz/.025/10000))/1000 + thresh1;
+t_dark		= 0.025*exp((v_bp_dark -thresh1)*1000/expon1);
+t_light		= 0.025*exp((v_bp_light-thresh1)*1000/expon1);
+
+if (notinit(istim)) istim = 100e-12;
+if (notinit(Chnoise)) Chnoise = 0;
+
+if (Chnoise) {		/* turn on all channel noise */
+  timinc  = 1e-6;
+  nanois  = 1;
+  na6nois = 1;
+  canois  = 1;
+  kdrnois = 1;
+  kanois  = 1;
+  sk1nois = 1;
+  sk2nois = 1;
+  bknois  = 1;
+}
+else {
+  timinc  = 1e-5;
+  nanois  = 0;
+  na6nois = 0;
+  canois  = 0;
+  kdrnois = 0;
+  kanois  = 0;
+  sk1nois = 0;
+  sk2nois = 0;
+  bknois  = 0;
+};
+
+if (!disp) {
+printf("#========= spikegen.n settings ===\n");
+printf("#	                   	\n");
+printf("#	 nc version:     %s	\n",  print_version(ncversion));
+printf("#	 machine:        %s	\n",  ccstr(system("hostname -s")));
+printf("#	 date:           %s	\n",  ccstr(system("date")));
+printf("#	 script name:    %s	\n",  infile);
+printf("#	 script version: %s	\n",  print_version(sversion));
+printf("#	 cell:           %s	\n",  anatfile);
+printf("#	 constructed by: %s 	\n",  makfile);
+printf("#	 density file:   %s 	\n",  densfile);
+printf("#	                   	\n");
+printf("#	 experiment      %s 	\n",  expt);
+printf("#	 Synapses:       %g 	\n",  Synapses);
+printf("#	 efracsyn:       %g 	\n",  efracsyn);
+printf("#	 ifracsyn:       %g 	\n",  ifracsyn);
+printf("#	 Chnoise:        %g 	\n",  Chnoise);
+printf("#	 gc_channels:    %g     \n",  gc_channels);
+printf("#	 gc_ca_system:   %g 	\n",  gc_ca_system);
+printf("#	 current_stim:   %g 	\n",  current_stim);
+printf("#	 ves_noise:      %g     \n",  ves_noise);
+printf("#	 postsyn_noise:  %g     \n",  postsyn_noise);
+printf("#	 multi_steps:    %g	\n",  multi_steps);		
+printf("#	 Transducer:     %g	\n",  Transducer);		
+};
+
+/*---------------------------------------------------------*/
+
+include "colors.n";		/* color defs for plot statements */
+
+if (make_gc) {
+  include (makfile);		/* make beta cell */
+};
+if (make_gc) {
+  find_maxmin(gc);		/* find out how large ganglion cell is */
+}
+else {   /* if (!make_gc) */
+    if (notinit(xmax))  xmax  =  200;
+    if (notinit(xmin))  xmin  = -200;
+    if (notinit(ymax))  ymax  =  200;
+    if (notinit(ymin))  ymin  = -200;
+};  
+
+at [xcone][1] sphere dia 1 vrev -.07 vrest -.06;
+at [xcone][1] loc(0,0,15); 
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+dim csyns[2000];        /* array to hold excitatory synapse numbers */
+
+if (make_bp) {                                /* make bipolar cells */
+
+   bp_zloc = 10;
+   xsize = xmax - xmin;
+   ysize = ymax - ymin;
+   xcent = int((xmax + xmin) * .5);
+   ycent = int((ymax + ymin) * .5);
+
+   /* Make only enough bipolar cells to fill GC's dendritic field */
+ 
+   if (notinit(bp_nn))      bp_nn = 12;
+
+   n_bp = gausnn (bparr, center (xcent,ycent), size (xsize,ysize), 
+                nnd=bp_nn, reg=10, rsd=1173, ginfo=info);
+   if (info >= 2) {
+     printf ("# original number of bipolar cells %g\n",n_bp);
+   };
+
+   for (i=0; i<n_bp; i++) {
+        local bpx,bpy;
+
+     /* make random bipolar array */
+
+     bpx = bparr[i][0];         /* make random offset */
+     bpy = bparr[i][1];
+     at [bp][i] loc (bpx,bpy,bp_zloc);
+     conn [xcone][1] to [bp][i]
+       synapse open expon=expon1 maxcond=nchanf*condf
+       thresh=thresh1  vrev=0
+       nfilt1 1 timec1 1
+       kd 0.5
+       nfilt2=2 timec2=1 /* */
+       nfilt3 2 timec3=srdur /* */
+       vesnoise=ves_noise vsize=vsiz nfilt2 1 timec2 sfdur
+       chnoise= postsyn_noise unit=condf
+       ename csyns[i];
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+/* Set up direct bipolar and amacrine inputs to gc */
+
+if (ifracsyn>0) { 
+    at [am][1] sphere dia 2 rm=100e3 vrev -.07 vrest -.05;
+    connect [xcone][1] to [am][1] cable dia .1 length 20 vrest -.05;
+};
+
+if (Transducer) {
+      at [xcone][1] transducer (0,0);
+    if (ifracsyn>0)
+      at [am][1] transducer (0,0);
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (make_bpgc && make_bp) {  /* make bp -> gc synapses */
+
+dim bpgcsyns[n_bp+1];           /* array to hold synapse numbers */
+
+   if (notinit(bpsyn_dist_thresh)) bpsyn_dist_thresh = 7;
+
+    nbpgc_syn = 0;
+    foreach node [bp] ?b {
+      mindist = 1e10;
+      close_gc = 0;
+      foreach cable ?br node [gc] ?g ?d {
+       if ((element br ->elabl) == "dend") { 
+         if ((dist=n2dist([bp][b],[gc][g][d])) < mindist) {
+           mindist = dist;                      /* remember this dist */
+           close_gc = d;                        /* save gc node */
+           close_gcn = g;                       /* save gc node */
+         };
+       };
+       //print dist;
+      };
+      if (mindist < bpsyn_dist_thresh) {
+        at[bp][b] sphere dia 5 vrev -.07 vrest -.07;
+        conn [bp][b] to [gc][close_gcn][close_gc]
+        synapse open expon=exponbp maxcond=nchanbpgc*condf
+        thresh=thresh1 vrev=0 
+        vgain=1
+        nfilt1 1 timec1 1
+        nfilt3 2 timec3=srdur
+        vesnoise=ves_noise vsize=vsiz nfilt2 1 timec2 sfdur
+        chnoise= postsyn_noise unit=condf
+        ename bpgcsyns[nbpgc_syn];
+        nbpgc_syn++;
+      }
+      else {  /* remove bipolar nodes that aren't connected */
+        erase node [bp][b];
+      };
+    };
+    if (info>=2) printf ("# number of bpgc synapses %g\n\n",nbpgc_syn);
+}
+
+else if (Synapses && !make_bp && !no_dendrites) {   
+
+/* make direct cone -> gc synapses */
+
+     local nEsynap, nIsynap;
+
+   if (info>=2) {
+     printf ("# v_bp_dark %g\n",v_bp_dark);
+     printf ("# v_bp_light %g\n",v_bp_light);
+   };
+   printf("# ves/s -dark %g \n", t_dark *10000/vsiz );
+   printf("# ves/s -light %g \n",t_light*10000/vsiz );
+   printf("# \n");
+
+   initrand(1) rsd = 334719;
+
+   nEsynap = nIsynap = 0;
+
+	/* connect excitatory synapses to clines * efracsyn nodes */
+
+   for (i=0; i<clines; i++){
+      if (cabldata[i][REG] == DEND) {
+           if (rrand(1) < efracsyn) {
+		makEsynap(i);
+		nEsynap++;
+	   };
+      };
+   };
+
+  if (ifracsyn>0) {
+	/* connect inhibitory synapses to ifracsyn nodes */
+
+   for (i=0; i<clines; i++){
+      if (cabldata[i][REG] == DEND) {
+           if (rrand(1) < ifracsyn) {
+		makIsynap(i);
+		nIsynap++;
+	   };
+      };
+   };
+ };
+
+   if (info >= 2) {
+	printf ("# nEsynap %g\n",nEsynap);
+        printf ("# nIsynap %g\n",nIsynap);
+   };
+};
+
+/*--------------------------------------------------*/
+
+/*  display */
+
+if (disp) {
+    if (notinit(dispfile)) dispfile = "dispgc.n";
+    include (dispfile);
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+proc onplot() {
+  if (phaseplot) onplot5();
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+proc disp_volt(site,label,ppen)
+
+{
+    local plg, offtr, offb, pmax, pmin;
+
+  if (spiketimesonly) return;
+
+  plg   =  .12;	// range
+  offtr =  0.0;
+  offb  = -0.08;
+  pmax = (1-offtr)*plg+offb;
+  pmin = (0-offtr)*plg+offb;
+  if (ppen) plot V[gc][site]  max pmax  min pmin pen ppen 
+					plnum 2 plname label
+  else      plot V[gc][site]  max pmax  min pmin 
+					plnum 2 plname label;
+
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+proc disp_currents(plgain) {
+    local plg, offtr, offb, pmax, pmin;
+
+  if (spiketimesonly) return;
+
+  plg = plgain;
+  offtr = 0.5;
+  offb  = 0;
+  pmax = (1-offtr)*plg+offb;
+  pmin = (0-offtr)*plg+offb;
+  plot G(I) nahh  pen 1  max pmax  min pmin plnum 3 plname "Ina";
+  //plot G(I) nahh  pen 1  max pmax*10  min pmin*100 plnum 3 plname "Ina2";
+  plot G(I) kdr   pen 2  max pmax  min pmin plnum 3 plname "Ikdr";
+  plot G(I) ka    pen 14 max pmax  min pmin plnum 3 plname "Ika";
+
+
+  plot G(I) ca1   pen 3  max pmax  min pmin plnum 3 plname "Ica";
+
+  if (!notinit(skca1)) {
+     plot G(I) skca1 pen 5 max pmax min pmin plnum 3 plname "ISk1";
+   //plot G(0) skca1 pen 6 max pmax*50 min pmin*50 plnum 2 plname "GSk1";
+  };
+  if (!notinit(skca2)) {
+      plot G(I) skca2 pen 8 max pmax min pmin plnum 3 plname "ISk2";
+    //plot G(0) skca2 pen 9 max pmax*50 min -pmax*50 plnum 2 plname "GSk2";
+  };
+
+  if (!notinit(bkca))
+     plot G(I) bkca pen 7 max pmax min pmin plnum 3 plname "IBk";
+
+  /*
+   plot totcur pen 12  max pmax min pmin plnum 3 plname "Itot";
+   */
+
+   // plot totcur pen 12  max pmax min pmin plnum 3 plname "Itot";
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+proc disp_ca()
+
+{
+    local plg, offtr, offb, pmax, pmin;
+
+   if (spiketimesonly) return;
+
+   plg   = 2e-6;
+   offtr = 0;
+   offb  = 0;
+   pmax  = (1-offtr)*plg+offb;
+   pmin  = (0-offtr)*plg+offb;
+
+   if (gc_ca_system==1) {
+    plot Ca(1)  [gc][soma] max pmax min pmin plsize .3 plnum 1 plname "[Ca]i"; 
+    plot Ca(100)[gc][soma] max pmax min pmin           plnum 1 plname "[Ca]c";
+/*
+    plot Ca(vrev) cachan_soma max .2    min -0.1   plnum 1 plname "CaVrev"; 
+    plot Ca(IP)   cachan_soma max 1e-13 min -1e-13 plnum 1 plname "CaIP";
+    plot Ca(IE)   cachan_soma max 1e-13 min -1e-13 plnum 1 plname "CaIEx"; 
+    plot Ca(IPE)  cachan_soma max 1e-13 min -1e-13 plnum 1 plname "CaIPE";
+*/
+  };
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+proc disp_syn() { /* display just one synapse. */
+    local plg, offtr, offb, pmax, pmin, nrec;
+
+  if (!Synapses) return;
+
+  nrec = cabldata[500][NODE];
+
+  if (current_stim==0) plot V[xcone][1];
+  plot FA9 esyns[nrec] min 0 max 100;
+  plot FB1 esyns[nrec] min 0 max 5;
+  plot FC0 esyns[nrec] min 0 max 5;
+  plot G0  esyns[nrec] min 0 max 1e-9;
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+func qfact(q10) {
+  return (exp(log(q10)*(tempcel-22)/10));
+};
+
+/*- - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+ if (phaseplot) {               /* draw phase plot instead of voltage trace */
+
+      proc onplot5() {          /* procedure to run at plot time */
+
+        v = V[gc][soma];
+        if (first) {
+          oldv = v;
+          first = 0;
+        };
+        dvdt = (v - oldv)/ploti*1e-3;
+        oldv = v;
+        graph (v,dvdt);
+       };  /* onplot */
+
+ };
+
+ if (phaseplot) {               /* draw phase plot instead of voltage trace */
+
+     local plg, offtr, offb;
+
+    graph X max (-0.04 + .08 / qfact(1.5)) min -.08;
+
+     plg = 800e-3 / qfact (1.3);
+     offtr = 0.5;
+     offb  = 0;
+     pmax = (1-offtr)*plg+offb;
+     pmin = (0-offtr)*plg+offb;
+    graph Y max pmax min pmin Char 'o';
+    graph init;
+
+     first = 1;
+
+ };    /* phase plot */
+
+/*---------------------------------------------------------*/
+
+if (notinit(stimampl)) stimampl=0;
+
+func totcur(n,x) {            /* calculate total current for plot */
+ return (G(I)nahh + G(I)naslo + G(I)kdr   + G(I)ka    + G(I)ca1 +
+                    G(I)bkca  + G(I)skca1 + G(I)skca2 - stimampl);
+};
+
+/* =========== run ======================*/
+
+/* calculate surface area. */
+
+dendsa = proxsa = somasa = hillsa = axonsa = 0;
+foreach cable ?d node [gc][-1] {
+  if (element d -> elabl == "dend")
+    dendsa+=PI*element d->dia*element d->length;};
+foreach cable ?d node [gc][-1] {
+  if (element d -> elabl == "dend_prox")
+    proxsa+=PI*element d->dia*element d->length; };
+foreach cable ?d node [gc][-1] {
+    if ((element d -> elabl == "axon") || 
+        (element d -> elabl == "axon_long")) {
+        axonsa+=PI*element d->dia*element d->length;};
+};
+foreach cable ?d node [gc][-1] {
+    if ((element d -> elabl == "axon_thin") ||
+        (element d -> elabl == "hillock")) {
+      hillsa += PI * element d->dia*element d->length;
+    };
+};
+foreach sphere ?d node [gc][-1] { r = element d->dia/2;  somasa += 4*PI*r*r; };
+totsa = dendsa + proxsa + somasa + hillsa + axonsa;
+densomsa = dendsa + proxsa + somasa;
+
+printf ("# Surface area dendr. 	          = %g um2\n",dendsa + .67*proxsa);
+printf ("# Surface area soma 	          = %g um2\n",somasa + .33*proxsa);
+printf ("# Surface area dendr + soma       = %g um2\n",dendsa + proxsa + somasa);
+printf ("# Total surface area              = %g um2\n",totsa);
+printf ("# Rin estimated from surface area = %g MOhms\n",drm/densomsa*1e8/1e6);
+printf ("# \n");
+
+printf ("# Na chans in dends               = %6g\n",
+						int(dendsa*densdata[NA][DEND] +
+                                         0.67*proxsa*densdata[NA][DEND_PROX]));
+printf ("# Na chans in soma                = %6g\n",
+					  int(somasa*densdata[NA][SOMA] +
+                                         0.33*proxsa*densdata[NA][DEND_PROX]));
+printf ("# Na chans in thin seg            = %6g\n",
+					    int(hillsa*densdata[NA][AXON_THIN]));
+
+printf ("# Na chans in axon                = %6g\n",
+					    int(axonsa*densdata[NA][AXON]));
+printf ("# \n");
+
+if (Synapses==0 && current_stim==0){
+	printf("# Synapses==0 && current_stim==0\n");
+	exit;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+/* before running stimuli, let system relax */
+
+/*
+waittime=10e-3;
+step (waittime);
+time=0;
+*/
+
+if (expt == "Rin") {
+
+   if (vidmode)
+     filout=stderr
+   else
+     filout=stdout;
+
+   dst = 0.0001;
+   dt  = 0.015;
+   dv = 0.002;
+
+   stimdur = dt;
+   endexp = 2 * stimdur;
+
+   vstart = -0.09;
+   vstop  = -0.03;
+   vstep  = 0.005;
+
+   if (info >= 0) {
+     nruns = (vstop-vstart)/vstep + 1;
+     timeperrun = 1.95;
+     MHz = 1800;
+     cpuspeed = system_speed();
+     fprintf (filout,"# Calculating Rin from Vm = %.3g to %.3g\n",vstart,vstop);
+     fprintf (filout,"#  Estimated run time: %.3g minutes\n",
+				nruns*timeperrun*MHz/cpuspeed);
+     fprintf (filout,"#  V      Rin(ohms)\n");
+     fprintf (filout,"#\n");
+   };
+
+   eqtime = .001;
+   stim node [gc][soma]  vclamp vstart-1.5*(vcl-vstart) start time dur eqtime;
+   step eqtime;
+   time = 0;
+
+   if (info >= 2) {
+       disp_volt(782,"V782",blue);
+       disp_volt(1514,"V1514",green);
+       disp_volt(soma,"Vsoma",red);
+       plot I[gc][soma] max 5e-9 min -5e-9 plnum 1 plname "Isoma";
+   }; 
+
+   for (v1=vstart; v1<=vstop; v1+=vstep) {
+
+     time = 0;
+     v2 = v1 + dv;
+
+     stim node [gc][soma]  vclamp v1 start time dur stimdur;
+     step stimdur-dst;
+     i1 = I[gc][soma];
+     step dst;
+     stim node [gc][soma]  vclamp v2 start time dur stimdur;
+     step stimdur-dst;
+     i2 = I[gc][soma];
+     step dst;
+     Rin = (v1-v2) / (i1-i2);
+     fprintf (filout,"%-6.3g  %-9.3g\n",v1,Rin);
+   };
+}
+else if (expt == "spike") {
+
+   istim   = 250e-12;
+   stimdur = .1;
+   endexp  = .01;
+
+   stim node [gc][soma] cclamp istim start 0 dur stimdur; 
+
+  if (!phaseplot) {
+    tc1 = qfact(1.0);
+    tc2 = qfact(2.0);
+    tc3 = qfact(1.8);
+  //fprintf (stderr,"tc1 %g, tc2 %g, tc3 %g\n",tc1,tc2,tc3);
+    spiktim = .003 / tc1;
+    spikdur = .0015 / tc2;
+    xdiff   = .003 / tc3;
+  //fprintf (stderr,"spiktim %g, spikdur %g, xdiff
+  //%g\n",spiktim,spikdur,xdiff);
+    setxmin = (spiktim - spikdur*.5 - xdiff*.5);
+    if (setxmin < 0) setxmin = 0;
+    setxmax = (spiktim + spikdur*.5 + xdiff*.5);
+    endexp = setxmax;
+
+   //disp_volt(soma,"Vsoma",4);
+   //disp_volt(1506,"V1506",1);
+   //disp_volt(1507,"V1507",2);
+   //disp_volt(1509,"V1509",5);
+   disp_currents(plgain=12e-9);
+  };
+
+}
+else if (expt == "vclamp") {
+   
+        //stimdur = 0.005;
+        // endexp  = 0.015;
+
+   //   stim node [gc][soma] vclamp -0.070 start 0 dur endexp/2;
+   
+  //    stim node [gc][soma] vclamp 0 start endexp/3 dur stimdur; 
+   //   stim node [gc][soma] vclamp -0.040 start 2*stimdur dur stimdur; 
+
+	stimdur  = 0.02;
+	nstim    = 10;
+	if (notinit(endexp)) endexp   = stimdur*nstim;
+	for (i=1; i<=nstim; i++) {
+		stim node [gc][soma]  vclamp -0.070
+			start (i-1.0)*stimdur dur stimdur/2;
+		stim node [gc][soma]  vclamp  -0.070+i*0.01
+		start (i-1.0)*stimdur+stimdur/2 dur stimdur/2;
+	};
+
+	disp_currents(plgain=12e-9);
+	disp_volt(soma,"Vsoma",4);
+
+} else if (expt == "spike_zone"){ /* check spike initiation zone */
+
+    ploti=1e-5;
+
+    stimdur  = 0.2;
+    waittime = .01;
+    nstim    = 1;
+    for (i=1; i<=nstim; i++) {
+       stim node [gc][soma] cclamp i*20e-12 start waittime dur stimdur;
+    };
+
+  if (!phaseplot) {
+    tc1 = qfact(1.);
+    tc2 = qfact(1.5);
+    tc3 = qfact(1.5);
+  //fprintf (stderr,"tc1 %g, tc2 %g, tc3 %g\n",tc1,tc2,tc3);
+
+    spiktim = .025 / tc1;
+    spikdur = .0015 / tc2;
+    xdiff   = .025 / tc3;
+
+  //fprintf (stderr,"spiktim %g, spikdur %g, xdiff
+  //%g\n",spiktim,spikdur,xdiff);
+    setxmin = (spiktim - spikdur*.5 - xdiff*.5);
+    if (setxmin < 0) setxmin = 0;
+    setxmax = (spiktim + spikdur*.5 + xdiff*.5);
+    endexp = setxmax;
+
+     plot_freq = 0;
+     disp_volt(soma,"Vsoma",1);
+     disp_volt(1506,"V1506",2);
+     disp_volt(1507,"V1507",3);
+     disp_volt(1509,"V1509",4);
+     disp_volt(1512,"V1512",5);
+     disp_volt(1514,"V1514",8);
+     if (long_axon) {
+       disp_volt(1515,"V1515",9);
+       disp_volt(1516,"V1516",10);
+     };
+  };
+}
+else if (expt == "istim_soma"){ /* current injection to check spike rate */
+      stimdur  = 0.1;
+      waittime =  .1;
+      nstim    = 1;
+      if (notinit(endexp)) endexp   = 0.2;
+      for (i=1; i<=nstim; i++) {
+         stim node [gc][soma] cclamp 50e-12
+                              start waittime+(i-1.0)*stimdur dur stimdur;
+      };
+
+     /* background ves release */
+     stim node [xcone][1] vclamp v_bp_dark start waittime dur endexp;
+
+  if (!phaseplot) {
+     plot_freq = 1;
+     disp_volt(soma,"Vsoma",4);
+  };
+}
+else if (expt == "f/i") {	/* multi-step current injection */
+
+
+  /* current clamp, then record spike train and [Ca] */
+
+    waittime = 0.1; // Let the system relax before stimulus.
+    stimdur  = 0.2;
+    afterstim = 0.10;
+    nstim=5;
+    ndstim=0;
+    endexp=waittime+nstim*(stimdur+afterstim)+ndstim*stimdur;
+    if (scomp==1) {
+	stimampl = 10e-12;
+    } else {
+	stimampl = 20e-12;
+    };
+        /* background ves release */
+
+//    stim node [xcone][1] vclamp v_bp_dark start 0 dur endexp; 
+
+    for (i=1; i<=nstim; i++) {
+      stim node [gc][soma] cclamp i*stimampl 
+		start waittime+(i-1.0)*(stimdur+afterstim)
+		dur stimdur;
+    };
+
+     plot_freq = 1;
+     disp_volt(soma,"Vsoma",4);
+     disp_volt(den_node6,"Vden_distal 6",0);
+     disp_ca();
+
+} else if (expt == "istim_soma_den" || expt == "istim_dend") {
+
+      if (expt == "istim_soma_den") {	/* soma current stimulus */
+    	if (notinit(endexp)) endexp=stimdur;
+	stim node [gc][soma] cclamp istim start 0 dur stimdur; 
+	stim node [xcone][1] vclamp v_bp_dark start 0 dur endexp; 
+	disp_volt(soma,"Vsoma",0);
+	disp_ca();
+      }
+      else if (expt == "istim_dend") {	/* dendritic current stimulus */
+    	if (notinit(endexp)) endexp=stimdur;
+	stim_node = den_node1;
+	stim node [gc][stim_node] cclamp istim start 0 dur stimdur; 
+	stim node [xcone][1] vclamp v_bp_dark start 0 dur endexp; 
+      };
+      if (plot_denspike) {
+        disp_volt(den_node0,"Vden_prox",0);
+        disp_volt(den_node1,"",0);
+        disp_volt(den_node2,"",0);
+        disp_volt(den_node3,"",0);
+        disp_volt(den_node4,"",0);
+        disp_volt(den_node5,"",0);
+        disp_volt(den_node6,"_Vden_distal",0);
+      };
+}
+else if (expt == "istim_noise") {
+ stimtime = .05;
+ stimdur = .0005;
+ stimtim = stimtime   / stimdur;
+ stimlen = stimlength / stimdur;
+ stimtc1 = 0.02 / stimdur;
+ stimtc2 = 0.06 / stimdur;
+ totlen = 1.1 / stimdur;
+
+ for (i=0; i<totlen; i++) {
+   tstim = 0;
+   if (i>stimtim && i<stimlen) {
+     sstim = 20e-12;
+     sstim += exp(-(i-stimtim)/stimtc1)*150e-12;
+     sstim += exp(-(i-stimtim)/stimtc2)*80e-12;
+     rstim = (rand() - 0.5) * snoise;
+     sstim += 10e-12*rstim;
+     tstim = sstim;
+   };
+   rstim = (rand() - 0.5) * snoise;
+   tstim += 20e-12*rstim; /* */
+   stim node [gc][soma] cclamp tstim start i*stimdur dur stimdur; /* */
+ };
+ disp_volt(soma,"Vsoma",4);
+}
+else if (expt == "synap") {
+
+    plot_freq = 1;
+    if (notinit(endexp)) endexp = stimdur;
+
+    stim_release_inh = 5;
+    v_am_stim     = (log(stim_release_inh/20)-45)/1000;
+
+    printf("# Stimulus: %g ves/sec, time= %g ..+%g\n",stim_release, 0, stimdur);
+    printf("# INH: %g ves/sec, time= %g ..+%g\n", stim_release_inh, 0, stimdur);
+
+    v_bp_stim       = (log(stim_release/20)-45 )/1000;
+
+    stim node [xcone][1] vclamp v_bp_stim  dur stimdur;
+    stim node [am][1] vclamp v_am_stim dur stimdur;
+
+    disp_volt(soma,"Vsoma",4);
+//      disp_volt(den_node6,"Vden_distal 6",0);
+    disp_ca();
+}
+else if (expt == "synap-f/i") {
+
+    plot_freq = 1;
+    stimdur   = 0.5;
+    nstim     = 3;
+    endexp    = stimdur*nstim*2;
+    //dark_release = 0.01; /* for the staircase no background */
+    dark_release   = 1.5;
+    v_bp_dark      = (log(dark_release/20)-45 )/1000;
+
+    for (i=1; i<=nstim; i++) {
+        stim_release = 1.5;// *i;
+        printf("# Stimulus: %g ves/sec, time= %g ..+%g\n",
+                t_dark, (i-1)*2*stimdur, stimdur);
+
+        printf("# Stimulus: %g ves/sec, time= %g ..+%g\n",
+                stim_release, (i-1)*2*stimdur+stimdur, stimdur);
+
+        v_bp_stim       = (log(stim_release/20)-45 )/1000;
+        printf("# v_bp_stim %g\n", v_bp_stim);
+
+        stim node [xcone][1] vclamp v_bp_dark
+                start (i-1)*2*stimdur dur stimdur;
+
+        stim node [xcone][1] vclamp v_bp_stim
+                start (i-1)*2*stimdur+stimdur dur stimdur;
+        };
+
+     disp_volt(soma,"Vsoma",4);
+     disp_volt(den_node6,"Vden_distal 6",0);
+     disp_ca();
+}
+     /* old "synap" expt: */
+/*  
+     tc=0.03;
+     nstim=1;
+     endexp=3*tc*nstim;
+     for (j=1; j<=nstim; j++) {
+    	stim node [xcone][1] vclamp v_bp_dark  start (j-1)*4*tc dur tc; 
+    	stim node [xcone][1] vclamp v_bp_light start (j-1)*4*tc+tc dur tc;
+     }; 
+     disp_volt(soma,"Vsoma",4);
+     disp_volt(den_node0,"Vden_prox 0 ",0);
+     disp_volt(den_node1,"1",0);
+     disp_volt(den_node2,"2",0);
+     disp_volt(den_node3,"3",0);
+     disp_volt(den_node4,"4",0);
+     disp_volt(den_node5,"5",0);
+     disp_volt(den_node6,"Vden_distal 6",0);
+} */
+
+else if (expt == "synap_noise") {
+     stimtime = .05;
+     tc=0.2;
+     nstim=1;
+     if (notinit(endexp)) endexp=3*tc*nstim;
+     for (j=1; j<=nstim; j++) {
+      stim node [xcone][1] vclamp v_bp_dark  start 0 dur stimtime; 
+      stim node [xcone][1] vclamp v_bp_light start stimtime dur 2*tc;
+     }; 
+     disp_volt(soma,"Vsoma",4);
+}
+else if (expt == "sine") {		/* drifting sine wave */
+  //stim file "beta8.s";
+   stim  sine 1.4 loc (0,0) blur .1
+   inten -.042 start 0 dur .4
+   orient 0 tfreq 10 drift 1 contrast scontrast 
+   sphase 41
+   ;
+}
+else if (expt == "spot") {		/* spot with temporal sine wave */
+   temp_freq = 20;
+   tperiod = 1/ temp_freq;
+   tincr = .001;
+   for (tim = 0; tim <= stimdur; tim +=tincr){
+        minten = -0.042;
+        theta = tim /tperiod * 2 * PI;
+        sinten = ((sin(theta))* 0.5 * scontrast) + minten;
+
+        stim spot 2 loc (0,0) blur .1
+        inten sinten start tim dur tincr
+        ;
+
+//      printf("%g %g\n", tim, sinten);
+   };
+}
+else if (expt == "spot_short") {	/* spot, short flash */
+
+   ploti = 1e-4;
+
+   dstim  = .1;
+   if (notinit(minten)) minten = -.052;
+   if (notinit(sdia))  sdia = 500;
+   stimtime = .02;
+
+   eqtime = .005;
+   stim spot sdia loc (0,0) blur .1
+   inten minten start 0 dur eqtime;
+
+   step eqtime;    /* short equilibration time */
+   time = 0;
+
+   for (t=0; t<=stimdur; t+= dtrial){
+ 
+     stim spot sdia loc (0,0) blur .1
+     inten minten start t dur dtrial 
+     ;
+
+     stim spot sdia loc (0,0) blur .1 
+     inten scontrast start t+stimtime dur dstim
+     ;
+        
+   };
+  disp_volt(soma,"Vsoma",4);
+  // disp_ca();
+}
+else if (expt == "spot_vclamp") { /* spot, short flash with vclamp to see epsc*/
+
+   waittime=.001;
+   stim node [gc][soma] vclamp -0.08 start 0 dur 1;
+   step waittime;
+
+   time = 0;
+   if (notinit(endexp)) endexp=.02;
+
+   dstim  = .1;
+   minten = -.05;
+   sttime = .002;
+
+   stim spot 2 loc (0,0) blur .1 inten minten start sttime dur dstim;
+
+   plg   =  .04;
+   offtr =  0.1;
+   offb  =  -.05;
+   pmax = (1-offtr)*plg+offb;
+   pmin = (0-offtr)*plg+offb;
+   plot V[xcone][1] max pmax  min pmin pen 2 plnum 3 plname "Vbp";
+
+   plg   =  1e-9;
+   offtr =  0.9;
+   offb  =  0;
+   pmax = (1-offtr)*plg+offb;
+   pmin = (0-offtr)*plg+offb;
+   plot I[gc][soma] max pmax  min pmin pen 12 plnum 2 plname "Isoma";
+    
+}
+else if (expt=="isislow") {             /* look at inter-spike interval */
+
+  waittime = 0.0004;
+  stimdur  = 1;
+  afterstim = 0.10;
+  stimampl = 50e-12;
+
+  stim node [gc][soma] cclamp 200e-12 start 0 dur waittime;
+  stim node [gc][soma] cclamp stimampl start waittime dur stimdur;
+
+  if (notinit(endexp)) endexp = .05 * 35/tempcel;
+
+  disp_currents(plgain=200e-12);
+  disp_volt(soma,"Vsoma",4);
+  disp_volt(709,"Vden1",6);
+  disp_volt(768,"Vden2",11);
+  disp_volt(1514,"Vax",8);
+  disp_ca();
+
+}
+else if (expt=="isifast") {             /* look at inter-spike interval */
+
+  dcai = 100e-9;
+
+  waittime = 0.0004;
+  stimdur  = 1;
+  afterstim = 0.10;
+  stimampl = 500e-12;
+
+  //stim node [gc][soma] cclamp 200e-12 start 0 dur waittime;
+  stim node [gc][soma] cclamp stimampl start waittime dur stimdur;
+
+  if (notinit(endexp)) endexp = .01 * 35/tempcel;
+
+  disp_currents(plgain=200e-12);
+  disp_volt(soma,"Vsoma",4);
+  disp_volt(709,"Vden1",6);
+  disp_volt(768,"Vden2",11);
+  disp_volt(1514,"Vax",8);
+  disp_ca();
+
+};
+
+/*---------------------------------------------------------*/
+
+ include "plot_freq.m";
+
+ maxf = 120; // so that 10mV Vmem <=> 10Hz
+ maxf = 240; // so that 10mV Vmem <=> 20Hz
+ if(plot_freq) plot spikplot max maxf min 0 Char 'o' size .012 vpen freq_color
+                                                plname "SpikeR" plnum 2;
+run;
+print("# done");

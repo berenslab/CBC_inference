@@ -1,0 +1,128 @@
+/* tcomp68c: Test of NMDA activation */
+
+timinc = 5e-6;
+crit   = 1e-10;
+ploti  = 1e-5;
+
+expt1 = 1;		/* -> 1, plot activation kinetics  */
+expt2 = 1;		/* -> 2, plot deactivation kinetics */
+
+ivplot = 1;
+plsep = 1;
+sampletime = 0;
+
+dnmdamg = 0.008;
+
+x = setvar();
+
+/*----------------------------------------*/
+
+nchan = 1;
+flag = 0;
+
+proc onplot()
+
+{
+ if (flag) {
+   if (expt==1) {
+     if (prestimdur+sampletime<time && time < (prestimdur+sampletime+0.0001)) {
+        Inmda = I[2];
+        //if (Inmda < maxcurrent) maxcurrent = Inmda;
+        maxcurrent = Inmda;
+     };
+ };
+};
+
+};
+
+
+/* Experiment to plot activation */
+
+n=1;
+
+at 1 sphere dia 1 rm=1e8 vrev -.07 vrest -.12;
+at 2 sphere dia 1 rm=1e8 vrev -.07 vrest -.12;
+
+conn 1 to 2 synapse open maxcond 10e-9 
+                timec2 [1,1,20]
+                expon 2
+		trconc 5e-6
+                mesgout GLU 
+                resp nmda type 1 offsetm= -0.015 taum=1 tauh=1 chnoise=0 N=100 
+                ename xxx;
+
+
+if (expt1) {
+
+expt = 1;
+n=1;
+maxcurrent = 0;
+
+vhold    = -0.12;
+vpulse   = -0.05;
+vstart   = -0.09;
+vstop    =  0.05;
+vstep    =  0.010;
+tailvolt = -0.12;
+
+predur      = 1.5;
+prestimdur  = 0.01;
+stimdur     = 0.1;
+tailcurdur  = 0.001;
+poststimdur = 0.4;
+norm1 = 1;
+
+// endexp = prestimdur+stimdur+tailcurdur+poststimdur;
+endexp = prestimdur+stimdur+tailcurdur;
+
+/* Experiment to test activation at different voltages */
+
+
+
+if (ivplot) {
+  graph X max vstop min vstart;
+  graph Y max 100e-12 min -100e-12;
+  graph init;
+  graph pen (5);
+  gmove (0.5, 0.95);
+  sprintf (sbuf,"sample time %g\n",sampletime);
+  gtext (sbuf);
+}
+else {
+  setxmin = 0;
+  plot I[2] max 100e-12 min -100e-12;
+  plot V[2] max vstop min vstart;
+  plot V[1] max vstop min vstart;
+//plot G(1) xxx max 2 min 0;
+//plot G(2) xxx max 2 min 0;
+//plot G(3) xxx max 2 min 0;
+};
+
+
+vpresyn = -0.03;
+vnmda = 0;
+
+time = -predur;
+stim node 2 vclamp=vhold start=time dur=predur;
+step predur;
+
+for (vpulse=vstart,i=0; vpulse < vstop; vpulse += vstep,i++) {
+  time = 0;
+  stim node 1 vclamp=vpresyn start=prestimdur+0.01 dur=0.02;
+  stim node 1 vclamp=-0.12 start=prestimdur+0.01+0.02 dur=stimdur-0.03;
+  maxcurrent = 0;
+  Inmda = 0;
+  stim node 2 vclamp=vhold start=time dur=prestimdur;
+  step prestimdur; 
+  flag = 1;
+  stim node 2 vclamp=vpulse start=prestimdur dur=stimdur;
+  step stimdur; 
+  flag = 0;
+  if (ivplot) graph (vpulse,maxcurrent);
+  stim node 2 vclamp=tailvolt start=prestimdur+stimdur dur=tailcurdur;
+  step tailcurdur; 
+  stim node 2 vclamp=vhold start=prestimdur+stimdur+tailcurdur dur=poststimdur;
+  step poststimdur; 
+ };
+};
+

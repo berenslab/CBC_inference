@@ -1,0 +1,38 @@
+/* cacomp3.n */
+/* simple exponential Ca decay */
+/* set number of shells to 1 for speed */
+
+timinc = 1e-4;
+ploti  = 1e-3;
+endexp = 0.3;
+rseed = 104;
+tempcel = 35;
+implicit=0;
+
+dcavoff=0;      /* voltage offset from Ca on surface of membrane */
+
+ddca=1e-12;      /* Ca diffusion const, set very low to eliminate diffusion */
+dcai=100e-9;
+catau = 50e-3;   /* variable used only here for vmax */
+
+at 1 sphere dia 1 rm 2000;
+
+at 1 chan Ca density .00001
+   capump vmax=5e-9/catau km=5e-6  
+   cshell 1
+   ename xxx
+   ;
+
+stimtime1 = 0.05;
+stimdur  = 0.05;
+
+stim node 1 vclamp -.01 start stimtime1 dur stimdur;
+stim node 1 vclamp -.07 start stimtime1+stimdur dur .01;
+
+plot V        1   max .04 min -.08;
+plot G        xxx max 1000e-12 min 0;
+plot Ca(1)    1   max  2e-6 min 0;
+plot Ca(99)   1   max  2e-6 min 0;
+//plot Ca(vrev) 1   max .10 min -.1;
+
+run;

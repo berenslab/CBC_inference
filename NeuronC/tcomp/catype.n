@@ -1,0 +1,467 @@
+/* cattype.n: Test of Ca type 1 channel kinetics */
+
+/*  expt = 1  ->    check activation voltage sensitivity
+    expt = 2  ->    check inactivation voltage sensitivity
+    expt = 3  ->    check kinetics
+*/
+
+timinc = 5e-5;
+crit   = 1e-8;
+endexp = 1.0;
+ploti  = 1e-4;
+
+tempcel= 22;
+
+expt = 1;		/* plot rate constants and ninf curve */
+expt = 2;		/* plot ctau curve */
+expt = 3;		/* plot activation kinetics  */
+expt = 4;		/* plot deactivation kinetics */
+
+catyp = 0;		/* L-type Ca channel */
+catyp = 2;		/* T-type Ca channel */
+
+expt = 1;
+
+//dcao = .00767;	/* = 10 / 3 * 2.3   */
+			/* Set to .00767 for calib, back to .0023 for use. */
+			/* Kawai et al (1996) used 10 mM for best data, */
+			/*  but 3 mM for more realistic records. */
+
+x = setvar();
+
+
+/*----------------------------------------*/
+
+func calcca0m(v, f)
+
+/* Calculate alphac, betac as a function of mv.
+*/
+
+{
+   local val,x,y;
+
+  if (f==1) {                                 /* alpha c */
+    y = -0.1 * (v+15.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                        /* singularity at v
+= -15 mv */
+       val = 0.6 * y / x
+    else
+       val = 0.6;
+  }
+  else if (f==2)                              /* beta c */
+    val = (2 * exp ((v+38) / -18.));
+  return (val*1000);
+};
+
+/*----------------------------------------*/
+
+func calcca2m(v, f)
+
+/* Calculate alphac, betac as a function of mv.
+*/
+
+{
+   local val,x,y;
+
+  if (f==1) {				      /* alpha c */
+    y = -.1 * (v - -49.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                        /* singularity at v = -15 mv */
+       val =  y / x
+    else
+       val = 1.0;
+    val *= 4.;
+  }
+  else if (f==2)                              /* beta c */
+    val = (6. * exp ((v - -69) / -25.));
+  return (val*5);
+};
+
+/*----------------------------------------*/
+
+func calcca2h(v, f)
+
+/* Calculate alphach, betach as a function of mv.
+*/
+
+{
+   local val,x,y;
+
+
+  if (f==1) {				      /* alpha h */
+    val = (12 * exp ((v- -73) / -9.));
+  }
+  else if (f==2) {                             /* beta h */
+    y = -0.05 * (v- -70.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                        /* singularity */
+       val = y / x
+    else
+       val = 1.0; 
+    val *= 24;
+    val *= 1 - 1 / (1 + ( exp ((v- -50) / -25.)));
+
+  }
+  else if (f==3)
+    val = 1- 1 / (1 + ( exp ((v- -50) / -25.)));
+  return (val);
+};
+
+/*----------------------------------------*/
+
+/* The model: a sphere and a channel */
+
+nchan = 1;
+
+at 1 sphere dia 10 rm=500000 vrev -.07 vrest -.07;
+at 1 chan Ca type catyp maxcond 300e-12 ename xxx;	/* */
+//at 1 chan Ca type 0 maxcond 300e-12 vrev=0.05 ename xxx;	/* */
+
+
+/*----------------------------------------*/
+
+proc onplot () {
+
+  if (expt == 3) onplot3();
+  if (expt == 4) onplot4();
+  if (expt == 5) onplot5();
+
+};
+
+/*----------------------------------------*/
+
+proc runexp () 
+
+{
+  for (n=1; n<=nchan; n++) 
+     stim node n vclamp=prevolt start=time dur=prestimdur;
+  step prestimdur; 
+  for (n=1; n<=nchan; n++)
+     stim node n vclamp=vpulse start=time dur=stimdur;
+  step stimdur; 
+  for (n=1; n<=nchan; n++)
+     stim node n vclamp=tailvolt start=time dur=tailcurdur;
+  step tailcurdur; 
+  for (n=1; n<=nchan; n++)
+     stim node n vclamp=prevolt start=time dur=poststimdur;
+  step poststimdur; 
+};
+
+/*----------------------------------------*/
+
+if (expt==1) {
+
+/*  Graph cinf and its slope, ctau, and calpha and cbeta rate functions */
+/*  to show activation behavior */
+
+
+xvmax =  0.03;
+xvmin = -0.10;
+xstep = 0.001;
+
+ graph X max xvmax min xvmin;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 20e-3 min 0;
+ graph Y max 300 min 0;
+ graph Y max 300 min 0;
+ graph init;
+
+ gmove (.20,.8);
+ gcwidth(.025);
+ if (catyp==0) gtext ("Ca L channel activation")
+ else if (catyp==1) gtext ("Ca L channel activation")
+ else if (catyp==2) gtext ("Ca T channel activation");
+
+ oldc = c= 0;
+ vh = -0.044;
+ kh = .0100;
+ boltz = 0;
+
+ for (v=xvmin; v <= xvmax; v += xstep) {
+  
+  c = cinf(v,xxx);
+
+  boltz =   1 - 1 / (1 + exp ( (v-vh) / kh) );
+  dc = c - oldc;
+  slope = dc / (xstep*1000);
+
+   graph (v,boltz,c,slope,ctau(v,xxx),
+		calcca2m(v*1000,1),calcca2m(v*1000,2));
+
+ //  graph (v,slope,calcca0m(v*1000,1),calcca0m(v*1000,2));
+
+  oldc = c;
+ };
+
+}
+/*-----------------------------------------------------------*/
+else if (expt==2) {
+
+/*  Graph chinf and its slope, chtau, and chalpha and chbeta rate functions */
+/*  to show inactivation behavior */
+
+xvmax =  0.03;
+xvmin = -0.10;
+xstep = 0.001;
+
+ graph X max xvmax min xvmin;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 20e-3 min 0;
+ graph Y max 100 min 0;
+ graph Y max 100 min 0;
+ graph Y max 2 min 0;
+ graph init;
+
+ gmove (.35,.8);
+ gcwidth(.025);
+ gtext ("Ca T channel inactivation");
+
+ oldh = h = 0;
+ vh = -0.065;
+ kh = .0078;
+
+ for (v=xvmin; v <= xvmax; v += xstep) {
+  
+  h = chinf(v,xxx);
+  t = ctaub(v,xxx);
+
+  boltz =  1 / (1 + exp ( (v-vh) / kh) );
+  dh = h - oldh;
+  slope = - dh / (xstep*1000);
+
+   graph (v,boltz,h,slope,t,
+		calcca2h(v*1000,1),calcca2h(v*1000,2),calcca2h(v*1000,3));
+
+ //  graph (v,slope,calcca0m(v*1000,1),calcca0m(v*1000,2));
+
+  oldh = h;
+ };
+
+}
+/*-----------------------------------------------------------*/
+else if (expt==3) {
+
+plotmod = "conductance";
+plotmod = "current";
+
+endexp = 0.06;
+
+vstart = -.1;
+vend   = 0.08;
+vstep = .01;
+
+
+if (plotmod=="current") {
+  graph X max endexp min 0;
+  graph Y max 3e-12 min -10e-12;
+}
+else {
+  graph X max endexp min 0;
+  graph Y max 200e-12 min -100e-12;
+  graph Y max vend min vstart;
+};
+
+graph init;
+
+proc onplot3() {
+    graph pen (i+1,i+1);
+    if (plotmod=="current") graph (time,I[1])
+    else                    graph (time,G(0)xxx);
+};
+
+//plot I[1] max 1e-11 min -1e-11;
+//plot V[1] max 0.04 min -.1;
+//plot G(0) xxx max 200e-12 min 0e-12;
+//plot G(1) xxx max 2 min 0;
+//plot G(2) xxx max 2 min 0;
+//plot G(3) xxx max 2 min 0;
+
+prevolt  = -.10;
+tailvolt = -.10;
+
+prestimdur = .01;
+stimdur     = .05;
+tailcurdur  = .03;
+poststimdur = .05;
+
+/* Experiment to test activation at different voltages */
+
+for (i=0,vpulse=vstart; vpulse<=vend; i++,vpulse += vstep) {
+  time = 0;
+  mx = -1000;
+  runexp();
+  step .01; 			/* allow last vclamp to turn off */
+ };
+
+}
+
+/*-----------------------------------------------------------*/
+
+else if (expt==4) {
+
+proc onplot4() {
+   local g, lg;
+
+    graph pen (i+1,i+1);
+    g = -I[1];
+    if (g<0) g=0;
+    if (time > 0.01) {
+      if (mx < g) mx = g;
+      if ((g > 0) && (mx > g) && time > 0.01) {
+//         graph (time,-log10(g/mx)*10e-12, mx,g);  /* slope */
+         graph (time,g/mx, mx,g);	    /* normalized peak */
+      };
+    };
+};
+
+endexp = 0.06;
+
+vstart = -.1;
+vend   = 0.05;
+vstep = .01;
+
+graph X max endexp min 0;
+graph Y max 1.4 min 0;
+graph Y max 1.2 min .9;
+graph Y max -13 min -11; 
+graph init;
+
+//plot I[1] max 1e-11 min -1e-11;
+//plot V[1] max 0.04 min -.1;
+//plot G(1) xxx max 2 min 0;
+//plot G(2) xxx max 2 min 0;
+//plot G(3) xxx max 2 min 0;
+
+prevolt  = -.10;
+tailvolt = -.10;
+
+prestimdur = .01;
+stimdur     = .05;
+tailcurdur  = .03;
+poststimdur = .05;
+
+/* Experiment to test activation at different voltages */
+
+for (i=0,vpulse=vstart; vpulse<=vend; i++,vpulse += vstep) {
+  time = 0;
+  mx = -1000;
+  runexp();
+  step .01; 			/* allow last vclamp to turn off */
+ };
+}
+
+/*-----------------------------------------------------------*/
+
+else if (expt==5) {
+
+/* Experiment to test tail current deactivation at different voltages */
+
+proc onplot5() {
+   local g, lg;
+
+    graph pen (i+1,i+1,i+1);
+
+    gframe ("../voltage");
+    graph (time,V[1]);
+
+    gframe ("../current");
+    graph (time,I[1]);
+
+    gframe ("../maxcur");
+    g = -I[1];
+    if (g<0) {
+       g=-g;
+       gsign= -1;
+    }
+    else gsign = 1;
+    if (time > 0.012 && time < .04) {
+      if (mx < g) mx = g;
+      if ((g > 0) && (mx >= g) && !done) { 
+//////       graph (time,-log10(g/mx)*10e-12, mx,g);  /* slope */
+         graph (vpulse,-mx*gsign);	    /* normalized peak */
+	 done = 1;
+      };
+    };
+};
+
+endexp = 0.06;
+
+vstart = -.1;
+vend   = 0.08;
+vstep = .01;
+
+/*-------------------------------*/
+gframe ("../voltage");
+gorigin (0,0);
+gsize   (.5);
+
+graph X max endexp min 0;
+graph Y max vend min vstart;
+graph init;
+
+gcwidth(.025);
+gmove (.7,.9);
+gtext ("voltage");
+
+/*-------------------------------*/
+gframe ("../current");
+gorigin (.5,0);
+gsize   (.5);
+
+gcwidth(.025);
+gmove (.7,.9);
+gtext ("current");
+
+graph X max endexp min 0;
+graph Y max 3e-12 min -10e-12;
+graph init;
+
+/*-------------------------------*/
+gframe ("../maxcur");
+gorigin (.5,.5);
+gsize   (.5);
+
+gcwidth(.025);
+gmove (.7,.9);
+gtext ("maxcur");
+
+graph X max vend min vstart;
+graph Y max 3e-12 min -10e-12;
+graph init;
+
+/*-------------------------------*/
+
+//gframe ("../current");
+//plot I[1] max 2e-11 min -2e-11;
+//gframe ("../voltage");
+//plot V[1] max 0.04 min -.1;
+////plot G xxx max 1e-9 min 0;
+//plot G(1) xxx max 2 min 0;
+//plot G(2) xxx max 2 min 0;
+//plot G(3) xxx max 2 min 0;
+
+vpulse   = vstart;
+prevolt  = -.1;
+tailvolt =  -.1;
+
+prestimdur = .01;
+stimdur     = .05;
+tailcurdur  = .03;
+poststimdur = .05;
+
+/* Experiment to test activation at different voltages */
+
+for (i=0,vpulse=vstart; vpulse<=vend; i++,vpulse += vstep) {
+  done = 0;
+  time = 0;
+  mx = -1000;
+  runexp();
+  step .01; 			/* allow last vclamp to turn off */
+};
+
+};

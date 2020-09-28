@@ -1,0 +1,12 @@
+#! /bin/bash 
+#
+for i in $@; do
+    printpeaksinedsi $i
+done
+
+
+##! /bin/csh -f
+#foreach i ($argv) 
+#  printpeaksinedsi $i  
+#end
+#

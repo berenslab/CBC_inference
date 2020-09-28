@@ -1,0 +1,22 @@
+
+/* Returns the maximum of a vector */
+func vectmax(x)
+{
+  local i, m;
+  m = x[0];
+  for (i = 0; i < sizeof(x); i++) {
+    if (x[i] > m) m = x[i];
+  };
+  return m;
+};
+
+/* Returns the minimum of a vector */
+func vectmin(x)
+{
+  local i, m;
+  m = x[0];
+  for (i = 0; i < sizeof(x); i++) {
+    if (x[i] < m) m = x[i];
+  };
+  return m;
+};

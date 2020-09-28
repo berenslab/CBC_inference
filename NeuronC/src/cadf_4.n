@@ -1,0 +1,65 @@
+
+FR = 11604.5;
+T = 300;
+frt = FR/T;
+
+dcai = 100e-9;
+
+naca=dnao/dcao;
+kca=dko/dcao;
+
+//mo = dcao*4;
+//mo = dnao;
+mo = dko;
+//mo = dclo;
+
+naratio = dnai/dnao;
+kratio  = dki/dko;
+caratio = dcai/dcao;
+clratio = dcli/dclo;
+
+naperm = 0;
+kperm  = 0;
+cperm  = 1;
+clperm = 0;
+z = 2;
+
+vstart = -0.2;
+vstop  = 0.2;
+vstep  = 0.001;
+
+for (v = vstart; v < vstop; v += vstep) {
+
+    dv = 1e-6;
+    if (abs(v) < 1e-6) v = 1e-6;
+
+    vf = exp(z*v*frt);
+    vfi = 1 / (1 - vf);
+
+    cavfi = (1.0-caratio*vf)*vfi* 4 * dcao/mo;
+    navfi = (1.0-naratio*vf)*vfi    * dnao/mo;
+    kvfi  = (1.0-kratio *vf)*vfi    *  dko/mo;
+    clvfi = (1.0-clratio*vf)*vfi    * dclo/mo;
+
+    cvfi = ( cperm*cavfi +
+            naperm*navfi +
+             kperm*kvfi  +
+             clperm*clvfi);
+
+    chdf = v * cvfi;
+
+    chgfrac = cvfi + frt*v*(8 * cperm*(1.0-caratio)*vf*vfi*vfi*dcao/mo + 
+                               naperm*(1.0-naratio)*vf*vfi*vfi*dnao/mo +
+                                kperm*(1.0-kratio)*vf*vfi*vfi*dko/mo   +
+                              -clperm*(1.0-clratio)*vf*vfi*vfi*dclo/mo);
+
+    chgvrev = -chdf/chgfrac + v; 
+ 
+
+    print v, chdf, chgvrev;
+
+//    print v, 0, chdf;
+
+};
+  
+

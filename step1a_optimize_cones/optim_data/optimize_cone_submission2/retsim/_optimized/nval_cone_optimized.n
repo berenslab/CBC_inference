@@ -1,0 +1,97 @@
+# Cell Parameters
+#
+    xcone    dbp1       0 
+#                
+        0       0   _MAKE      # whether to make this cell type
+        1       1   _MAKE_DEND # whether to make dendrites
+        1       1   _MAKE_AXON # whether to make axon
+        1       1   _MAKE_DIST # whether to make axon distal
+        0       0   _NMADE     # number of cells made
+    2e+04       1   _MAXNUM    # maximum number of cells of this type
+       -1       3   _NCOLOR    # color of this cell type for display
+        5       3   _MAXCOV    # max coverage factor (for arrays)
+        1      50   _MAXSYNI   # max number of syn input cells per celltype
+       20     100   _MAXSYNO   # max number of syn output cells per celltyp
+  1.5e+04    2500   _DENS      # density of this type (per mm2)
+       10       8   _REGU      # regularity (mean/stdev) of spacing
+        1       1   _MORPH     # morphology (=0 -> file, or artificial)
+        0       0   _COMPLAM   # compartment size (default=complam)
+        1       0   _BIOPHYS   # add biophys properties (chan dens file)
+        0       0   _CHNOISE   # add membrane channel noise properties  
+        0       0   _RATIOK    # set K density values as ratio from Na
+        0  -0.043   _VSTART    # initial resting potential
+        0   -0.05   _VREV      # membrane potential for Rm (VCl)
+        0   2e+04   _NRM       # the cell's Rm, 0 => use default (drm)
+        0       0   _NRI       # the cell's Ri, 0 => use default (dri)
+     5.13       7   _SOMADIA   # Soma diameter
+        0     -11   _SOMAZ     # Z location (x,y loc determ. by array)
+        0       2   _DENDARB   # type of dendritic tree
+        0      -1   _DENDARBZ  # dendritic arborization level
+       20      10   _DENZDIST  # dendritic arborization synaptic z tolerance
+        0     0.3   _STRATDIA  # stratif. annulus dia (fract of treedia)
+      0.2     0.4   _DTIPDIA   # diameter of dendritic tips
+        5      40   _DTREEDIA  # diameter of dendritic tree
+        0       0   _AXARBT    # type of axonal tree
+      -15     -27   _AXARBZ    # axonal arborization level
+        0     0.4   _AXTIPDIA  # diameter of axonal tips
+     5.13      45   _AXARBDIA  # diameter of axonal arbor
+      500      25   _MAXSDIST  # maximum synaptic distance
+        1      10   _TAPERSPC  # space constant of diameter taper
+        1       1   _TAPERABS  # abs diameter for taper
+        1       2   _NDENDR    # number of first-order dendrites
+        0       0   _GROWTHR   # distance thresh for growth of dendrites
+        0       0   _SEGLEN    # length of dendritic segments
+
+# Connections
+#
+#   xcone    dbp1
+#                
+       -1   xcone  _CELPRE1   # cell type to connect to (neg, no conn)
+        1       1  _CONPRE1   # connection number of presyn cell
+        1       1  _CELCONV1  # number of presyn cells to connect to
+        0       0  _GROWPOST1 # grow when making conn from presyn cell
+
+# Synapses
+#
+#   xcone    dbp1 
+#
+     dbp1      -1   _CELPOST1  # cell type to connect to (neg, no conn)
+        1       0   _CONPOST1  # connection number for postsyn cell
+        1       0   _CELDIV1   # number of postsyn cells to connect to
+        0       0   _GROWPRE1  # grow when making conn to postsyn cell
+        0       0   _SYNSPAC1  # synaptic spacing in dendritic tree
+        0       0   _SYNANNI1  # inner dia of annulus in dendritic tree
+        0       0   _SYNREGP1  # synaptic region in postsyn dendritic tree
+        0       0   _USEDYAD1  # synapse is dyad using preexisting type
+       -1       0   _DYADTYP1  # type of dyad synapse to connect with
+        0       0   _AUTAPSE1  # synapse back to presynaptic node
+        1       0   _SYNNUM1   # number of synapses per connection
+        1       0   _SENSCA1   # synaptic release sensitivity calcium
+    13.795      0   _SRRPOOL1  # synaptic readily releasable pool
+    13.795      0   _SMRRPOOL1 # synaptic max readily releasable pool
+        0       0   _SRRPOOLG1 # synaptic readily releasable pool gain mult (default 0 -> rrpool sets gain; 1-> constant gain)
+      100       0   _SMAXRATE1 # maximum synaptic release rate
+        1       0   _SGAIN1    # synaptic gain (Only when no Ca)
+   1.4638       0   _SVGAIN1   # synaptic vgain --> Linear factor after Ca
+        0       0   _SDURH1    # synaptic high pass time const.
+        0       0   _SNFILTH1  # synaptic high pass nfilt (Only when no Ca)
+        0       0   _SHGAIN1   # synaptic high pass gain
+        0       0   _SHOFFS1   # synaptic high pass offset
+      1.0       0   _SVSIZ1    # synaptic vesicle size
+  2.5e-10       0   _SCOND1    # synaptic conductance
+        0       0   _STHRESH1  # synaptic threshold (Only when no Ca)
+        0       0   _SVNOISE1  # 1->allow vesicle noise, override, vnoise=0
+        1       0   _SCOV1     # 1=Poisson, <1->more regular, gamma dist
+        2       0   _SDUR1     # synaptic event time const.
+        0       0   _SFALL1    # synaptic event fall time const.
+        1       0   _SNFILT1   # synaptic vesicle nfilt  (Only when no Ca)
+   0.0015       0   _STRCONC1  # synaptic transmitter concentration.
+  xmglur6       0   _SRESP1    # synaptic response (ampa,gaba,gj,etc.
+        2       0   _SCNFILT1  # second mesng. nfilt
+        2       0   _SCDUR1    # second mesng. time const.
+        1       0   _SCGAIN1   # synaptic second messenger gain
+        1       0   _SCOFF1    # synaptic second messenger offset
+        0       0   _SCNOISE1  # 1->allow channel noise, override, cnoise=0
+       20       0   _SNCHAN1   # number of channels
+  2.2e-11       0   _SUNIT1    # synaptic channel unitary conductance
+        0       0   _SVREV1    # synaptic reversal potential

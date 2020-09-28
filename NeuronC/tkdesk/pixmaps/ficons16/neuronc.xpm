@@ -1,0 +1,33 @@
+/* XPM */
+static char * neuronc_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"16 16 11 1",
+/* colors */
+" 	s None	c None",
+".	c LightSlateGray",
+"X	c black",
+"o	c LightGray",
+"O	c gray",
+"+	c PaleGreen",
+"@	c MediumBlue",
+"#	c coral",
+"$	c tomato",
+"%	c blue",
+"&	c SkyBlue",
+/* pixels */
+"                ",
+"............XoO ",
+".+++++++++++XooO",
+".+@@++++++++XXXX",
+".+@@++++++++++.X",
+".++#++++++@@++.X",
+".++#$+++++@@++.X",
+".+++#%+++#$+++.X",
+".++%%%%%#$++++.X",
+".++%%%%%$+++++.X",
+".+%%&&%%%+++++.X",
+".++%&&%%++++++.X",
+".++%%%%%++++++.X",
+".++++%++++++++.X",
+"...............X",
+" XXXXXXXXXXXXXXX"};

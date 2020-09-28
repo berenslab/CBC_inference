@@ -1,0 +1,171 @@
+/* tcomp31d: Test of Na activation and inactivation */
+
+timinc = 5e-6;
+crit   = 1e-10;
+ploti  = 1e-5;
+
+expt1 = 1;		/* -> 1, plot activation kinetics  */
+expt2 = 0;		/* -> 2, plot deactivation kinetics */
+
+ivplot = 0;
+plsep = 1;
+
+x = setvar();
+
+
+/*----------------------------------------*/
+
+nchan = 1;
+flag = 0;
+
+proc onplot()
+
+{
+ if (expt==1) {
+   if (flag) {
+     if (prestimdur<time && time <= (prestimdur+0.005)) {
+       INa = I[1];
+        if (INa < maxcurrent) maxcurrent = INa;
+     };
+   };
+ } else {
+   if (flag) {
+     if (prestimdur+stimdur<=time && time <= (prestimdur+stimdur+0.005)) {
+        INa = I[1];
+        if (INa < maxcurrent) maxcurrent = INa;
+     };
+   };
+};
+
+};
+
+
+/* Experiment to plot activation */
+
+n=1;
+expt = 1;
+maxcurrent = 0;
+
+at 1 sphere dia 10 rm=1e8 vrev -.07 vrest -.07;
+at 1 chan Na type 5 maxcond 500e-12 offset= 0.000 tauc=1 taud=1 ename xxx;	/* */
+
+if (expt1) {
+
+n=1;
+
+vhold    = -0.07;
+vpulse   = -0.05;
+vstart   = -0.08;
+vstop    =  0.02;
+vstep    =  0.005;
+tailvolt = -0.07;
+
+prestimdur  = 0.01;
+stimdur     = 0.02;
+tailcurdur  = 0.0;
+poststimdur = 0.2;
+norm1 = -5e-10;
+
+endexp = prestimdur+stimdur+tailcurdur+poststimdur;
+
+/* Experiment to test activation at different voltages */
+
+
+if (ivplot) {
+  graph X max vstop min vstart;
+  graph Y max 2 min 0;
+  graph init;
+  graph pen (5);
+} else {
+  plot I[n] max 100e-12 min -100e-12;
+  plot V[n] max vstop min vhold;
+  plot G(1) xxx max 1 min 0 plname = "state 1";
+  plot G(2) xxx max 1 min 0 plname = "state 2";
+  plot G(3) xxx max 1 min 0 plname = "state 3";
+  plot G(4) xxx max 1 min 0 plname = "state 4";
+  plot G(5) xxx max 1 min 0 plname = "state 5";
+  plot G(6) xxx max 1 min 0 plname = "state 6";
+  plot G(7) xxx max 1 min 0 plname = "state 7";
+  plot G(8) xxx max 1 min 0 plname = "state 8";
+  plot G(9) xxx max 1 min 0 plname = "state 9";
+};
+
+
+for (vpulse=vstart; vpulse < vstop; vpulse += vstep) {
+  time = 0;
+  maxcurrent = 0;
+  INa = 0;
+  stim node n vclamp=vhold start=time dur=prestimdur;
+  step prestimdur; 
+  flag = 1;
+  stim node n vclamp=vpulse start=prestimdur dur=stimdur;
+  step stimdur; 
+  flag = 0;
+  if (ivplot) graph (vpulse,maxcurrent/(vna-vpulse)/norm1);
+  stim node n vclamp=tailvolt start=prestimdur+stimdur dur=tailcurdur;
+  step tailcurdur; 
+  stim node n vclamp=vhold start=prestimdur+stimdur+tailcurdur dur=poststimdur;
+  step poststimdur; 
+ };
+};
+
+/* Experiment to test inactivation */
+
+if (expt2) {
+n=1;
+expt = 2;
+maxcurrent = 0;
+
+vhold    = -0.07;
+vpulse   = -0.05;
+vstart   = -0.08;
+vstop    =  0.02;
+vstep    =  0.005;
+tailvolt =  0;
+
+prestimdur  = 0.01;
+stimdur     = 0.02;
+tailcurdur  = 0.002;
+poststimdur = 0.1;
+norm2 = 2.5e-11;
+
+endexp = prestimdur+stimdur+tailcurdur+poststimdur;
+
+/* Experiment to test activation at different voltages */
+
+if (ivplot) {
+  graph X max vstop min vstart;
+  graph Y max 2 min 0;
+//  graph init;
+  graph pen (2);
+} else {
+  plot I[n] max 100e-12 min -100e-12;
+  plot V[n] max vstop min vhold;
+  plot G(1) xxx max 1 min 0 plname = "state 1";
+  plot G(2) xxx max 1 min 0 plname = "state 2";
+  plot G(3) xxx max 1 min 0 plname = "state 3";
+  plot G(4) xxx max 1 min 0 plname = "state 4";
+  plot G(5) xxx max 1 min 0 plname = "state 5";
+  plot G(6) xxx max 1 min 0 plname = "state 6";
+  plot G(7) xxx max 1 min 0 plname = "state 7";
+  plot G(8) xxx max 1 min 0 plname = "state 8";
+  plot G(9) xxx max 1 min 0 plname = "state 9";
+};
+
+for (vpulse=vstart; vpulse < vstop; vpulse += vstep) {
+  time = 0;
+  maxcurrent = 0;
+  stim node n vclamp=vhold start=time dur=prestimdur;
+  step prestimdur; 
+  stim node n vclamp=vpulse start=prestimdur dur=stimdur;
+  step stimdur; 
+  flag = 1;
+  stim node n vclamp=tailvolt start=prestimdur+stimdur dur=tailcurdur;
+  step tailcurdur; 
+  flag = 0;
+  if (ivplot) graph (vpulse,-maxcurrent/norm2);
+  stim node n vclamp=vhold start=prestimdur+stimdur+tailcurdur dur=poststimdur;
+  step poststimdur; 
+ };
+};
+

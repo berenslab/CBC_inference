@@ -1,0 +1,43 @@
+/* simple model of cone-hz cell circuit */
+
+timinc=1e-4;
+exponf = 2;
+exponb = 4;
+condf = 2e-10;
+condb = 3e-10;
+thra  = -.045;
+thrb  = -.05;
+
+drm = 20000;
+
+plmax = -.02;
+plmin = -.055;
+
+x = setvar();
+
+at 1 sphere dia 10 vrest= -.04;
+conn 1 to 10 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 2 sphere dia 10 vrest= -.04;
+conn 2 to 10 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 10 sphere dia 10 vrest= -.04;
+conn 10 to 1 synapse open expon=exponb maxcond=condb 
+			thresh= thrb vrev= -.067 nfilt1 1 timec1 6;
+conn 10 to 2 synapse open expon=exponb maxcond=condb 
+			thresh= thrb vrev= -.067 nfilt1 1 timec1 6;
+
+
+stim node 1 cclamp 1.2e-11 start 0 dur 1;
+stim node 2 cclamp 1.2e-11 start 0 dur 1;
+stim node 1 cclamp -.5e-11 start .05 dur .1;
+/* stim node 1 cclamp 1e-12 start .01 dur .01; /* */
+
+plot V[1], V[2], V[10];
+
+endexp = .2;
+
+run;
+

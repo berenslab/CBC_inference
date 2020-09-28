@@ -1,0 +1,1871 @@
+#! /usr/mont/bin/nc -q -c
+
+/* maknval.n */
+
+/* Script to create neuron parameter file.
+   Run "maknval.n" > nval.n" to make.
+*/
+
+/*-----------------------------------------*/
+
+/* Check to make sure these cell identities are same as in "makcel.n". */
+
+xcone =  0;            /* Identity numbers for neurons */
+xrod  =  1; 
+hbat  =  2;
+ha    =  3;
+hb    =  4;
+rbp   =  5;
+cbp   =  6;             /* depolarizing cone bipolar */
+hbp   =  7;             /* hyperpolarizing cone bipolar */
+a17   =  8;
+aii   =  9;
+sb    = 10;
+am    = 11;
+amh   = 12;
+ams   = 13;
+gc    = 14;
+dsgc  = 15;
+gcoff = 16;
+nceltypes = 17;
+
+soma  = 0;
+
+/*-----------------------------------------*/
+
+include "colors.n";
+
+PNAMSIZ = 220;
+CNAMSIZ = 25;
+RNAMSIZ = 25;
+SNAMSIZ = 40;
+dim pname[PNAMSIZ][2];		/* neural parameters */
+dim rname[RNAMSIZ][2];		/* response types */
+dim cname[CNAMSIZ][2];		/* presynaptic connections */
+dim sname[SNAMSIZ][2];		/* postsynaptic connections */
+pindx = 0;
+cindx = 0;
+rindx = 1;	/* responses start at 1  = xglut */
+sindx = 0;
+
+x = setvar();
+
+for (j=0; j<PNAMSIZ; j++) {
+    pname[j][0] = "";
+    pname[j][1] = "";
+};
+for (j=0; j<CNAMSIZ; j++) {
+    cname[j][0] = "";
+    cname[j][1] = "";
+};
+for (j=0; j<RNAMSIZ; j++) {
+    rname[j][0] = "";
+    rname[j][1] = "";
+};
+for (j=0; j<SNAMSIZ; j++) {
+    sname[j][0] = "";
+    sname[j][1] = "";
+};
+
+func makn (var,comment)
+
+{
+ pname[pindx][0] = var;
+ pname[pindx][1] = comment;
+ return pindx++;
+};
+
+func makc (var,comment)
+
+{
+ cname[cindx][0] = var;
+ cname[cindx][1] = comment;
+ return cindx++;
+};
+
+func makr (var,comment)
+
+{
+ rname[rindx][0] = var;
+ rname[rindx][1] = comment;
+ return rindx++;
+};
+
+func maks (var,comment)
+
+{
+ sname[sindx][0] = var;
+ sname[sindx][1] = comment;
+ return sindx++;
+};
+
+/*-----------------------------------------*/
+
+ /* defs for "nval[][]" */
+
+MAKE	 = makn("MAKE",		"/* whether to make this cell type */");
+MAKE_DEND= makn("MAKE_DEND",	"/* whether to make dendrites */");
+MAKE_AXON= makn("MAKE_AXON",	"/* whether to make axon */");
+MAKE_LONG= makn("MAKE_LONG",	"/* whether to make axon long */");
+NMADE	 = makn("NMADE",	"/* number of cells made */");
+MAXNUM   = makn("MAXNUM",	"/* maximum number of cells of this type */");
+COLOR	 = makn("COLOR",	"/* color of this cell type for display */");
+MAXCOV   = makn("MAXCOV",	"/* max coverage factor (for arrays) */");
+MAXSYNI	 = makn("MAXSYNI",	"/* max number of input syns per celltype */");
+MAXSYNO	 = makn("MAXSYNO",	"/* max number of output syns per celltype */");
+DENS	 = makn("DENS",		"/* density of this type (per mm2) */");
+REGU 	 = makn("REGU",		"/* regularity (mean/stdev) of spacing */");
+MORPH	 = makn("MORPH",	"/* morphology (=0 -> file, or artificial) */");
+COMPLAM	 = makn("COMPLAM",	"/* compartment size (default=complam) */");
+BIOPHYS  = makn("BIOPHYS",	"/* add biophys properties (chan dens file) */");
+CHNOISE  = makn("CHNOISE",	"/* add membrane channel noise properties   */");
+RATIOK 	 = makn("RATIOK",	"/* set K density values as ratio from Na */");
+VSTART	 = makn("VSTART",	"/* initial resting potential */");
+VREV	 = makn("VREV",		"/* membrane potential for Rm (VCl) */");
+RM	 = makn("RM",		"/* the cell's Rm */");
+
+SOMADIA  = makn("SOMADIA",	"/* Soma diameter */");
+SOMAZ	 = makn("SOMAZ",	"/* Z location (x,y loc determ. by array) */");
+DENDARB  = makn("DENDARB",	"/* type of dendritic tree */");
+DENDARBZ = makn("DENDARBZ",	"/* dendritic arborization level */");
+DENZDIST = makn("DENZDIST",	"/* dendritic arborization z tolerance */");
+STRATDIA = makn("STRATDIA",	"/* stratif. annulus dia (fract of treedia) */");
+DTIPDIA	 = makn("DTIPDIA",	"/* diameter of dendritic tips */");
+DTREEDIA = makn("DTREEDIA",	"/* diameter of dendritic tree */");
+AXARBT	 = makn("AXARBT",	"/* type of axonal tree */");
+AXARBZ	 = makn("AXARBZ",	"/* axonal arborization level */");
+AXTIPDIA = makn("AXTIPDIA",	"/* diameter of axonal tips */");
+AXARBDIA = makn("AXARBDIA",	"/* diameter of axonal arbor */");
+
+TAPERSPC = makn("TAPERSPC",	"/* space constant of diameter taper */");
+TAPERABS = makn("TAPERABS",	"/* abs diameter for taper */");
+NDENDR	 = makn("NDENDR",	"/* number of first-order dendrites */");
+GROWTHR  = makn("GROWTHR",	"/* distance thresh for growth of dendrites */");
+
+CELPRE1	 = makn("CELPRE1",	"/* cell type to connect to (neg, no conn) */");
+CONPRE1  = makn("CONPRE1",	"/* connection number of presyn cell */");
+CELCONV1 = makn("CELCONV1",	"/* number of presyn cells to connect to */");
+GROWPOST1= makn("GROWPOST1",	"/* grow when making conn from presyn cell */");
+CELPRE2	 = makn("CELPRE2",	"/* cell type to connect to (neg, no conn) */");
+CONPRE2  = makn("CONPRE2",	"/* connection number of presyn cell */");
+CELCONV2 = makn("CELCONV2",	"/* number of presyn cells to connect to */");
+GROWPOST2= makn("GROWPOST2",	"/* grow when making conn from presyn cell */");
+CELPRE3	 = makn("CELPRE3",	"/* cell type to connect to (neg, no conn) */");
+CONPRE3  = makn("CONPRE3",	"/* connection number of presyn cell */");
+CELCONV3 = makn("CELCONV3",	"/* number of presyn cells to connect to */");
+GROWPOST3= makn("GROWPOST3",	"/* grow when making conn from presyn cell */");
+CELPRE4	 = makn("CELPRE4",	"/* cell type to connect to (neg, no conn) */");
+CONPRE4  = makn("CONPRE4",	"/* connection number of presyn cell */");
+CELCONV4 = makn("CELCONV4",	"/* number of presyn cells to connect to */");
+GROWPOST4= makn("GROWPOST4",	"/* grow when making conn from presyn cell */");
+CELPRE5	 = makn("CELPRE5",	"/* cell type to connect to (neg, no conn) */");
+CONPRE5  = makn("CONPRE5",	"/* connection number of presyn cell */");
+CELCONV5 = makn("CELCONV5",	"/* number of presyn cells to connect to */");
+GROWPOST5= makn("GROWPOST5",	"/* grow when making conn from presyn cell */");
+CELPRE6	 = makn("CELPRE6",	"/* cell type to connect to (neg, no conn) */");
+CONPRE6  = makn("CONPRE6",	"/* connection number of presyn cell */");
+CELCONV6 = makn("CELCONV6",	"/* number of presyn cells to connect to */");
+GROWPOST6= makn("GROWPOST6",	"/* grow when making conn from presyn cell */");
+CELPRE7	 = makn("CELPRE7",	"/* cell type to connect to (neg, no conn) */");
+CONPRE7  = makn("CONPRE7",	"/* connection number of presyn cell */");
+CELCONV7 = makn("CELCONV7",	"/* number of presyn cells to connect to */");
+GROWPOST7= makn("GROWPOST7",	"/* grow when making conn from presyn cell */");
+CELPRE8	 = makn("CELPRE8",	"/* cell type to connect to (neg, no conn) */");
+CONPRE8  = makn("CONPRE8",	"/* connection number of presyn cell */");
+CELCONV8 = makn("CELCONV8",	"/* number of presyn cells to connect to */");
+GROWPOST8= makn("GROWPOST8",	"/* grow when making conn from presyn cell */");
+
+CELPOST1 = makn("CELPOST1",	"/* cell type to connect to (neg, no conn) */");
+CONPOST1 = makn("CONPOST1",	"/* connection number for postsyn cell */");
+CELDIV1  = makn("CELDIV1",	"/* number of postsyn cells to connect to */");
+GROWPRE1 = makn("GROWPRE1",	"/* grow when making conn to postsyn cell */");
+USEDYAD1 = makn("USEDYAD1",	"/* synapse is dyad using preexisting type */");
+DYADTYP1 = makn("DYADTYP1",	"/* type of dyad synapse to connect with */");
+AUTAPSE1 = makn("AUTAPSE1",	"/* synapse back to presynaptic node */");
+SYNNUM1	 = makn("SYNNUM1",	"/* number of synapses per connection */");
+SENSCA1  = makn("SENSCA1",	"/* synaptic release sensitivity calcium */");
+SGAIN1	 = makn("SGAIN1",	"/* synaptic gain */");
+SVGAIN1	 = makn("SVGAIN1",	"/* synaptic vgain */");
+SDURH1   = makn("SDURH1",	"/* synaptic high pass time const. */");
+SNFILTH1 = makn("SNFILTH1",	"/* synaptic high pass nfilt */");
+SHGAIN1  = makn("SHGAIN1",	"/* synaptic high pass gain */");
+SVSIZ1	 = makn("SVSIZ1",	"/* synaptic vesicle size */");
+SCOND1	 = makn("SCOND1",	"/* synaptic conductance */");
+STHRESH1 = makn("STHRESH1",	"/* synaptic threshold */");
+SVNOISE1 = makn("SVNOISE1",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR1	 = makn("SDUR1",	"/* synaptic event time const. */");
+SNFILT1  = makn("SNFILT1",	"/* synaptic vesicle nfilt */");
+STRCONC1 = makn("STRCONC1",	"/* synaptic transmitter concentration. */");
+SRESP1	 = makn("SRESP1",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT1 = makn("SCNFILT1",	"/* second mesng. nfilt */");
+SCDUR1	 = makn("SCDUR1",	"/* second mesng. time const. */");
+SCGAIN1	 = makn("SCGAIN1",	"/* synaptic second messenger gain */");
+SCNOISE1 = makn("SCNOISE1",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN1  = makn("SNCHAN1",	"/* number of channels */");
+SUNIT1	 = makn("SUNIT1",	"/* synaptic channel unitary conductace */");
+SVREV1	 = makn("SVREV1",	"/* synaptic reversal potential */");
+
+CELPOST2 = makn("CELPOST2",	"/* cell type to connect to (neg, no conn) */");
+CONPOST2 = makn("CONPOST2",	"/* connection number for postsyn cell */");
+CELDIV2  = makn("CELDIV2",	"/* number of postsyn cells to connect to */");
+GROWPRE2 = makn("GROWPRE2",	"/* grow when making conn to postsyn cell */");
+USEDYAD2 = makn("USEDYAD2",	"/* synapse is dyad using preexisting type */");
+DYADTYP2 = makn("DYADTYP2",	"/* type of dyad synapse to connect with */");
+AUTAPSE2 = makn("AUTAPSE2",	"/* synapse back to presynaptic node */");
+SYNNUM2	 = makn("SYNNUM2",	"/* number of synapses per connection */");
+SENSCA2  = makn("SENSCA2",	"/* synaptic release sensitivity calcium */");
+SGAIN2	 = makn("SGAIN2",	"/* synaptic gain */");
+SVGAIN2	 = makn("SVGAIN2",	"/* synaptic vgain */");
+SDURH2   = makn("SDURH2",	"/* synaptic high pass time const. */");
+SNFILTH2 = makn("SNFILTH2",	"/* synaptic high pass nfilt */");
+SHGAIN2  = makn("SHGAIN2",	"/* synaptic high pass gain */");
+SVSIZ2	 = makn("SVSIZ2",	"/* synaptic vesicle size */");
+SCOND2	 = makn("SCOND2",	"/* synaptic conductance */");
+STHRESH2 = makn("STHRESH2",	"/* synaptic threshold */");
+SVNOISE2 = makn("SVNOISE2",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR2	 = makn("SDUR2",	"/* synaptic event time const. */");
+SNFILT2  = makn("SNFILT2",	"/* synaptic vesicle nfilt */");
+STRCONC2 = makn("STRCONC2",	"/* synaptic transmitter concentration. */");
+SRESP2	 = makn("SRESP2",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT2 = makn("SCNFILT2",	"/* second mesng. nfilt */");
+SCDUR2	 = makn("SCDUR2",	"/* second mesng. time const. */");
+SCGAIN2	 = makn("SCGAIN2",	"/* synaptic second messenger gain */");
+SCNOISE2 = makn("SCNOISE2",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN2  = makn("SNCHAN2",	"/* number of channels */");
+SUNIT2	 = makn("SUNIT2",	"/* synaptic channel unitary conductace */");
+SVREV2	 = makn("SVREV2",	"/* synaptic reversal potential */");
+
+CELPOST3 = makn("CELPOST3",	"/* cell type to connect to (neg, no conn) */");
+CONPOST3 = makn("CONPOST3",	"/* connection number for postsyn cell */");
+CELDIV3  = makn("CELDIV3",	"/* number of postsyn cells to connect to */");
+GROWPRE3 = makn("GROWPRE3",	"/* grow when making conn to postsyn cell */");
+USEDYAD3 = makn("USEDYAD3",	"/* synapse is dyad using preexisting type */");
+DYADTYP3 = makn("DYADTYP3",	"/* type of dyad synapse to connect with */");
+AUTAPSE3 = makn("AUTAPSE3",	"/* synapse back to presynaptic node */");
+SYNNUM3	 = makn("SYNNUM3",	"/* number of synapses per connection */");
+SENSCA3  = makn("SENSCA3",	"/* synaptic release sensitivity calcium */");
+SGAIN3	 = makn("SGAIN3",	"/* synaptic gain */");
+SVGAIN3	 = makn("SVGAIN3",	"/* synaptic vgain */");
+SDURH3   = makn("SDURH3",	"/* synaptic high pass time const. */");
+SNFILTH3 = makn("SNFILTH3",	"/* synaptic high pass nfilt */");
+SHGAIN3  = makn("SHGAIN3",	"/* synaptic high pass gain */");
+SVSIZ3	 = makn("SVSIZ3",	"/* synaptic vesicle size */");
+SCOND3	 = makn("SCOND3",	"/* synaptic conductance */");
+STHRESH3 = makn("STHRESH3",	"/* synaptic threshold */");
+SVNOISE3 = makn("SVNOISE3",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR3	 = makn("SDUR3",	"/* synaptic event time const. */");
+SNFILT3  = makn("SNFILT3",	"/* synaptic vesicle nfilt */");
+STRCONC3 = makn("STRCONC3",	"/* synaptic transmitter concentration. */");
+SRESP3	 = makn("SRESP3",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT3 = makn("SCNFILT3",	"/* second mesng. nfilt */");
+SCDUR3	 = makn("SCDUR3",	"/* second mesng. time const. */");
+SCGAIN3	 = makn("SCGAIN3",	"/* synaptic second messenger gain */");
+SCNOISE3 = makn("SCNOISE3",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN3  = makn("SNCHAN3",	"/* number of channels */");
+SUNIT3	 = makn("SUNIT3",	"/* synaptic channel unitary conductace */");
+SVREV3	 = makn("SVREV3",	"/* synaptic reversal potential */");
+
+CELPOST4 = makn("CELPOST4",	"/* cell type to connect to (neg, no conn) */");
+CONPOST4 = makn("CONPOST4",	"/* connection number for postsyn cell */");
+CELDIV4  = makn("CELDIV4",	"/* number of postsyn cells to connect to */");
+GROWPRE4 = makn("GROWPRE4",	"/* grow when making conn to postsyn cell */");
+USEDYAD4 = makn("USEDYAD4",	"/* synapse is dyad using preexisting type */");
+DYADTYP4 = makn("DYADTYP4",	"/* type of dyad synapse to connect with */");
+AUTAPSE4 = makn("AUTAPSE4",	"/* synapse back to presynaptic node */");
+SYNNUM4	 = makn("SYNNUM4",	"/* number of synapses per connection */");
+SENSCA4  = makn("SENSCA4",	"/* synaptic release sensitivity calcium */");
+SGAIN4	 = makn("SGAIN4",	"/* synaptic gain */");
+SVGAIN4	 = makn("SVGAIN4",	"/* synaptic vgain */");
+SDURH4   = makn("SDURH4",	"/* synaptic high pass time const. */");
+SNFILTH4 = makn("SNFILTH4",	"/* synaptic high pass nfilt */");
+SHGAIN4  = makn("SHGAIN4",	"/* synaptic high pass gain */");
+SVSIZ4	 = makn("SVSIZ4",	"/* synaptic vesicle size */");
+SCOND4	 = makn("SCOND4",	"/* synaptic conductance */");
+STHRESH4 = makn("STHRESH4",	"/* synaptic threshold */");
+SVNOISE4 = makn("SVNOISE4",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR4	 = makn("SDUR4",	"/* synaptic event time const. */");
+SNFILT4  = makn("SNFILT4",	"/* synaptic vesicle nfilt */");
+STRCONC4 = makn("STRCONC4",	"/* synaptic transmitter concentration. */");
+SRESP4	 = makn("SRESP4",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT4 = makn("SCNFILT4",	"/* second mesng. nfilt */");
+SCDUR4	 = makn("SCDUR4",	"/* second mesng. time const. */");
+SCGAIN4	 = makn("SCGAIN4",	"/* synaptic second messenger gain */");
+SCNOISE4 = makn("SCNOISE4",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN4  = makn("SNCHAN4",	"/* number of channels */");
+SUNIT4	 = makn("SUNIT4",	"/* synaptic channel unitary conductace */");
+SVREV4	 = makn("SVREV4",	"/* synaptic reversal potential */");
+
+CELPOST5 = makn("CELPOST5",	"/* cell type to connect to (neg, no conn) */");
+CONPOST5 = makn("CONPOST5",	"/* connection number for postsyn cell */");
+CELDIV5  = makn("CELDIV5",	"/* number of postsyn cells to connect to */");
+GROWPRE5 = makn("GROWPRE5",	"/* grow when making conn to postsyn cell */");
+USEDYAD5 = makn("USEDYAD5",	"/* synapse is dyad using preexisting type */");
+DYADTYP5 = makn("DYADTYP5",	"/* type of dyad synapse to connect with */");
+AUTAPSE5 = makn("AUTAPSE5",	"/* synapse back to presynaptic node */");
+SYNNUM5	 = makn("SYNNUM5",	"/* number of synapses per connection */");
+SENSCA5  = makn("SENSCA5",	"/* synaptic release sensitivity calcium */");
+SGAIN5	 = makn("SGAIN5",	"/* synaptic gain */");
+SVGAIN5	 = makn("SVGAIN5",	"/* synaptic vgain */");
+SDURH5   = makn("SDURH5",	"/* synaptic high pass time const. */");
+SNFILTH5 = makn("SNFILTH5",	"/* synaptic high pass nfilt */");
+SHGAIN5  = makn("SHGAIN5",	"/* synaptic high pass gain */");
+SVSIZ5	 = makn("SVSIZ5",	"/* synaptic vesicle size */");
+SCOND5	 = makn("SCOND5",	"/* synaptic conductance */");
+STHRESH5 = makn("STHRESH5",	"/* synaptic threshold */");
+SVNOISE5 = makn("SVNOISE5",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR5	 = makn("SDUR5",	"/* synaptic event time const. */");
+SNFILT5  = makn("SNFILT5",	"/* synaptic vesicle nfilt */");
+STRCONC5 = makn("STRCONC5",	"/* synaptic transmitter concentration. */");
+SRESP5	 = makn("SRESP5",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT5 = makn("SCNFILT5",	"/* second mesng. nfilt */");
+SCDUR5	 = makn("SCDUR5",	"/* second mesng. time const. */");
+SCGAIN5	 = makn("SCGAIN5",	"/* synaptic second messenger gain */");
+SCNOISE5 = makn("SCNOISE5",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN5  = makn("SNCHAN5",	"/* number of channels */");
+SUNIT5	 = makn("SUNIT5",	"/* synaptic channel unitary conductace */");
+SVREV5	 = makn("SVREV5",	"/* synaptic reversal potential */");
+
+NPARAMS  = makn("NPARAMS",	"/* number of neuron parameters */");
+
+NCONNI = 8;			/* number of possible presynaptic cell types */
+NCONNO = 5;			/* number of possible postsynaptic cell types */
+
+// fprintf (stderr,"nparams %g\n", NPARAMS);
+
+ NBRANCHED = 0;		/* not branched, separate dendrites for each input */
+ BRANCHED  = 1;		/* branched dendritic tree */
+ HBRANCHED = 2;		/* highly branched */
+ SBRANCHED = 3;		/* starburst branching */
+
+/* defs for responses */
+
+ xglut     = makr("XGLUT",	"/* generic glutamate response */");
+ xampa     = makr("XAMPA",	"/* AMPA synaptic response */");
+ xampa5    = makr("XAMPA5",	"/* AMPA type 5 synaptic response */");
+ xkainate  = makr("XKAINATE",	"/* Kainate synaptic response */");
+ xmglur6   = makr("XMGLUR6",	"/* mGluR6 synaptic response */");
+ xgaba     = makr("XGABA",	"/* GABA synaptic response */");
+ xgly      = makr("XGLY",	"/* Glycine synaptic response */");
+ xgj       = makr("XGJ",	"/* gap junction synaptic response */");
+ xdyad     = makr("XDYAD",	"/* dyad synapse (uses other resp type) */");
+ nresptypes= makr("NRESPTYPES",	"/* number of synaptic types */");
+
+/* defs for connections */
+				/* change these here as well as above */
+CELPRE	 = makc("CELPRE",	"/* cell type to connect to (neg, no conn) */");
+CONPRE   = makc("CONPRE",	"/* connection number of presyn cell */");
+CELCONV  = makc("CELCONV",	"/* number of presyn cells to connect to */");
+GROWPOST = makc("GROWPOST",	"/* grow when making conn from presyn cell */");
+NCONNP   = makc("NCONNP",	"/* number of connection parameters */");
+
+CELPOST  = maks("CELPOST",	"/* cell type to connect to (neg, no conn) */");
+CONPOST  = maks("CONPOST",	"/* connection number for postsyn cell */");
+CELDIV   = maks("CELDIV",	"/* number of postsyn cells to connect to */");
+GROWPRE  = maks("GROWPRE",	"/* grow when making conn to postsyn cell */");
+USEDYAD  = maks("USEDYAD",	"/* synapse is dyad using preexisting type */");
+DYADTYP  = maks("DYADTYP",	"/* type of dyad synapse to connect with */");
+AUTAPSE  = maks("AUTAPSE",	"/* synapse back to presynaptic node */");
+SYNNUM	 = maks("SYNNUM",	"/* number of synapses per connection */");
+SENSCA	 = maks("SENSCA",	"/* synaptic release sensitivity calcium */");
+SGAIN	 = maks("SGAIN",	"/* synaptic gain */");
+SVGAIN	 = maks("SVGAIN",	"/* synaptic vgain */");
+SDURH    = maks("SDURH",	"/* synaptic high pass time const. */");
+SNFILTH  = maks("SNFILTH",	"/* synaptic high pass nfilt */");
+SHGAIN   = maks("SHGAIN",	"/* synaptic high pass gain */");
+SVSIZ	 = maks("SVSIZ",	"/* synaptic vesicle size */");
+SCOND	 = maks("SCOND",	"/* synaptic conductance */");
+STHRESH  = maks("STHRESH",	"/* synaptic threshold */");
+SVNOISE  = maks("SVNOISE",	"/* 1->allow vesicle noise, override, vnoise=0 */");
+SDUR	 = maks("SDUR",		"/* synaptic event time const. */");
+SNFILT   = maks("SNFILT",	"/* synaptic vesicle nfilt */");
+STRCONC	 = maks("STRCONC",	"/* synaptic transmitter concentration. */");
+SRESP	 = maks("SRESP",	"/* synaptic response (ampa,gaba,gj,etc. */");
+SCNFILT  = maks("SCNFILT",	"/* second mesng. nfilt */");
+SCDUR	 = maks("SCDUR",	"/* second mesng. time const. */");
+SCGAIN	 = maks("SCGAIN",	"/* synaptic second messenger gain */");
+SCNOISE  = maks("SCNOISE",	"/* 1->allow channel noise, override, cnoise=0 */");
+SNCHAN 	 = maks("SNCHAN",	"/* number of channels */");
+SUNIT	 = maks("SUNIT",	"/* synaptic channel unitary conductace */");
+SVREV	 = maks("SVREV",	"/* synaptic reversal potential */");
+NSYNP    = maks("NSYNP",	"/* number of synaptic parameters */");
+
+
+/*-----------------------------------------*/
+
+dim celname[nceltypes];			/* cell names */
+dim nval[nceltypes][NPARAMS];		/* cell build params */
+dim anatfiles[nceltypes];		/* cell anatomy file names */
+
+
+   celname [xrod]   = "xrod";		/* set the names */
+   celname [xcone]  = "xcone";
+   celname [hbat]   = "hbat";
+   celname [ha]     = "ha";
+   celname [hb]     = "hb";
+   celname [rbp]    = "rbp";
+   celname [cbp]    = "cbp";
+   celname [hbp]    = "hbp";
+   celname [aii]    = "aii";
+   celname [am]     = "am";
+   celname [amh]    = "amh";
+   celname [ams]    = "ams";
+   celname [sb]     = "sb";
+   celname [a17]    = "a17";
+   celname [gc]     = "gc";
+   celname [dsgc]   = "dsgc";
+   celname [gcoff]  = "gcoff";
+
+   for (n=0; n<nceltypes; n++) 	/* zero the array */
+     for (p=0; p<NPARAMS; p++) 
+        nval[n][p] = 0;
+
+	/* Neurons */
+
+  nval[xcone][RM] = 1000;	/* Rm's */
+  nval[xrod] [RM] = 5000;
+  nval[ha]   [RM] = 10000;
+  nval[hb]   [RM] = 10000;
+  nval[hbat] [RM] = 20000;
+  nval[cbp]  [RM] = 20000;
+  nval[hbp]  [RM] = 20000;
+  nval[rbp]  [RM] = 10000;
+  nval[a17]  [RM] = 50000;
+  nval[aii]  [RM] = 50000;
+  nval[sb]   [RM] = 50000;
+  nval[am]   [RM] = 50000;
+  nval[amh]  [RM] = 50000;
+  nval[ams]  [RM] = 50000;
+  nval[gc]   [RM] = 10000;
+  nval[dsgc] [RM] = 10000;
+  nval[gcoff] [RM] = 10000;
+
+  nval[xcone][MAXNUM] = 20000;	/* maximum numbers of cells */
+  nval[xrod] [MAXNUM] = 50000;
+  nval[ha]  [MAXNUM] = 100;
+  nval[hb]  [MAXNUM] = 400;
+  nval[hbat][MAXNUM] = 100;
+  nval[rbp] [MAXNUM] = 2000;
+  nval[cbp] [MAXNUM] = 10000;
+  nval[hbp] [MAXNUM] = 10000;
+  nval[a17] [MAXNUM] = 400;
+  nval[aii] [MAXNUM] = 400;
+  nval[sb]  [MAXNUM] = 400;
+  nval[am]  [MAXNUM] = 400;
+  nval[amh] [MAXNUM] = 400;
+  nval[ams] [MAXNUM] = 2000;
+  nval[gc]  [MAXNUM] = 100;
+  nval[dsgc] [MAXNUM] = 100;
+  nval[gcoff][MAXNUM] = 100;
+
+  nval[xcone][MAXCOV] = 5;	
+  nval[xrod]  [MAXCOV] = 5;
+  nval[ha]  [MAXCOV] = 20;	/* maximum coverage factors */
+  nval[hb]  [MAXCOV] = 20;
+  nval[hbat][MAXCOV] = 10;
+  nval[rbp] [MAXCOV] = 10;
+  nval[cbp] [MAXCOV] = 10;
+  nval[hbp] [MAXCOV] = 10;
+  nval[a17] [MAXCOV] = 50;
+  nval[aii] [MAXCOV] = 10;
+  nval[sb]  [MAXCOV] = 30;
+  nval[am]  [MAXCOV] = 30;
+  nval[amh] [MAXCOV] = 30;
+  nval[ams] [MAXCOV] = 10;
+  nval[gc]  [MAXCOV] = 10;
+  nval[dsgc][MAXCOV] = 10;
+  nval[gcoff][MAXCOV] = 10;
+ 
+  nval[xcone][MAXSYNO] = 20;		/* maximum output synapses */
+  nval[xrod] [MAXSYNO] = 10;
+  nval[ha]  [MAXSYNO] = 200;
+  nval[hb]  [MAXSYNO] = 100;
+  nval[hbat][MAXSYNO] = 1000;
+  nval[cbp] [MAXSYNO] = 50;
+  nval[hbp] [MAXSYNO] = 50;
+  nval[rbp] [MAXSYNO] = 50;
+  nval[a17] [MAXSYNO] = 500;
+  nval[aii] [MAXSYNO] = 500;
+  nval[sb]  [MAXSYNO] = 500;
+  nval[am]  [MAXSYNO] = 500;
+  nval[amh] [MAXSYNO] = 500;
+  nval[ams] [MAXSYNO] = 50;
+
+  nval[xcone][MAXSYNI] = 20;		/* maximum input synapses */
+  nval[xrod] [MAXSYNI] = 10;
+  nval[ha]  [MAXSYNI] = 200;
+  nval[hb]  [MAXSYNI] = 100;
+  nval[hbat][MAXSYNI] = 1000;
+  nval[cbp] [MAXSYNI] = 50;
+  nval[hbp] [MAXSYNI] = 50;
+  nval[rbp] [MAXSYNI] = 50;
+  nval[a17] [MAXSYNI] = 500;
+  nval[aii] [MAXSYNI] = 500;
+  nval[sb]  [MAXSYNI] = 500;
+  nval[am]  [MAXSYNI] = 500;
+  nval[amh] [MAXSYNI] = 500;
+  nval[ams] [MAXSYNI] = 50;
+  nval[gc] [MAXSYNI]  = 1000;
+  nval[dsgc] [MAXSYNI] = 1000;
+  nval[gcoff] [MAXSYNI] = 1000;
+
+  nval[xcone][DENS]= 25000;		/* density of cell */
+  nval[xrod][DENS] = 250000;
+  nval[ha]  [DENS] = 600;
+  nval[hb]  [DENS] = 2000;
+  nval[hbat][DENS] = 1500;
+  nval[rbp] [DENS] = 20000;
+  nval[cbp] [DENS] = 6500;
+  nval[hbp] [DENS] = 5500;
+  nval[a17] [DENS] = 8000;
+  nval[aii] [DENS] = 4000;
+  nval[am]  [DENS] = 8000;
+  nval[amh] [DENS] = 8000;
+  nval[ams] [DENS] = 6500;
+  nval[sb]  [DENS] = 500;
+  nval[gc]  [DENS] = 50;
+  nval[dsgc][DENS] = 100;
+  nval[gcoff][DENS] = 100;
+
+  nval[xcone][REGU]= 10;		/* regularity of cell array */
+  nval[xrod][REGU] = 20;
+  nval[ha]  [REGU] = 6;
+  nval[hb]  [REGU] = 6;
+  nval[hbat][REGU] = 6;
+  nval[rbp] [REGU] = 8;
+  nval[cbp] [REGU] = 8;
+  nval[hbp] [REGU] = 8;
+  nval[a17] [REGU] = 6;
+  nval[aii] [REGU] = 8;
+  nval[amh] [REGU] = 6;
+  nval[ams] [REGU] = 6;
+  nval[sb]  [REGU] = 8;
+  nval[gc]  [REGU] = 6;
+  nval[dsgc][REGU] = 6;
+  nval[gcoff][REGU] = 6;
+
+  nval[xcone][VSTART] = -.0288;	/* initial resting potential */
+  nval[xrod] [VSTART] = -.034;
+  nval[ha]   [VSTART] = -.04;
+  nval[hb]   [VSTART] = -.04;
+  nval[hbat] [VSTART] = -.04;
+  nval[rbp]  [VSTART] = -.05;
+  nval[cbp]  [VSTART] = -.050;
+  nval[hbp]  [VSTART] = -.0411;
+  nval[a17]  [VSTART] = -.05;
+  nval[aii]  [VSTART] = -.05;
+  nval[am]   [VSTART] = -.05;
+  nval[amh]  [VSTART] = -.05;
+  nval[ams]  [VSTART] = -.05;
+  nval[sb]   [VSTART] = -.058;
+  nval[gc]   [VSTART] = -.058;
+  nval[dsgc] [VSTART] = -.07;
+  nval[gcoff][VSTART] = -.06;
+
+  nval[xcone][VREV] = -.07;	/* membrane reversal potential */
+  nval[xrod] [VREV] = -.07;
+  nval[ha]   [VREV] = -.07;
+  nval[hb]   [VREV] = -.07;
+  nval[hbat] [VREV] = -.07;
+  nval[rbp]  [VREV] = -.07;
+  nval[cbp]  [VREV] = -.06;
+  nval[hbp]  [VREV] = -.06;
+  nval[a17]  [VREV] = -.07;
+  nval[aii]  [VREV] = -.07;
+  nval[am]   [VREV] = -.07;
+  nval[amh]  [VREV] = -.07;
+  nval[ams]  [VREV] = -.07;
+  nval[sb]   [VREV] = -.06;
+  nval[gc]   [VREV] = -.07;
+  nval[dsgc] [VREV] = -.07;
+  nval[gcoff][VREV] = -.07;
+
+  nval[xcone][MORPH] = 1;	/* =1 -> artif morphology */
+  nval[xrod] [MORPH] = 1;
+  nval[ha]   [MORPH] = 1;
+  nval[hb]   [MORPH] = 1;
+  nval[hbat] [MORPH] = 1;
+  nval[rbp]  [MORPH] = 1;
+  nval[cbp]  [MORPH] = 1;
+  nval[hbp]  [MORPH] = 1;
+  nval[a17]  [MORPH] = 0;
+  nval[aii]  [MORPH] = 0;
+  nval[amh]  [MORPH] = 0;
+  nval[ams]  [MORPH] = 0;
+  nval[sb]   [MORPH] = 0;
+  nval[gc]   [MORPH] = 0;
+  nval[dsgc] [MORPH] = 0;
+  nval[gcoff][MORPH] = 0;
+
+  nval[xcone][COMPLAM] = 0;	/* compartment size */
+  nval[xrod] [COMPLAM] = 0;
+  nval[ha]   [COMPLAM] = 0;
+  nval[hb]   [COMPLAM] = 0;
+  nval[hbat] [COMPLAM] = 0;
+  nval[rbp]  [COMPLAM] = 0;
+  nval[cbp]  [COMPLAM] = 0;
+  nval[hbp]  [COMPLAM] = 0;
+  nval[a17]  [COMPLAM] = 0;
+  nval[aii]  [COMPLAM] = 0;
+  nval[amh]  [COMPLAM] = 0;
+  nval[ams]  [COMPLAM] = 0;
+  nval[sb]   [COMPLAM] = 0;
+  nval[gc]   [COMPLAM] = 0;
+  nval[dsgc] [COMPLAM] = 0;
+  nval[gcoff][COMPLAM] = 0;
+
+  nval[xcone][BIOPHYS] = 0;	/* =1 -> add biophysical properties */
+  nval[xrod] [BIOPHYS] = 0;
+  nval[ha]   [BIOPHYS] = 0;
+  nval[hb]   [BIOPHYS] = 0;
+  nval[hbat] [BIOPHYS] = 0;
+  nval[rbp]  [BIOPHYS] = 0;
+  nval[cbp]  [BIOPHYS] = 0;
+  nval[hbp]  [BIOPHYS] = 0;
+  nval[a17]  [BIOPHYS] = 0;
+  nval[aii]  [BIOPHYS] = 0;
+  nval[am]   [BIOPHYS] = 0;
+  nval[amh]  [BIOPHYS] = 0;
+  nval[ams]  [BIOPHYS] = 0;
+  nval[sb]   [BIOPHYS] = 1;
+  nval[gc]   [BIOPHYS] = 1;
+  nval[dsgc] [BIOPHYS] = 1;
+  nval[gcoff][BIOPHYS] = 1;
+
+  nval[xcone][CHNOISE] = 0;	/* =1 -> add membrane channel noise properties */
+  nval[xrod] [CHNOISE] = 0;
+  nval[ha]   [CHNOISE] = 0;
+  nval[hb]   [CHNOISE] = 0;
+  nval[hbat] [CHNOISE] = 0;
+  nval[rbp]  [CHNOISE] = 0;
+  nval[cbp]  [CHNOISE] = 0;
+  nval[hbp]  [CHNOISE] = 0;
+  nval[a17]  [CHNOISE] = 0;
+  nval[aii]  [CHNOISE] = 0;
+  nval[am]   [CHNOISE] = 0;
+  nval[amh]  [CHNOISE] = 0;
+  nval[ams]  [CHNOISE] = 0;
+  nval[sb]   [CHNOISE] = 0;
+  nval[gc]   [CHNOISE] = 0;
+  nval[dsgc] [CHNOISE] = 0;
+  nval[gcoff][CHNOISE] = 0;
+
+  nval[xcone][MAKE_DEND] = 1;	/* Make dendrites */
+  nval[xrod] [MAKE_DEND] = 1;
+  nval[ha]   [MAKE_DEND] = 1;
+  nval[hb]   [MAKE_DEND] = 1;
+  nval[hbat] [MAKE_DEND] = 1;
+  nval[rbp]  [MAKE_DEND] = 1;
+  nval[cbp]  [MAKE_DEND] = 1;
+  nval[hbp]  [MAKE_DEND] = 1;
+  nval[a17]  [MAKE_DEND] = 1;
+  nval[aii]  [MAKE_DEND] = 1;
+  nval[am]   [MAKE_DEND] = 1;
+  nval[amh]  [MAKE_DEND] = 1;
+  nval[ams]  [MAKE_DEND] = 1;
+  nval[sb]   [MAKE_DEND] = 1;
+  nval[gc]   [MAKE_DEND] = 1;
+  nval[dsgc] [MAKE_DEND] = 1;
+  nval[gcoff][MAKE_DEND] = 1;
+
+  nval[xcone][MAKE_AXON] = 1;	/* Make axon */
+  nval[xrod] [MAKE_AXON] = 1;
+  nval[cbp]  [MAKE_AXON] = 1;
+  nval[hbp]  [MAKE_AXON] = 1;
+  nval[rbp]  [MAKE_AXON] = 1;
+  nval[gc]   [MAKE_AXON] = 1;
+  nval[dsgc] [MAKE_AXON] = 1;
+  nval[gcoff][MAKE_AXON] = 1;
+
+  nval[xcone][MAKE_LONG] = 0;	/* Axon long */
+  nval[xrod] [MAKE_LONG] = 0;
+  nval[cbp]  [MAKE_LONG] = 0;
+  nval[hbp]  [MAKE_LONG] = 0;
+  nval[rbp]  [MAKE_LONG] = 0;
+  nval[gc]   [MAKE_LONG] = 0;
+  nval[dsgc] [MAKE_LONG] = 1;
+  nval[gcoff][MAKE_LONG] = 0;
+
+  nval[xcone][DTREEDIA] = 5;	/* dendritic tree diameters */
+  nval[xrod] [DTREEDIA] = 2;
+  nval[ha]   [DTREEDIA] = 100;
+  nval[hb]   [DTREEDIA] = 70;
+  nval[hbat] [DTREEDIA] = 50;
+  nval[rbp]  [DTREEDIA] = 15;
+  nval[cbp]  [DTREEDIA] = 20;
+  nval[hbp]  [DTREEDIA] = 25;
+  nval[a17]  [DTREEDIA] = 500;
+  nval[aii]  [DTREEDIA] = 40;
+  nval[am]   [DTREEDIA] = 500;
+  nval[amh]  [DTREEDIA] = 500;
+  nval[ams]  [DTREEDIA] = 20;
+  nval[sb]   [DTREEDIA] = 500;
+  nval[gc]   [DTREEDIA] = 200;
+  nval[dsgc] [DTREEDIA] = 400;
+  nval[gcoff][DTREEDIA] = 200;
+
+  nval[xcone][TAPERABS] = 1;	/* dendritic taper, absolute diameters */
+  nval[xrod] [TAPERABS] = 1;
+  nval[ha]   [TAPERABS] = 4;
+  nval[hb]   [TAPERABS] = 3;
+  nval[hbat] [TAPERABS] = 2;
+  nval[rbp]  [TAPERABS] = 1;
+  nval[cbp]  [TAPERABS] = 1;
+  nval[hbp]  [TAPERABS] = 1;
+  nval[a17]  [TAPERABS] = .2;
+  nval[aii]  [TAPERABS] = .5;
+  nval[am]   [TAPERABS] = .2;
+  nval[amh]  [TAPERABS] = .2;
+  nval[ams]  [TAPERABS] =  1;
+  nval[sb]   [TAPERABS] = .2;
+  nval[gc]   [TAPERABS] = 6;
+  nval[dsgc] [TAPERABS] = 3;
+  nval[gcoff][TAPERABS] = 6;
+
+  nval[xcone][TAPERSPC] = 1;	/* dendritic taper, space constant */
+  nval[xrod] [TAPERSPC] = 1;
+  nval[ha]   [TAPERSPC] = 30;
+  nval[hb]   [TAPERSPC] = 20;
+  nval[hbat] [TAPERSPC] = 30;
+  nval[rbp]  [TAPERSPC] = 10;
+  nval[cbp]  [TAPERSPC] = 10;
+  nval[hbp]  [TAPERSPC] = 10;
+  nval[a17]  [TAPERSPC] = 50;
+  nval[aii]  [TAPERSPC] = 50;
+  nval[am]   [TAPERSPC] = 50;
+  nval[amh]  [TAPERSPC] = 50;
+  nval[ams]  [TAPERSPC] = 10;
+  nval[sb]   [TAPERSPC] = 300;
+  nval[gc]   [TAPERSPC] = 60;
+  nval[dsgc] [TAPERSPC] = 20;
+  nval[gcoff][TAPERSPC] = 60;
+
+  nval[xcone][NDENDR] = 1;	/* Number of dendrites */
+  nval[xrod] [NDENDR] = 1;
+  nval[ha]   [NDENDR] = 5;
+  nval[hb]   [NDENDR] = 8;
+  nval[hbat] [NDENDR] = 8;
+  nval[rbp]  [NDENDR] = 25;
+  nval[cbp]  [NDENDR] = 2;
+  nval[hbp]  [NDENDR] = 5;
+  nval[a17]  [NDENDR] = 12;
+  nval[aii]  [NDENDR] = 5;
+  nval[am]   [NDENDR] = 5;
+  nval[amh]  [NDENDR] = 5;
+  nval[ams]  [NDENDR] = 5;
+  nval[sb]   [NDENDR] = 5;
+  nval[gc]   [NDENDR] = 7;
+  nval[dsgc] [NDENDR] = 8;
+  nval[gcoff][NDENDR] = 6;
+
+  nval[gc]   [GROWTHR] = 3;
+  nval[dsgc] [GROWTHR] = 3;
+  nval[gcoff][GROWTHR] = 3;
+
+  nval[rbp]  [STRATDIA] = 0.3;
+  nval[cbp]  [STRATDIA] = 0.3;
+  nval[hbp]  [STRATDIA] = 0.3;
+  nval[a17]  [STRATDIA] = 0.2;
+  nval[aii]  [STRATDIA] = 0.2;
+  nval[am]   [STRATDIA] = 0.2;
+  nval[amh]  [STRATDIA] = 0.2;
+  nval[ams]  [STRATDIA] = 0.2;
+  nval[sb]   [STRATDIA] = 0.2;
+  nval[gc]   [STRATDIA] = 0.25;
+  nval[dsgc] [STRATDIA] = 0.95;
+  nval[gcoff][STRATDIA] = 0.25;
+
+  nval[xrod][DTIPDIA] = 0.1;
+  nval[xcone][DTIPDIA] = 0.2;
+  nval[ha]  [DTIPDIA] = 0.2;	/* dendritic tip diameters */
+  nval[hb]  [DTIPDIA] = 0.2;
+  nval[hbat][DTIPDIA] = 0.2;
+  nval[rbp] [DTIPDIA] = 0.2;
+  nval[cbp] [DTIPDIA] = 0.4;
+  nval[hbp] [DTIPDIA] = 0.4;
+  nval[a17] [DTIPDIA] = 0.2;
+  nval[aii] [DTIPDIA] = 0.2;
+  nval[am]  [DTIPDIA] = 0.2;
+  nval[amh] [DTIPDIA] = 0.2;
+  nval[ams] [DTIPDIA] = 0.4;
+  nval[sb]  [DTIPDIA] = 0.5;
+  nval[gc]  [DTIPDIA] = 0.2;
+  nval[dsgc][DTIPDIA] = 0.2;
+  nval[gcoff][DTIPDIA] = 0.2;
+
+  nval[rbp] [AXTIPDIA] = 0.4;
+  nval[cbp] [AXTIPDIA] = 0.4;
+  nval[hbp] [AXTIPDIA] = 0.4;
+  nval[ams] [AXTIPDIA] = 0.4;
+
+  nval[xcone][AXARBDIA] = 6.5;		/* axon arborization diameter */
+  nval[xrod] [AXARBDIA] = 5;
+  nval[rbp] [AXARBDIA]  = 12;
+  nval[aii] [AXARBDIA]  = 40;
+  nval[cbp] [AXARBDIA]  = 24;
+  nval[hbp] [AXARBDIA]  = 24;
+  nval[ams] [AXARBDIA]  = 24;
+
+  nval[ha]  [DENDARB] = BRANCHED;	/* type of dendritic tree */
+  nval[hb]  [DENDARB] = BRANCHED;
+  nval[hbat][DENDARB] = BRANCHED;
+  nval[rbp] [DENDARB] = NBRANCHED;
+  nval[cbp] [DENDARB] = NBRANCHED;
+  nval[hbp] [DENDARB] = NBRANCHED;
+  nval[a17] [DENDARB] = BRANCHED;
+  nval[aii] [DENDARB] = BRANCHED;
+  nval[am]  [DENDARB] = BRANCHED;
+  nval[amh] [DENDARB] = BRANCHED;
+  nval[ams] [DENDARB] = NBRANCHED;
+  nval[sb]  [DENDARB] = SBRANCHED;
+  nval[gc]  [DENDARB] = BRANCHED;
+  nval[dsgc][DENDARB] = BRANCHED;
+  nval[gcoff][DENDARB] = BRANCHED;
+
+  nval[rbp] [AXARBT] = NBRANCHED;
+  nval[cbp] [AXARBT] = NBRANCHED;
+  nval[hbp] [AXARBT] = NBRANCHED;
+  nval[ams] [AXARBT] = NBRANCHED;
+
+  nval[xcone][SOMADIA] = 3;	/* soma diameter */
+  nval[xrod] [SOMADIA] = 5;
+  nval[ha]   [SOMADIA] = 12;
+  nval[hb]   [SOMADIA] = 9;
+  nval[hbat] [SOMADIA] = 2;
+  nval[rbp]  [SOMADIA] = 7;
+  nval[cbp]  [SOMADIA] = 7;
+  nval[hbp]  [SOMADIA] = 7;
+  nval[a17]  [SOMADIA] = 9;
+  nval[aii]  [SOMADIA] = 9;
+  nval[am]   [SOMADIA] = 7;
+  nval[amh]  [SOMADIA] = 7;
+  nval[ams]  [SOMADIA] = 7;
+  nval[sb]   [SOMADIA] = 8;
+  nval[gc]   [SOMADIA] = 20;
+  nval[dsgc] [SOMADIA] = 15;
+  nval[gcoff][SOMADIA] = 20;
+
+  nval[xcone][SOMAZ] = 0;	/* soma Z position, layer within retina */
+  nval[xrod] [SOMAZ] = 0;
+  nval[ha]   [SOMAZ] = -8;
+  nval[hb]   [SOMAZ] = -6;
+  nval[hbat] [SOMAZ] = -4;
+  nval[rbp]  [SOMAZ] = -8;
+  nval[cbp]  [SOMAZ] = -8;
+  nval[hbp]  [SOMAZ] = -8;
+  nval[a17]  [SOMAZ] = -10;
+  nval[aii]  [SOMAZ] = -10;
+  nval[am]   [SOMAZ] = -10;
+  nval[amh]  [SOMAZ] = -10;
+  nval[ams]  [SOMAZ] = -10;
+  nval[sb]   [SOMAZ] = -37;
+  nval[gc]   [SOMAZ] = -40;
+  nval[dsgc] [SOMAZ] = -40;
+  nval[gcoff][SOMAZ] = -40;
+
+  nval[xcone][DENDARBZ] = 0;	/* dendritic arborization layer within retina */
+  nval[xrod] [DENDARBZ] = 0;
+  nval[ha]   [DENDARBZ] = -6;
+  nval[hb]   [DENDARBZ] = -5;
+  nval[hbat] [DENDARBZ] = -4;
+  nval[rbp]  [DENDARBZ] = -1;
+  nval[cbp]  [DENDARBZ] = -1;
+  nval[hbp]  [DENDARBZ] = -1;
+  nval[a17]  [DENDARBZ] = -20;
+  nval[aii]  [DENDARBZ] = -20;
+  nval[sb]   [DENDARBZ] = -30;
+  nval[am]   [DENDARBZ] = -20;
+  nval[amh]  [DENDARBZ] = -20;
+  nval[ams]  [DENDARBZ] = -1;
+  nval[gc]   [DENDARBZ] = -30;
+  nval[dsgc] [DENDARBZ] = -30;
+  nval[gcoff][DENDARBZ] = -30;
+
+  nval[xcone][DENZDIST] = 10;	/* dendritic z dist tolerance for synaptic input */
+  nval[xrod] [DENZDIST] = 10;
+  nval[ha]   [DENZDIST] = 10;
+  nval[hb]   [DENZDIST] = 10;
+  nval[hbat] [DENZDIST] = 10;
+  nval[rbp]  [DENZDIST] = 10;
+  nval[cbp]  [DENZDIST] = 10;
+  nval[hbp]  [DENZDIST] = 10;
+  nval[a17]  [DENZDIST] = 10;
+  nval[aii]  [DENZDIST] = 10;
+  nval[sb]   [DENZDIST] = 5;
+  nval[am]   [DENZDIST] = 10;
+  nval[amh]  [DENZDIST] = 10;
+  nval[ams]  [DENZDIST] = 10;
+  nval[gc]   [DENZDIST] = 10;
+  nval[dsgc] [DENZDIST] = 3;
+  nval[gcoff][DENZDIST] = 10;
+
+  nval[xcone][AXARBZ] =  0;	/* axonal arborization layer with the retina */
+  nval[xrod] [AXARBZ] =  0;
+  nval[rbp]  [AXARBZ] = -42;
+  nval[cbp]  [AXARBZ] = -27;
+  nval[hbp]  [AXARBZ] = -22;
+  nval[ams]  [AXARBZ] = -27;
+  nval[gc]   [AXARBZ] = -60;
+  nval[dsgc] [AXARBZ] = -60;
+  nval[gcoff][AXARBZ] = -60;
+
+  nval[xcone][COLOR] = red;	/* color */
+  nval[xrod] [COLOR] = magenta;
+  nval[ha]   [COLOR] = cyan;
+  nval[hb]   [COLOR] = green;
+  nval[hbat] [COLOR] = blue;
+  nval[rbp]  [COLOR] = red;
+  nval[cbp]  [COLOR] = ltyel;
+  nval[hbp]  [COLOR] = ltblue;
+  nval[a17]  [COLOR] = ltcyan;
+  nval[aii]  [COLOR] = ltred;
+  nval[sb]   [COLOR] = green;
+  nval[am]   [COLOR] = gray;
+  nval[amh]  [COLOR] = brtwht;
+  nval[ams]  [COLOR] = ltcyan;
+  nval[gc]   [COLOR] = green;
+  nval[dsgc] [COLOR] = ltmag;
+  nval[gcoff][COLOR] = ltmag;
+
+
+  /* Connections to presynaptic cell */
+
+  for (n=0; n<nceltypes; n++) {     /* set synaptic params to defaults */
+    for (k=j=0; j<NCONNI; j++,k+=NCONNP){ 
+      nval[n][k+CELPRE1]  = -1;	    /* cell type to connect to (neg, no conn) */
+      nval[n][k+CONPRE1]  = 1;	    /* connection number for presyn cell */
+      nval[n][k+CELCONV1] = 1;	    /* number of postsyn cells to connect to */
+      nval[n][k+GROWPOST1] = 0;	    /* =1->when postsyn, grow when making synapse */
+    };
+  };
+
+  nval[rbp][CELCONV1] = 1;
+  nval[cbp][CELCONV1] = 8;
+  nval[cbp][CELCONV6] = 8;
+  nval[hbp][CELCONV1] = 8;
+  nval[rbp][CELCONV1] = 25;
+  nval[aii][CELCONV1] = 25;
+  nval[sb][CELCONV1]  = 400;
+
+  nval[gc][CELCONV1]   = 1e3;
+  nval[dsgc][CELCONV1] = 1e3;
+  nval[dsgc][CELCONV3] = 1e3;
+  nval[dsgc][CELCONV4] = 1e3;
+  nval[gcoff][CELCONV1] = 1e3;
+
+  nval[ha]   [GROWPOST1] = 1;		/* =1 -> when postsynaptic, grow to make synapse */
+  nval[hb]   [GROWPOST1] = 1;		/* =2 -> when postsynaptic, grow to make synapse */
+  nval[hb]   [GROWPOST1] = 1;
+  nval[hbat] [GROWPOST1] = 1;
+  nval[rbp]  [GROWPOST1] = 1;
+  nval[cbp]  [GROWPOST1] = 1;
+  nval[hbp]  [GROWPOST1] = 1;
+  nval[a17]  [GROWPOST1] = 0;
+  nval[aii]  [GROWPOST1] = 1;
+  nval[am]   [GROWPOST1] = 1;
+  nval[amh]  [GROWPOST1] = 1;
+  nval[ams]  [GROWPOST1] = 1;
+  nval[sb]   [GROWPOST1] = 0;
+  nval[gc]   [GROWPOST1] = 0;
+  nval[dsgc] [GROWPOST1] = 0;
+  nval[gcoff][GROWPOST1] = 0;
+
+  /* Connections to postsynaptic cell */
+
+  for (n=0; n<nceltypes; n++) {      /* set synaptic params to defaults */
+    for (k=j=0; j<NCONNO; j++,k+=NSYNP){ 
+      nval[n][k+CELPOST1] = -1;	     /* cell type to connect to (neg, no conn) */
+      nval[n][k+CONPOST1] = 0;	     /* connection number */
+      nval[n][k+CELDIV1]  = 2;	     /* number of postsyn cells to connect to */
+      nval[n][k+GROWPRE1] = 0;	     /* grow when making conn to postsyn cell */
+      nval[n][k+USEDYAD1] = 0;	     /* synapse is dyad using preexisting type */
+      nval[n][k+DYADTYP1] = -1;	     /* type of dyad synapse to connect with */
+      nval[n][k+AUTAPSE1] = 0;	     /* synapse back to presynaptic node */
+      nval[n][k+SYNNUM1]  = 1;	     /* number of synapses per connection */
+      nval[n][k+SENSCA1]  = 0;	     /* synaptic sensitivity to calcium */
+      nval[n][k+SGAIN1]   = 2;	     /* synaptic gain */
+      nval[n][k+SVGAIN1]  = 1;	     /* synaptic vgain */
+      nval[n][k+SDURH1]   = 0;	     /* synaptic high pass time const. */
+      nval[n][k+SNFILTH1] = 0;	     /* synaptic high pass nfilt. */
+      nval[n][k+SHGAIN1]  = 0;	     /* synaptic high pass gain. */
+      nval[n][k+SVSIZ1]   = 10;	     /* synaptic vesicle size */
+      nval[n][k+SCOND1]   = 220e-12; /* synaptic conductance */
+      nval[n][k+STHRESH1] = -0.05;   /* synaptic release threshold */
+      nval[n][k+SVNOISE1] = 1;	     /* 1 -> synaptic vesicle noise */
+      nval[n][k+SDUR1]    = 2;	     /* synaptic event time const. */
+      nval[n][k+SNFILT1]  = 1;	     /* number of synaptic vesicle filters. */
+      nval[n][k+STRCONC1] = 100e-6;  /* synaptic transmitter concentration */
+      nval[n][k+SRESP1]   = xampa;   /* synaptic response (ampa,gaba,gj,etc.)*/
+      nval[n][k+SCNFILT1] = 0;	     /* number of second messenger filters. */
+      nval[n][k+SCDUR1]   = 1;	     /* second mesng. time const. */
+      nval[n][k+SCGAIN1]  = 1;	     /* synaptic second messenger gain */
+      nval[n][k+SCNOISE1] =  0;	     /* synaptic channel noise */
+      nval[n][k+SNCHAN1]  = 20;	     /* number of channels */
+      nval[n][k+SUNIT1]   = 22e-12;  /* unitary conductance */
+      nval[n][k+SVREV1]   = 0;	     /* synaptic reversal potential */
+    };
+  };
+
+  nval[xcone][GROWPRE1] = 0;		/* =1 -> when presynaptic, grow to make synapse */
+  nval[xrod] [GROWPRE1] = 0;		/* =2 -> when presynaptic, grow when artif morph */
+  nval[ha]   [GROWPRE1] = 0;
+  nval[hb]   [GROWPRE1] = 0;
+  nval[hbat] [GROWPRE1] = 0;
+  nval[rbp]  [GROWPRE1] = 0;
+  nval[cbp]  [GROWPRE1] = 0;
+  nval[hbp]  [GROWPRE1] = 0;
+  nval[a17]  [GROWPRE1] = 0;
+  nval[aii]  [GROWPRE1] = 0;
+  nval[am]   [GROWPRE1] = 0;
+  nval[amh]  [GROWPRE1] = 0;
+  nval[ams]  [GROWPRE1] = 0;
+  nval[sb]   [GROWPRE1] = 0;
+  nval[gc]   [GROWPRE1] = 0;
+  nval[dsgc] [GROWPRE1] = 0;
+  nval[gcoff][GROWPRE1] = 0;
+
+  nval[xcone][CELPOST1] = cbp;	  	/* cell type to connect to */
+  nval[xcone][CONPOST1] = 1;	  	/* connection number */
+  nval[xcone][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[xcone][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[xcone][SRESP1]  = xmglur6;	/* synaptic response */
+  nval[xcone][SGAIN1]  = 6;	  	/* synaptic gain */
+  nval[xcone][SVGAIN1] = 2;	  	/* synaptic vgain */
+  nval[xcone][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[xcone][SCOND1]  = 300e-12;  	/* synaptic conductance */
+  nval[xcone][SVREV1]  = 0;	  	/* synaptic reversal potential */
+  nval[xcone][STHRESH1]= -0.036;  	/* synaptic release threshold */
+  nval[xcone][SNCHAN1] = 20;	  	/* number of channels */
+  nval[xcone][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[xcone][SCDUR1]  = 10;	  	/* second mesng. time const. */
+  nval[xcone][SCNFILT1]= 2;	  	/* second mesng. time const. */
+  nval[xcone][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[xcone][SUNIT1]  = 22e-12;  	/* unitary conductance */
+
+  nval[cbp][CELPRE1]   = xcone;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE1]   = 1;	  	/* presynaptic connection number */
+
+  nval[xcone][CELPOST2] = hbp;	  	/* cell type to connect to */
+  nval[xcone][CONPOST2] = 1;	  	/* connection number */
+  nval[xcone][CELDIV2] = 1;	  	/* number of postsyn cells to conn to */
+  nval[xcone][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[xcone][SRESP2]  = xglut;		/* synaptic response */
+  nval[xcone][SGAIN2]  = 4;	  	/* synaptic gain */
+  nval[xcone][SVGAIN2] = 2;	  	/* synaptic vgain */
+  nval[xcone][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[xcone][SCOND2]  = 35e-12;  	/* synaptic conductance */
+  nval[xcone][STHRESH2]= -0.040;  	/* synaptic release threshold */
+  nval[xcone][SNCHAN2] = 20;	  	/* number of channels */
+  nval[xcone][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[xcone][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[xcone][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[xcone][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[hbp][CELPRE1]   = xcone;	  	/* presynaptic cell type */
+  nval[hbp][CONPRE1]   = 2;	  	/* presynaptic connection number */
+
+  nval[xcone][CELPOST3] = ha;	  	/* cell type to connect to */
+  nval[xcone][CONPOST3] = 1;	  	/* connection number */
+  nval[xcone][CELDIV3]  = 2;	  	/* number of postsyn cells to conn to */
+  nval[xcone][USEDYAD3] = 1;		/* synapse is dyad using preexisting type */
+  nval[xcone][DYADTYP3] = cbp;		/* type of dyad synapse to connect with */
+  nval[xcone][SYNNUM3] = 1;	  	/* number of synapses per conn */
+  nval[xcone][SGAIN3]  = 2;	  	/* synaptic gain */
+  nval[xcone][SCGAIN3] = 1;	  	/* synaptic second messenger gain */
+  nval[xcone][SCOND3]  = 220e-12;  	/* synaptic conductance */
+  nval[xcone][STHRESH3]= -0.050;  	/* synaptic release threshold */
+  nval[xcone][SRESP3]  = xampa;		/* synaptic response */
+  nval[xcone][SNCHAN3] = 20;	  	/* number of channels */
+  nval[xcone][SDUR3]   = 2;	  	/* synaptic event time const. */
+  nval[xcone][SCDUR3]  = 1;	  	/* second mesng. time const. */
+  nval[xcone][SVSIZ3]  = 10;	  	/* synaptic vesicle size */
+  nval[xcone][SUNIT3]  = 22e-12;  	/* unitary conductance */
+  nval[xcone][SVREV3]  = 0;	  	/* synaptic reversal potential */
+
+  nval[ha][CELPRE1]   = xcone;	  	/* presynaptic cell type */
+  nval[ha][CONPRE1]   = 3;	  	/* presynaptic connection number */
+
+  nval[xcone][CELPOST4] = hb;	  	/* cell type to connect to */
+  nval[xcone][CONPOST4] = 1;	  	/* connection number */
+  nval[xcone][CELDIV4]  = 4;	  	/* number of postsyn cells to conn to */
+  nval[xcone][USEDYAD4] = 1;		/* synapse is dyad using preexisting type */
+  nval[xcone][DYADTYP4] = cbp;		/* type of dyad synapse to connect with */
+  nval[xcone][SYNNUM4] = 1;	  	/* number of synapses per conn */
+  nval[xcone][SRESP4]  = xampa;		/* synaptic response */
+  nval[xcone][SGAIN4]  = 2;	  	/* synaptic gain */
+  nval[xcone][SCGAIN4] = 1;	  	/* synaptic second messenger gain */
+  nval[xcone][SCOND4]  = 220e-12;  	/* synaptic conductance */
+  nval[xcone][STHRESH4]= -0.050;  	/* synaptic release threshold */
+  nval[xcone][SNCHAN4] = 20;	  	/* number of channels */
+  nval[xcone][SDUR4]   = 2;	  	/* synaptic event time const. */
+  nval[xcone][SCDUR4]  = 1;	  	/* second mesng. time const. */
+  nval[xcone][SVSIZ4]  = 10;	  	/* synaptic vesicle size */
+  nval[xcone][SUNIT4]  = 22e-12;  	/* unitary conductance */
+  nval[xcone][SVREV4]  = 0;	  	/* synaptic reversal potential */
+
+  nval[hb][CELPRE1]   = xcone;	  	/* presynaptic cell type */
+  nval[hb][CONPRE1]   = 4;	  	/* presynaptic connection number */
+
+  nval[xcone][CELPOST5] = xcone;  	/* cell type to connect to */
+  nval[xcone][CONPOST5] = 3;	  	/* connection number */
+  nval[xcone][CELDIV5]  = 8;		/* number of postsyn cells to conn to */
+  nval[xcone][GROWPRE5] = 0;		/* grow when making conn to postsyn cell */
+  nval[xcone][SYNNUM5] = 4;		/* number of synapses per conn */
+  nval[xcone][SRESP5]  = xgj;		/* synaptic response */
+  nval[xcone][SGAIN5]  = 2;	  	/* synaptic gain */
+  nval[xcone][SCGAIN5] = 1;	  	/* synaptic second messenger gain */
+  nval[xcone][SCOND5]  = 500e-12;  	/* synaptic conductance */
+  nval[xcone][STHRESH5]= -0.050;  	/* synaptic release threshold */
+  nval[xcone][SNCHAN5] = 20;	  	/* number of channels */
+  nval[xcone][SDUR5]   = 2;	  	/* synaptic event time const. */
+  nval[xcone][SCDUR5]  = 1;	  	/* second mesng. time const. */
+  nval[xcone][SVSIZ5]  = 10;	  	/* synaptic vesicle size */
+  nval[xcone][SUNIT5]  = 22e-12;  	/* unitary conductance */
+  nval[xcone][SVREV5]  = 0;	  	/* synaptic reversal potential */
+
+  nval[xcone][CELPRE3]   = xcone;	/* presynaptic cell type */
+  nval[xcone][CONPRE3]   = 5;	  	/* presynaptic connection number */
+  nval[xcone][GROWPOST3] = 0;	  	/* grow when making conn from presyn cell */
+  nval[xcone][CELCONV3]  = 8;		/* number of postsyn cells to connect to */
+
+  nval[xrod][CELPOST1] = rbp;	  	/* cell type to connect to */
+  nval[xrod][CONPOST1] = 1;	  	/* connection number */
+  nval[xrod][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[xrod][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[xrod][SRESP1]  = xmglur6;	/* synaptic response */
+  nval[xrod][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[xrod][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[xrod][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[xrod][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[xrod][SNCHAN1] = 20;	  	/* number of channels */
+  nval[xrod][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[xrod][SNFILT1]  = 1;	  	/* synaptic vesicle nfilt */
+  nval[xrod][SCDUR1]  = 20;	  	/* second mesng. time const. */
+  nval[xrod][SCNFILT1] = 2;	  	/* second mesng. nfilt  */
+  nval[xrod][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[xrod][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[xrod][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[rbp][CELPRE1]  = xrod;	  	/* presynaptic cell type */
+  nval[rbp][CONPRE1]  = 1;	  	/* presynaptic connection number */
+
+  nval[xrod][CELPOST2] = hbat;	  	/* cell type to connect to */
+  nval[xrod][CONPOST2] = 1;	  	/* connection number */
+  nval[xrod][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[xrod][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[xrod][SRESP2]  = xampa;		/* synaptic response */
+  nval[xrod][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[xrod][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[xrod][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[xrod][STHRESH2]= -0.050;  	/* synaptic release threshold */
+  nval[xrod][SNCHAN2] = 20;	  	/* number of channels */
+  nval[xrod][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[xrod][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[xrod][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[xrod][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[xrod][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[hbat][CELPRE1]  = xrod;	  	/* presynaptic cell type */
+  nval[hbat][CONPRE1]  = 2;	  	/* presynaptic connection number */
+
+  nval[hbat][CELPOST1] = xrod;	  	/* cell type to connect to */
+  nval[hbat][CONPOST1] = 1;	  	/* connection number */
+  nval[hbat][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hbat][USEDYAD1] = 0;		/* synapse is dyad using preexisting type */
+  nval[hbat][DYADTYP1] = rbp;		/* type of dyad synapse to connect with */
+  nval[hbat][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[hbat][SRESP1]  = xampa;		/* synaptic response */
+  nval[hbat][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[hbat][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[hbat][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[hbat][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[hbat][SNCHAN1] = 20;	  	/* number of channels */
+  nval[hbat][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[hbat][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[hbat][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[hbat][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[hbat][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[xrod][CELPRE1]  = hbat;	  	/* presynaptic cell type */
+  nval[xrod][CONPRE1]  = 1;	  	/* presynaptic connection number */
+
+  nval[ha][CELPOST1] = xcone;	  	/* cell type to connect to */
+  nval[ha][CONPOST1] = 1;	  	/* connection number */
+  nval[ha][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[ha][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[ha][SRESP1]  = xgaba;		/* synaptic response */
+  nval[ha][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[ha][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[ha][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[ha][STHRESH1]= -0.050;  		/* synaptic release threshold */
+  nval[ha][SNCHAN1] = 20;	  	/* number of channels */
+  nval[ha][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[ha][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[ha][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[ha][SUNIT1]  = 22e-12;  		/* unitary conductance */
+  nval[ha][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[xcone][CELPRE1]  = ha;	  	/* presynaptic cell type */
+  nval[xcone][CONPRE1]  = 1;	  	/* presynaptic connection number */
+
+  nval[ha][CELPOST2] = cbp;	  	/* cell type to connect to */
+  nval[ha][CONPOST2] = 2;	  	/* connection number */
+  nval[ha][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[ha][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[ha][SRESP2]  = xgaba;		/* synaptic response */
+  nval[ha][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[ha][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[ha][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[ha][STHRESH2]= -0.050;  		/* synaptic release threshold */
+  nval[ha][SNCHAN2] = 20;	  	/* number of channels */
+  nval[ha][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[ha][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[ha][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[ha][SUNIT2]  = 22e-12;  		/* unitary conductance */
+  nval[ha][SVREV2]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE2]  = ha;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE2]  = 2;	  	/* presynaptic connection number */
+
+  nval[ha][CELPOST3] = hbp;	  	/* cell type to connect to */
+  nval[ha][CONPOST3] = 2;	  	/* connection number */
+  nval[ha][CELDIV3] = 2;	  	/* number of postsyn cells to conn to */
+  nval[ha][SYNNUM3] = 1;	  	/* number of synapses per conn */
+  nval[ha][SRESP3]  = xgaba;		/* synaptic response */
+  nval[ha][SGAIN3]  = 2;	  	/* synaptic gain */
+  nval[ha][SCGAIN3] = 1;	  	/* synaptic second messenger gain */
+  nval[ha][SCOND3]  = 220e-12;  	/* synaptic conductance */
+  nval[ha][STHRESH3]= -0.050;  		/* synaptic release threshold */
+  nval[ha][SNCHAN3] = 20;	  	/* number of channels */
+  nval[ha][SDUR3]   = 2;	  	/* synaptic event time const. */
+  nval[ha][SCDUR3]  = 1;	  	/* second mesng. time const. */
+  nval[ha][SVSIZ3]  = 10;	  	/* synaptic vesicle size */
+  nval[ha][SUNIT3]  = 22e-12;  		/* unitary conductance */
+  nval[ha][SVREV3]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[hbp][CELPRE2]  = ha;	  	/* presynaptic cell type */
+  nval[hbp][CONPRE2]  = 3;	  	/* presynaptic connection number */
+
+  nval[hb][CELPOST1] = xcone;	  	/* cell type to connect to */
+  nval[hb][CONPOST1] = 2;	  	/* connection number */
+  nval[hb][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hb][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[hb][SRESP1]  = xgaba;		/* synaptic response */
+  nval[hb][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[hb][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[hb][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[hb][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[hb][SNCHAN1] = 20;	  	/* number of channels */
+  nval[hb][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[hb][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[hb][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[hb][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[hb][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[xcone][CELPRE2]  = hb;	  	/* presynaptic cell type */
+  nval[xcone][CONPRE2]  = 1;	  	/* presynaptic connection number */
+
+  nval[hb][CELPOST2] = cbp;	  	/* cell type to connect to */
+  nval[hb][CONPOST2] = 3;	  	/* connection number */
+  nval[hb][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hb][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[hb][SRESP2]  = xgaba;		/* synaptic response */
+  nval[hb][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[hb][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[hb][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[hb][STHRESH2]= -0.050;  	/* synaptic release threshold */
+  nval[hb][SNCHAN2] = 20;	  	/* number of channels */
+  nval[hb][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[hb][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[hb][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[hb][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[hb][SVREV2]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE3]  = hb;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE3]  = 2;	  	/* presynaptic connection number */
+
+  nval[hb][CELPOST3] = hbp;	  	/* cell type to connect to */
+  nval[hb][CONPOST3] = 3;	  	/* connection number */
+  nval[hb][CELDIV3] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hb][SYNNUM3] = 1;	  	/* number of synapses per conn */
+  nval[hb][SRESP3]  = xgaba;		/* synaptic response */
+  nval[hb][SGAIN3]  = 2;	  	/* synaptic gain */
+  nval[hb][SCGAIN3] = 1;	  	/* synaptic second messenger gain */
+  nval[hb][SCOND3]  = 220e-12;  	/* synaptic conductance */
+  nval[hb][STHRESH3]= -0.050;  		/* synaptic release threshold */
+  nval[hb][SNCHAN3] = 20;	  	/* number of channels */
+  nval[hb][SDUR3]   = 2;	  	/* synaptic event time const. */
+  nval[hb][SCDUR3]  = 1;	  	/* second mesng. time const. */
+  nval[hb][SVSIZ3]  = 10;	  	/* synaptic vesicle size */
+  nval[hb][SUNIT3]  = 22e-12;  		/* unitary conductance */
+  nval[hb][SVREV3]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[hbp][CELPRE3]  = hb;	  	/* presynaptic cell type */
+  nval[hbp][CONPRE3]  = 3;	  	/* presynaptic connection number */
+
+  nval[rbp][CELPOST1] = aii;	  	/* cell type to connect to */
+  nval[rbp][CONPOST1] = 1;	  	/* connection number */
+  nval[rbp][CELDIV1] = 5;	  	/* number of postsyn cells to conn to */
+  nval[rbp][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[rbp][SRESP1]  = xampa;		/* synaptic response */
+  nval[rbp][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[rbp][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[rbp][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[rbp][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[rbp][SNCHAN1] = 20;	  	/* number of channels */
+  nval[rbp][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[rbp][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[rbp][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[rbp][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[rbp][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[aii][CELPRE1] = rbp;	  	/* presynaptic cell type */
+  nval[aii][CONPRE1] = 1;	  	/* presynaptic connection number */
+
+  nval[rbp][CELPOST2] = a17;	  	/* cell type to connect to */
+  nval[rbp][CONPOST2] = 1;	  	/* connection number */
+  nval[rbp][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[rbp][USEDYAD2] = 1;		/* synapse is dyad using preexisting type */
+  nval[rbp][DYADTYP2] = rbp;		/* type of dyad synapse to connect with */
+  nval[rbp][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[rbp][SRESP2]  = xampa;		/* synaptic response */
+  nval[rbp][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[rbp][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[rbp][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[rbp][STHRESH2]= -0.050;  	/* synaptic release threshold */
+  nval[rbp][SNCHAN2] = 20;	  	/* number of channels */
+  nval[rbp][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[rbp][SCDUR2]  = 2;	  	/* second mesng. time const. */
+  nval[rbp][SVSIZ2]  = 20;	  	/* synaptic vesicle size */
+  nval[rbp][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[rbp][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[a17][CELPRE1] = rbp;	  	/* presynaptic cell type */
+  nval[a17][CONPRE1] = 2;	  	/* presynaptic connection number */
+
+  nval[a17][CELPOST1] = rbp;	  	/* cell type to connect to */
+  nval[a17][CONPOST1] = 2;	  	/* connection number */
+  nval[a17][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[a17][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[a17][SRESP1]  = xgaba;		/* synaptic response */
+  nval[a17][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[a17][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[a17][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[a17][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[a17][SNCHAN1] = 20;	  	/* number of channels */
+  nval[a17][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[a17][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[a17][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[a17][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[a17][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[rbp][CELPRE2] = a17;	  	/* presynaptic cell type */
+  nval[rbp][CONPRE2] = 1;	  	/* presynaptic connection number */
+
+  nval[cbp][CELPOST1] = gc;	  	/* cell type to connect to */
+  nval[cbp][CONPOST1] = 1;	  	/* connection number */
+  nval[cbp][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[cbp][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[cbp][SRESP1]  = xampa;		/* synaptic response */
+  nval[cbp][SGAIN1]  = 3;	  	/* synaptic gain */
+  nval[cbp][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[cbp][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[cbp][STHRESH1]= -0.043;  	/* synaptic release threshold */
+  nval[cbp][SNCHAN1] = 20;	  	/* number of channels */
+  nval[cbp][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[cbp][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[cbp][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[cbp][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[cbp][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[gc][CELPRE1] = cbp;	  	/* presynaptic cell type */
+  nval[gc][CONPRE1] = 1;	  	/* presynaptic connection number */
+
+  nval[cbp][CELPOST2] = dsgc;	  	/* cell type to connect to */
+  nval[cbp][CONPOST2] = 1;	  	/* connection number */
+  nval[cbp][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[cbp][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[cbp][SGAIN2]  = 3;	  	/* synaptic gain */
+  nval[cbp][SDURH2]  = 40;	  	/* high pass time constant */
+  nval[cbp][SNFILTH2]= 1;	  	/* high pass number of filters */
+  nval[cbp][SHGAIN2] = .7;	  	/* high pass gain */
+  nval[cbp][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[cbp][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[cbp][STHRESH2]= -0.045;  	/* synaptic release threshold */
+  nval[cbp][SNCHAN2] = 20;	  	/* number of channels */
+  nval[cbp][SDUR2]   = 5;	  	/* synaptic event time const. */
+  nval[cbp][SRESP2]  = xampa5;		/* synaptic response */
+  nval[cbp][STRCONC2]  = 200e-6;	/* synaptic neurotransmitter conc */
+  nval[cbp][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[cbp][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[cbp][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[cbp][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[dsgc][CELPRE1] = cbp;	  	/* presynaptic cell type */
+  nval[dsgc][CONPRE1] = 2;	  	/* presynaptic connection number */
+
+  nval[cbp][CELPOST3] = sb;	  	/* cell type to connect to */
+  nval[cbp][CONPOST3] = 1;	  	/* connection number */
+  nval[cbp][CELDIV3] = 6;	  	/* number of postsyn cells to conn to */
+  nval[cbp][SYNNUM3] = 1;	  	/* number of synapses per conn */
+  nval[cbp][SRESP3]  = xampa5;		/* synaptic response */
+  nval[cbp][SGAIN3]  = 3;	  	/* synaptic gain */
+  nval[cbp][SCGAIN3] = 1;	  	/* synaptic second messenger gain */
+  nval[cbp][SCOND3]  = 220e-12;  	/* synaptic conductance */
+  nval[cbp][STHRESH3]= -0.045;  	/* synaptic release threshold */
+  nval[cbp][SNCHAN3] = 20;	  	/* number of channels */
+  nval[cbp][SDUR3]   = 5;	  	/* synaptic event time const. */
+  nval[cbp][SCDUR3]  = 1;	  	/* second mesng. time const. */
+  nval[cbp][SVSIZ3]  = 10;	  	/* synaptic vesicle size */
+  nval[cbp][SUNIT3]  = 22e-12;  	/* unitary conductance */
+  nval[cbp][SVREV3]  = 0;	  	/* synaptic reversal potential */
+
+  nval[sb][CELPRE1] = cbp;	  	/* presynaptic cell type */
+  nval[sb][CONPRE1] = 3;	  	/* presynaptic connection number */
+
+  nval[cbp][CELPOST4] = am;	  	/* cell type to connect to */
+  nval[cbp][CONPOST4] = 1;	  	/* connection number */
+  nval[cbp][CELDIV4] = 2;	  	/* number of postsyn cells to conn to */
+  nval[cbp][SYNNUM4] = 1;	  	/* number of synapses per conn */
+  nval[cbp][SRESP4]  = xampa;		/* synaptic response */
+  nval[cbp][SGAIN4]  = 2;	  	/* synaptic gain */
+  nval[cbp][SCGAIN4] = 1;	  	/* synaptic second messenger gain */
+  nval[cbp][SCOND4]  = 220e-12;  	/* synaptic conductance */
+  nval[cbp][STHRESH4]= -0.050;  	/* synaptic release threshold */
+  nval[cbp][SNCHAN4] = 20;	  	/* number of channels */
+  nval[cbp][SDUR4]   = 2;	  	/* synaptic event time const. */
+  nval[cbp][SCDUR4]  = 1;	  	/* second mesng. time const. */
+  nval[cbp][SVSIZ4]  = 10;	  	/* synaptic vesicle size */
+  nval[cbp][SUNIT4]  = 22e-12;  	/* unitary conductance */
+  nval[cbp][SVREV4]  = 0;	  	/* synaptic reversal potential */
+
+  nval[am][CELPRE1] = cbp;	  	/* presynaptic cell type */
+  nval[am][CONPRE1] = 4;	  	/* presynaptic connection number */
+
+  nval[cbp][CELPOST5] = cbp;	  	/* cell type to connect to */
+  nval[cbp][CONPOST5] = 6;	  	/* connection number */
+  nval[cbp][CELDIV5] = 8;	  	/* number of postsyn cells to conn to */
+  nval[cbp][SYNNUM5] = 1;	  	/* number of synapses per conn */
+  nval[cbp][SRESP5]  = xgj;		/* synaptic response */
+  nval[cbp][SGAIN5]  = 2;	  	/* synaptic gain */
+  nval[cbp][SCGAIN5] = 1;	  	/* synaptic second messenger gain */
+  nval[cbp][SCOND5]  = 220e-12;  	/* synaptic conductance */
+  nval[cbp][STHRESH5]= -0.050;  	/* synaptic release threshold */
+  nval[cbp][SNCHAN5] = 20;	  	/* number of channels */
+  nval[cbp][SDUR5]   = 2;	  	/* synaptic event time const. */
+  nval[cbp][SCDUR5]  = 1;	  	/* second mesng. time const. */
+  nval[cbp][SVSIZ5]  = 10;	  	/* synaptic vesicle size */
+  nval[cbp][SUNIT5]  = 22e-12;  	/* unitary conductance */
+  nval[cbp][SVREV5]  = 0;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE6] = cbp;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE6] = 5;	  	/* presynaptic connection number */
+
+  nval[hbp][CELPOST1] = gcoff;	  	/* cell type to connect to */
+  nval[hbp][CONPOST1] = 1;	  	/* connection number */
+  nval[hbp][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hbp][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[hbp][SRESP1]  = xampa;		/* synaptic response */
+  nval[hbp][SGAIN1]  = 3;	  	/* synaptic gain */
+  nval[hbp][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[hbp][SCOND1]  = 300e-12;  	/* synaptic conductance */
+  nval[hbp][STHRESH1]= -0.043;  	/* synaptic release threshold */
+  nval[hbp][SNCHAN1] = 20;	  	/* number of channels */
+  nval[hbp][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[hbp][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[hbp][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[hbp][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[hbp][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[gcoff][CELPRE1] = hbp;	  	/* presynaptic cell type */
+  nval[gcoff][CONPRE1] = 1;	  	/* presynaptic connection number */
+
+  nval[hbp][CELPOST2] = sb;	  	/* cell type to connect to */
+  nval[hbp][CONPOST2] = 1;	  	/* connection number */
+  nval[hbp][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hbp][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[hbp][SRESP2]  = xampa;		/* synaptic response */
+  nval[hbp][SGAIN2]  = 3;	  	/* synaptic gain */
+  nval[hbp][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[hbp][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[hbp][STHRESH2]= -0.030;  	/* synaptic release threshold */
+  nval[hbp][SNCHAN2] = 5;	  	/* number of channels */
+  nval[hbp][SDUR2]   = .2;	  	/* synaptic event time const. */
+  nval[hbp][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[hbp][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[hbp][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[hbp][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[sb][CELPRE2] = hbp;	  	/* presynaptic cell type */
+  nval[sb][CONPRE2] = 2;	  	/* presynaptic connection number */
+
+  nval[hbp][CELPOST3] = amh;	  	/* cell type to connect to */
+  nval[hbp][CONPOST3] = 1;	  	/* connection number */
+  nval[hbp][CELDIV3] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hbp][SYNNUM3] = 1;	  	/* number of synapses per conn */
+  nval[hbp][SRESP3]  = xampa;		/* synaptic response */
+  nval[hbp][SGAIN3]  = 2;	  	/* synaptic gain */
+  nval[hbp][SCGAIN3] = 1;	  	/* synaptic second messenger gain */
+  nval[hbp][SCOND3]  = 220e-12;  	/* synaptic conductance */
+  nval[hbp][STHRESH3]= -0.050;  	/* synaptic release threshold */
+  nval[hbp][SNCHAN3] = 20;	  	/* number of channels */
+  nval[hbp][SDUR3]   = 2;	  	/* synaptic event time const. */
+  nval[hbp][SCDUR3]  = 1;	  	/* second mesng. time const. */
+  nval[hbp][SVSIZ3]  = 10;	  	/* synaptic vesicle size */
+  nval[hbp][SUNIT3]  = 22e-12;  	/* unitary conductance */
+  nval[hbp][SVREV3]  = 0;	  	/* synaptic reversal potential */
+
+  nval[amh][CELPRE1] = hbp;	  	/* presynaptic cell type */
+  nval[amh][CONPRE1] = 3;	  	/* presynaptic connection number */
+
+  nval[hbp][CELPOST4] = dsgc;	  	/* cell type to connect to */
+  nval[hbp][CONPOST4] = 3;	  	/* connection number */
+  nval[hbp][CELDIV4] = 2;	  	/* number of postsyn cells to conn to */
+  nval[hbp][SYNNUM4] = 1;	  	/* number of synapses per conn */
+  nval[hbp][SRESP4]  = xampa;		/* synaptic response */
+  nval[hbp][SGAIN4]  = 3;	  	/* synaptic gain */
+  nval[hbp][SCGAIN4] = 1;	  	/* synaptic second messenger gain */
+  nval[hbp][SCOND4]  = 220e-12;  	/* synaptic conductance */
+  nval[hbp][STHRESH4]= -0.050;  	/* synaptic release threshold */
+  nval[hbp][SNCHAN4] = 20;	  	/* number of channels */
+  nval[hbp][SDUR4]   = 5;	  	/* synaptic event time const. */
+  nval[hbp][SCDUR4]  = 1;	  	/* second mesng. time const. */
+  nval[hbp][SVSIZ4]  = 10;	  	/* synaptic vesicle size */
+  nval[hbp][SUNIT4]  = 22e-12;  	/* unitary conductance */
+  nval[hbp][SVREV4]  = 0;	  	/* synaptic reversal potential */
+
+  nval[dsgc][CELPRE3] = hbp;	  	/* presynaptic cell type */
+  nval[dsgc][CONPRE3] = 4;	  	/* presynaptic connection number */
+
+  nval[aii][CELPOST1] = cbp;	  	/* cell type to connect to */
+  nval[aii][CONPOST1] = 7;	  	/* connection number */
+  nval[aii][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[aii][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[aii][SRESP1]  = xgj;		/* synaptic response */
+  nval[aii][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[aii][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[aii][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[aii][STHRESH1]= -0.050;  		/* synaptic release threshold */
+  nval[aii][SNCHAN1] = 20;	  	/* number of channels */
+  nval[aii][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[aii][SNFILT1]  = 1;	  	/* synaptic event time const. */
+  nval[aii][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[aii][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[aii][SUNIT1]  = 22e-12; 		/* unitary conductance */
+  nval[aii][SVREV1]  = 0;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE7] = aii;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE7] = 1;	  	/* presynaptic connection number */
+
+  nval[aii][CELPOST2] = aii;	  	/* cell type to connect to */
+  nval[aii][CONPOST2] = 2;	  	/* connection number */
+  nval[aii][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[aii][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[aii][SRESP2]  = xgj;		/* synaptic response */
+  nval[aii][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[aii][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[aii][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[aii][STHRESH2]= -0.050;  		/* synaptic release threshold */
+  nval[aii][SNCHAN2] = 20;	  	/* number of channels */
+  nval[aii][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[aii][SNFILT2]  = 1;	  	/* synaptic event time const. */
+  nval[aii][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[aii][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[aii][SUNIT2]  = 22e-12; 		/* unitary conductance */
+  nval[aii][SVREV2]  = 0;	  	/* synaptic reversal potential */
+
+  nval[aii][CELPRE2] = aii;	  	/* presynaptic cell type */
+  nval[aii][CONPRE2] = 2;	  	/* presynaptic connection number */
+
+  nval[sb][CELPOST1] = cbp;	  	/* cell type to connect to */
+  nval[sb][CONPOST1] = 4;	  	/* connection number */
+  nval[sb][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[sb][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[sb][SRESP1]  = xgaba;		/* synaptic response */
+  nval[sb][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[sb][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[sb][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[sb][STHRESH1]= -0.050;  		/* synaptic release threshold */
+  nval[sb][SNCHAN1] = 20;	  	/* number of channels */
+  nval[sb][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[sb][SNFILT1]  = 1;	  	/* synaptic event time const. */
+  nval[sb][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[sb][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[sb][SUNIT1]  = 22e-12;  		/* unitary conductance */
+  nval[sb][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE4] = sb;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE4] = 1;	  	/* presynaptic connection number */
+
+  nval[sb][CELPOST2] = dsgc;	  	/* cell type to connect to */
+  nval[sb][CONPOST2] = 2;	  	/* connection number */
+  nval[sb][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[sb][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[sb][SRESP2]  = xgaba;		/* synaptic response */
+  nval[sb][SGAIN2]  = 3;	  	/* synaptic gain */
+  nval[sb][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[sb][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[sb][STHRESH2]= -0.050;  		/* synaptic release threshold */
+  nval[sb][SNCHAN2] = 20;	  	/* number of channels */
+  nval[sb][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[sb][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[sb][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[sb][SUNIT2]  = 22e-12;  		/* unitary conductance */
+  nval[sb][SVREV2]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[dsgc][CELPRE2] = sb;	  	/* presynaptic cell type */
+  nval[dsgc][CONPRE2] = 2;	  	/* presynaptic connection number */
+
+  nval[sb][CELPOST3] = sb;	  	/* cell type to connect to */
+  nval[sb][CONPOST3] = 3;	  	/* connection number */
+  nval[sb][CELDIV3]  = 2;	  	/* number of postsyn cells to conn to */
+  nval[sb][SYNNUM3]  = 1;	  	/* number of synapses per conn */
+  nval[sb][AUTAPSE3] = 1;	  	/* synapse back to presynaptic node */
+  nval[sb][SENSCA3]  = 1;	  	/* synaptic sensitivity to calcium */
+  nval[sb][SRESP3]   = xgaba;		/* synaptic response */
+  nval[sb][SGAIN3]   = 2;	  	/* synaptic gain */
+  nval[sb][SCGAIN3]  = 1;	  	/* synaptic second messenger gain */
+  nval[sb][SCOND3]   = 220e-12;  	/* synaptic conductance */
+  nval[sb][STHRESH3] = -0.050;  	/* synaptic release threshold */
+  nval[sb][SNCHAN3]  = 20;	  	/* number of channels */
+  nval[sb][SDUR3]    = 2;	  	/* synaptic event time const. */
+  nval[sb][SCDUR3]   = 1;	  	/* second mesng. time const. */
+  nval[sb][SVSIZ3]   = 10;	  	/* synaptic vesicle size */
+  nval[sb][SUNIT3]   = 22e-12;  	/* unitary conductance */
+  nval[sb][SVREV3]   = -0.06;	  	/* synaptic reversal potential */
+
+  nval[sb][CELPRE3] = sb;	  	/* presynaptic cell type */
+  nval[sb][CONPRE3] = 3;	  	/* presynaptic connection number */
+
+  nval[am][CELPOST1] = cbp;	  	/* cell type to connect to */
+  nval[am][CONPOST1] = 5;	  	/* connection number */
+  nval[am][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[am][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[am][SRESP1]  = xgaba;		/* synaptic response */
+  nval[am][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[am][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[am][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[am][STHRESH1]= -0.050;  		/* synaptic release threshold */
+  nval[am][SNCHAN1] = 20;	  	/* number of channels */
+  nval[am][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[am][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[am][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[am][SUNIT1]  = 22e-12;  		/* unitary conductance */
+  nval[am][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[cbp][CELPRE5] = am;	  	/* presynaptic cell type */
+  nval[cbp][CONPRE5] = 1;	  	/* presynaptic connection number */
+
+  nval[am][CELPOST2] = gc;	  	/* cell type to connect to */
+  nval[am][CONPOST2] = 2;	  	/* connection number */
+  nval[am][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[am][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[am][SRESP2]  = xgaba;		/* synaptic response */
+  nval[am][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[am][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[am][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[am][STHRESH2]= -0.050;  		/* synaptic release threshold */
+  nval[am][SNCHAN2] = 20;	  	/* number of channels */
+  nval[am][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[am][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[am][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[am][SUNIT2]  = 22e-12;  		/* unitary conductance */
+  nval[am][SVREV2]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[gc][CELPRE2] = am;	  	/* presynaptic cell type */
+  nval[gc][CONPRE2] = 2;	  	/* presynaptic connection number */
+
+  nval[amh][CELPOST1] = hbp;	  	/* cell type to connect to */
+  nval[amh][CONPOST1] = 5;	  	/* connection number */
+  nval[amh][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[amh][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[amh][SRESP1]  = xgaba;		/* synaptic response */
+  nval[amh][SGAIN1]  = 2;	  	/* synaptic gain */
+  nval[amh][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[amh][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[amh][STHRESH1]= -0.050;  	/* synaptic release threshold */
+  nval[amh][SNCHAN1] = 20;	  	/* number of channels */
+  nval[amh][SDUR1]   = 2;	  	/* synaptic event time const. */
+  nval[amh][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[amh][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[amh][SUNIT1]  = 22e-12;  	/* unitary conductance */
+  nval[amh][SVREV1]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[hbp][CELPRE4] = amh;	  	/* presynaptic cell type */
+  nval[hbp][CONPRE4] = 1;	  	/* presynaptic connection number */
+
+  nval[amh][CELPOST2] = gcoff;	  	/* cell type to connect to */
+  nval[amh][CONPOST2] = 2;	  	/* connection number */
+  nval[amh][CELDIV2] = 2;	  	/* number of postsyn cells to conn to */
+  nval[amh][SYNNUM2] = 1;	  	/* number of synapses per conn */
+  nval[amh][SRESP2]  = xgaba;		/* synaptic response */
+  nval[amh][SGAIN2]  = 2;	  	/* synaptic gain */
+  nval[amh][SCGAIN2] = 1;	  	/* synaptic second messenger gain */
+  nval[amh][SCOND2]  = 220e-12;  	/* synaptic conductance */
+  nval[amh][STHRESH2]= -0.050;  		/* synaptic release threshold */
+  nval[amh][SNCHAN2] = 20;	  	/* number of channels */
+  nval[amh][SDUR2]   = 2;	  	/* synaptic event time const. */
+  nval[amh][SCDUR2]  = 1;	  	/* second mesng. time const. */
+  nval[amh][SVSIZ2]  = 10;	  	/* synaptic vesicle size */
+  nval[amh][SUNIT2]  = 22e-12;  	/* unitary conductance */
+  nval[amh][SVREV2]  = -0.06;	  	/* synaptic reversal potential */
+
+  nval[gcoff][CELPRE2] = amh;	  	/* presynaptic cell type */
+  nval[gcoff][CONPRE2] = 2;	  	/* presynaptic connection number */
+
+  nval[ams][CELPOST1] = dsgc;	  	/* cell type to connect to */
+  nval[ams][CONPOST1] = 4;	  	/* connection number */
+  nval[ams][CELDIV1] = 2;	  	/* number of postsyn cells to conn to */
+  nval[ams][SYNNUM1] = 1;	  	/* number of synapses per conn */
+  nval[ams][SRESP1]  = xgaba;		/* synaptic response */
+  nval[ams][SGAIN1]  = 3;	  	/* synaptic gain */
+  nval[ams][SDURH1]  = 40;	  	/* high pass time constant */
+  nval[ams][SNFILTH1]= 1;	  	/* high pass number of filters */
+  nval[ams][SHGAIN1] = .7;	  	/* high pass number gain */
+  nval[ams][SCGAIN1] = 1;	  	/* synaptic second messenger gain */
+  nval[ams][SCOND1]  = 220e-12;  	/* synaptic conductance */
+  nval[ams][STHRESH1]= -0.045;  	/* synaptic release threshold */
+  nval[ams][STRCONC1]= 200e-6;		/* synaptic neurotransmitter conc */
+  nval[ams][SNCHAN1] = 20;	  	/* number of channels */
+  nval[ams][SDUR1]   = 15;	  	/* synaptic event time const. */
+  nval[ams][SCDUR1]  = 1;	  	/* second mesng. time const. */
+  nval[ams][SVSIZ1]  = 10;	  	/* synaptic vesicle size */
+  nval[ams][SUNIT1]  = 22e-12; 		/* unitary conductance */
+  nval[ams][SVREV1]  = -0.068;	  	/* synaptic reversal potential */
+
+  nval[dsgc][CELPRE4] = ams;	  	/* presynaptic cell type */
+  nval[dsgc][CONPRE4] = 1;	  	/* presynaptic connection number */
+
+/*--------------------------------------------*/
+
+proc printceltypes()
+
+/* print a row of cell type names */
+
+{
+  printf ("#\n");
+  printf ("# ");
+  for (i=0; i<nceltypes; i++ ) {
+      printf ("%7s ", celname[i]);
+  };
+  printf ("\n");
+  printf ("#\n");
+};
+
+proc printparams(stopval)
+{
+ if (pind<=stopval) printceltypes();
+
+  /* Print out cell names for three rows: CELPOST, SRESP, and CELPRE */
+
+  for (j=pind; j<stopval; j++) {
+    printf ("  ");
+    for (i=0; i<nceltypes; i++ ) {
+      if (j >= CELPOST1 && (j <=(CELPOST1+NCONNO*NSYNP)) && ((j-CELPOST1)%NSYNP)==0) {
+        if (nval[i][j] >= 0)
+	  printf ("%7s ", celname[nval[i][j]])
+        else
+	  printf ("%7g ", -1);
+      } else
+      if (j >= SRESP1 && (j <= (SRESP1+NCONNO*NSYNP)) && ((j-SRESP1)%NSYNP)==0) {
+        if (nval[i][j] >= 0)
+	  printf ("%7s ", rname[nval[i][j]][0])
+        else
+	  printf ("%7g ", -1);
+      } else
+      if (j >= DYADTYP1 && (j <= (DYADTYP1+NCONNO*NSYNP)) && ((j-DYADTYP1)%NSYNP)==0) {
+        if (nval[i][j] >= 0)
+	  printf ("%7s ", celname[nval[i][j]])
+        else
+	  printf ("%7g ", -1);
+      } else
+      if (j >= CELPRE1 && (j <= (CELPRE1+NCONNI*NCONNP)) && ((j-CELPRE1)%NCONNP)==0) {
+        if (nval[i][j] >= 0)
+	  printf ("%7s ", celname[nval[i][j]])
+        else
+	  printf ("%7g ", -1);
+      }
+      else 
+	printf ("%7.3g ", nval[i][j]);
+    };
+    printf (" # %3g %-9s %s\n",j,pname[j][0],pname[j][1]);
+    //printf (" #  %3g %s\n",j,pname[j][0]);
+  };
+  pind = j;
+};
+
+  printf ("#\n");
+  printf ("#  nval.n\n");
+  printf ("#\n");
+  printf ("#  Neuron parameters for retsim.n simulation script\n");
+  printf ("#  Generated  %s     \n", ccstr(system("date")));
+  printf ("#\n");
+  printf ("#    Modify this file to change parameter values.\n");
+  printf ("#\n");
+  printf ("#    Original created by \"maknval.n > nval.n\"\n");
+  printf ("#    To add parameters, edit \"maknval.n\", run \"maknval.n > nval.n\",\n");
+  printf ("#    then edit \"makcel.n\" and read in \"nval.n\" for these param defs.\n");
+  printf ("#    Last, edit \"nvals.n\" and remove these param defs.\n");
+
+  pind = 0;
+  printparams(CELPRE1);
+  printparams(CELPOST1);
+  printparams(CELPOST2);
+  printparams(CELPOST3);
+  printparams(CELPOST4);
+  printparams(CELPOST5);
+  printparams(SVREV5+1);
+
+  printf ("\n\n");
+
+/*--------------------------------------------*/
+
+  /* print out param numbers */
+
+proc printparamnums(stopval)
+{
+  for (j=pind; j<stopval; j++) {
+    printf ("#define %-10s %3g\t%s\n",pname[j][0],j,pname[j][1]);
+  };
+  printf ("\n");
+  pind = j;
+};
+
+  printf ("/*  Neuron parameters for makcel.n simulation script */\n"); 
+  printf ("\n");
+  printf ("/* To add parameters, edit \"maknval.n\", run \"maknval.n > nval.n\",\n");
+  printf ("   then edit \"makcel.n\" and read in \"nval.n\" for these param defs.\n");
+  printf ("   Last, edit \"nvals.n\" and remove these param defs.\n");
+ 
+  printf ("*/\n");
+  printf ("\n");
+
+  pind = 0;
+  printparamnums(CELPOST1);
+  printparamnums(CELPOST2);
+  printparamnums(CELPOST3);
+  printparamnums(CELPOST4);
+  printparamnums(CELPOST5);
+  printparamnums(NPARAMS);
+  printparamnums(NPARAMS+1);
+
+
+  for (j=0; j<=NCONNP; j++) {	/* print presynaptic connection params */
+    printf ("#define %-10s %3g\t%s\n",cname[j][0],j,cname[j][1]);
+  };
+  printf ("\n");
+
+  for (j=0; j<=NSYNP; j++) {	/* print postsynaptic conn/syn params */
+    printf ("#define %-10s %3g\t%s\n",sname[j][0],j,sname[j][1]);
+  };
+
+  printf ("\n");
+  printf ("#define %-10s %3g\t%s\n","NCONNI",NCONNI,"/* number of input connection cell types */");
+  printf ("#define %-10s %3g\t%s\n","NCONNO",NCONNO,"/* number of output connection cell types  */");
+
+  printf ("\n");
+  for (j=1; j<=nresptypes; j++) {	/* print response types */
+    printf ("#define %-10s %3g\t%s\n",rname[j][0],j,rname[j][1]);
+  };
+  printf ("\n");
+
+

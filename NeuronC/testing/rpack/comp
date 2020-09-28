@@ -1,0 +1,10 @@
+#! /bin/csh -f
+#
+foreach i ($argv) 
+ rfix $i > $i.f
+ column 1 $i.f > $i.X
+ column 3 $i.f > $i.Y2
+ hc $i.X $i.Y2 > $i.x
+ rm $i.X $i.Y2 $i.f
+ rmsa ref_cable.x $i.x
+end

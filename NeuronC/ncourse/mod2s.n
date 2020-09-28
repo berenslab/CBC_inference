@@ -1,0 +1,42 @@
+   drm = 5000;                               /* default rm = 5000 */
+   pre = 100;                                /* pre-synaptic node = 100 */
+
+   at pre loc (0,10) sphere dia 1;
+   conn pre to 1 loc (0,0) synapse expon 5 thresh -.05 maxcond 5e-9;
+                                   /* thresh 50 mv, max con 5e-9 S, etc. */
+
+   conn 1 to 2 loc (120,0) cable length 120 dia 1;       /* construct cable */ 
+   conn 2 to 3 loc (240,0) cable length 120 dia 1;
+   conn 3 to 4 loc (360,0) cable length 120 dia 1;
+   conn 4 to 5 loc (480,0) cable length 120 dia 1;
+   conn 5 to 6 loc (600,0) cable length 120 dia 1;
+
+   if (disp) {
+     display center (0,0,0);
+     display size (1000);
+     display matching [-1][-1][-1];
+     exit;
+   };
+
+   stim node pre vclamp -.01 start 0 dur .01;
+
+   step .01;                            /* run model for 10 msec */
+
+   graph X max 600 min 0;               /* set X-axis scale */
+   graph Y max 0 min -.07;              /* set Y-axis scale */ 
+   graph init;                          /* draw X- and Y-axes */ 
+
+   graph (0,  V[1]);                    /* graph volts vs. distance */
+   graph (120,V[2]);
+   graph (240,V[3]);
+   graph (360,V[4]);
+   graph (480,V[5]);
+   graph (600,V[6]);
+
+   gpen (7);                            /* make labels for graph */
+   gmove (0.02,0.85);
+   gtext ("Volts");
+   gmove (0.45,0.01);
+   gtext ("microns");
+
+

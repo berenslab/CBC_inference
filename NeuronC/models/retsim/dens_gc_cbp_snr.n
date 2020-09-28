@@ -1,0 +1,30 @@
+# Default membrane properties (density) file
+#
+#       dend  dend_prox dend_dist soma  hillock thin   axon   axon_dist node varicos
+#
+# Name  R1      R2      R3      R4      R5       R6      R7      R8     R9     R10
+#
+0       DENDD   DEND   DENDP   SOMA   HILLOCK  AXONT   AXON   AXOND   VARIC 
+#
+_NA    25e-3   25e-3   60e-3   70e-3   100e-3 400e-3  100e-3  0e-3  0e-3   # Na
+_NA5    0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # Na5
+_NA6    0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # Na6
+_NA8    0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # Na8
+_KDR   10e-3   10e-3   25e-3   25e-3    30e-3  35e-3    0e-3  0e-3  0e-3   # Kdr
+_K6     0e-3    0e-3    0e-3    0e-3     0e-3  10e-3   10e-3  0e-3  0e-3   # Kdr
+_KA     2e-3    2e-3    2e-3   10e-3    10e-3   0e-3    0e-3  0e-3  0e-3   # KA
+_KH     0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # KH
+_KIR    0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # KHz
+_SKCA1  0e-3    0e-3    0e-3 0.25e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # sKCa1
+_SKCA2  0e-3    0e-3    0e-3 0.25e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # sKCa2
+_BKCA   0.7e-3  0e-6    0e-3    1e-3     0e-6   0e-6    0e-6  0e-3  0e-3   # bKCa
+_CLCA   0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # ClCa
+_CA_L   0.08e-3 0.08e-3 0.1e-3 1.1e-3   0e-3   0e-3    0e-3  0e-3  0e-3   # Ca
+_CA_T   0e-3    0e-3    0e-3    0e-3     0e-3   0e-3    0e-3  0e-3  0e-3   # Ca5
+_CAP    2e-7    2e-7    1e-6    1e-6     0e-2   0e-3    0e-3  0e-3  0e-3   # CAPUMP
+_CAE    0e-12   0e-3    0e-7    0e-2     0e-2   0e-3    0e-3  0e-3  0e-3   # Caexch
+_VST    gc_vs   gc_vs   gc_vs   gc_vs    gc_vs  gc_vs   gc_vs gc_vs gc_vs  # vstart
+_VRV    vcl     vcl     vcl     vcl      vcl    vcl     vcl   vcl   vcl    # vrev
+_RM     gc_rm   gc_rm   gc_rm   gc_rm    gc_rm  gc_rm   gc_rm gc_rm gc_rm  # Rm
+_CM     dcm   	dcm	dcm	dcm	 dcm	dcm	dcm   dcm   dcm    # Cm
+#

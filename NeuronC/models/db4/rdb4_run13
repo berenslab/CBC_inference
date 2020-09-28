@@ -1,0 +1,63 @@
+#
+# run 13 test, same as run 12 test (1 high-density Na region) but original length axon
+#
+# mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --predur 0.05 --prestepdur 0.02 --stepdur .01 --tailcurdur 0.005 --poststepdur 0.00 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.081 --axdia 0.6 --cbplam 0.02 --naax 60e-3 --nahd 1000e-3 --set_timinc 5e-6 --set_ploti 10e-5 --mxrot -90 --plotlabel db4_Iact_na2 | plotmod -p 1-3 -p 5 -e 0.018 -E 0.03 | vid 
+#
+# run 13, same as run 12 (1 high-density Na region) but original length axon
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na2 > db4_run13.r &
+
+# run13_ri400
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 400 --driab 400 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri400 > db4_run13_ri400.r &
+
+# run13_ri300
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 300 --driab 300 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri300 > db4_run13_ri300.r &
+
+# run13_ri200
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri200 > db4_run13_ri200.r &
+
+# run13_ri100
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 100 --driab 100 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri100 > db4_run13_ri100.r &
+#
+#
+# run 13_hd800
+#
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 800e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_hd800 > db4_run13_hd800.r &
+
+# run 13_hd600
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 600e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_hd600 > db4_run13_hd600.r &
+
+# run 13_hd400
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 400e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_hd400 > db4_run13_hd400.r &
+
+# run 13_hd200
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 200e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_hd200 > db4_run13_hd200.r &
+
+# run 13_hd100
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 100e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_hd100 > db4_run13_hd100.r &
+
+# run 13_ri200_hd400
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 200 --driab 200 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 60e-3 --nahd 400e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_ri200_hd400 > db4_run13_ri200_hd400.r &
+
+# run 13_na30
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 30e-3 --nahd 1000e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na40 > db4_run13_na40.r &
+
+# run 13_hd100_na10
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 20e-3 --nahd 100e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na40 > db4_run13_na40.r &
+
+# run 13_hd100_na0
+
+mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.065 --vstop 0.02 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 2.8e3 --dri 100 --dria 600 --driab 600 --dcm 1e-6 --dcmab 1e-6 --dvreva -0.082 --axdia 0.6 --cbplam 0.01 --naax 0e-3 --nahd 100e-3 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_Iact_na40 > db4_run13_na40.r &
+
+

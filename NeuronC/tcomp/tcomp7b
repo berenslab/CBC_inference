@@ -1,0 +1,36 @@
+/* test of expon synapse */
+
+
+timinc = 5e-5;
+ploti = timinc;
+crit = 1e-8;
+endexp = .05;
+
+at (1) sphere dia 10;
+at (2) sphere dia 10;
+at (3) sphere dia 10;
+conn (1) to (2) synapse open 
+	expon 20 maxcond 200e-12 
+	thresh -.04 timec1 .5
+	nfilt2=2 timec2 2 vgain=5 
+	vesnoise=1 vsize=50 ename syn1;
+
+conn (3) to (2) synapse open 
+	expon 20 
+	thresh -.04 timec1 .5
+	nfilt2=2 timec2 2 vgain=5 
+	vesnoise=1 vsize=50 
+	spost syn1
+	;
+
+stim node (1) vclamp 0 start 0 dur .005;
+stim node (3) vclamp 0 start 0 dur .005;
+stim node (2) vclamp -.04 start 0 dur 1;
+
+plot V[1];
+
+plg = 20e-12;
+plot I[2] max plg min -plg;
+plot FC0 syn1 max 5 min 0;
+
+run;

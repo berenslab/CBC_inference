@@ -1,0 +1,18 @@
+#! /bin/bash
+#
+#  ncplotps
+#
+for i in $@; do
+    echo ${i%.*}.pdf
+    plotmod $i | vid -c | ps2pdf - - > ${i%.*}.pdf
+done
+
+
+##! /bin/csh -f
+##  ncplotps
+##
+#foreach i ($argv) 
+#  plotmod $i:r.r | vid -c | ps2pdf - - > $i:r.ps
+#end
+
+

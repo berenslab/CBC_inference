@@ -1,0 +1,54 @@
+
+/* test of CNG channel */
+
+timinc = 1e-5;
+ploti  = 1e-4;
+endexp = .1;
+rseed = 111;
+tempcel = 22;
+
+at 1 sphere dia 10 vrest -.07;
+
+at 2 sphere dia 10 rm 2000;
+
+conn 1 to 2 synapse open maxcond 1e-8
+		timec2 .1 tfall2 = 2
+		expon 2.44
+		//mesgout cgmp 
+		trconc=5e-6
+		resp cgmp taum=1 chnoise=1
+                ename xxx
+		;
+//at 2 chan cgmp type 1 taum=1 trconc=10e-6
+//                ename xxx
+		;
+
+stimtime1 = 0.00;
+stimdur  = 2.2;
+
+stim node 1 vclamp -.03 start stimtime1 dur stimdur;
+stim node 1 vclamp -.07 start stimtime1+stimdur dur 2;
+
+stim node 2 vclamp .05 start stimtime1 dur 2;
+
+//stimtime2 = 0.07;
+//
+//stim node 1 vclamp -.03 start stimtime2 dur stimdur;
+//stim node 1 vclamp -.07 start stimtime2+stimdur dur 1;
+
+//plot V[1] max -.02 min -.07;
+//plot V[2] max -.02 min -.07;
+
+//plot FB1 xxx max 10 min 0;
+//plot G0 xxx max 1e-9 min 0;
+
+plot G1 xxx max 1 min 0;
+plot G2 xxx max 1 min 0;
+plot G3 xxx max 1 min 0;
+plot G4 xxx max 1 min 0;
+plot G5 xxx max 1 min 0;
+plot G6 xxx max 1 min 0;
+plot G7 xxx max 1 min 0;
+plot G8 xxx max 1 min 0;
+
+run;

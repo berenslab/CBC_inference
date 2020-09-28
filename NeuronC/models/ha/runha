@@ -1,0 +1,54 @@
+#! /bin/csh -f
+#
+
+# 1) turn on inputs sequentially, look at soma:
+
+nc -s drm 10000 ha.n >ha.m.10000
+
+nc -s drm 20000 ha.n >ha.m.20000
+
+nc -s drm 50000 ha.n >ha.m.50000
+
+# 2) turn on inputs sequentially, look at soma,
+#     but this time with extra load at each distal loc:
+
+nc -s drm 10000 har.n >har.m.10000
+
+nc -s drm 20000 har.n >har.m.20000
+
+nc -s drm 50000 har.n >har.m.50000
+
+# 3) look at distal locs, stimulate soma:
+
+nc -s drm 10000 has.n >has.m.10000
+
+nc -s drm 20000 has.n >has.m.20000
+
+nc -s drm 50000 has.n >has.m.50000
+
+# 4) look at distal locs, stimulate soma,
+#    but this time with extra load at each distal loc:
+
+nc -s drm 10000 hasr.n >hasr.m.10000
+
+nc -s drm 20000 hasr.n >hasr.m.20000
+
+nc -s drm 50000 hasr.n >hasr.m.50000
+
+# 5) make dendritic tips longer:
+
+nc -s drm 10000 -s splen 10 har.n >har.s.10
+
+nc -s drm 10000 -s splen 10 hasr.n >hasr.s.10
+
+# 6) make dendritic load smaller:
+
+nc -s drm 10000 -s syncond 100e-12 har.n >har.l.100
+
+nc -s drm 10000 -s syncond 100e-12 hasr.n >hasr.l.100
+
+# 7) use drm = 20000
+
+nc -s drm 20000 -s syncond 100e-12 har.n >har.l.200
+
+nc -s drm 20000 -s syncond 100e-12 hasr.n >hasr.l.200

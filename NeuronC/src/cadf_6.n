@@ -1,0 +1,83 @@
+
+FR = 11604.5;
+T = 300;
+frt = FR/T;
+
+dcai = 100e-9;
+
+naca=dnao/dcao;
+kca=dko/dcao;
+
+//mo = dcao*4;
+//mo = dnao;
+mo = dko;
+//mo = dclo;
+
+naratio = dnai/dnao;
+kratio  = dki/dko;
+caratio = dcai/dcao;
+clratio = dcli/dclo;
+
+naperm = 0;
+kperm  = 1;
+cperm  = 0;
+clperm = 0;
+z = 1;
+
+vstart = -0.2;
+vstop  = 0.2;
+vstep  = 0.001;
+
+func calc_cvfi (v, iono, ioni, ionm, z, perm)
+
+{
+    vf = exp(z*v*frt);
+    vfi = 1 / (1 - vf);
+    cvfi = (1.0-ioni/iono*vf)*vfi * z*z * iono/ionm * perm;
+    return cvfi;
+};
+
+func calc_chgfrac (v,iono,ioni,ionm,z,perm)
+{
+    vf = exp(z*v*frt);
+    vfi = 1 / (1 - vf);
+    chgfrac = frt*v*z*z*z * (1.0-ioni/iono)*vf*vfi*vfi*iono/ionm*perm;
+    return chgfrac;
+};
+
+for (v = vstart; v < vstop; v += vstep) {
+
+    dv = 1e-6;
+    if (abs(v) < 1e-6) continue;
+
+    vf = exp(z*v*frt);
+    vfi = 1 / (1 - vf);
+
+    main_ion = dcao*4;
+    cavfi = calc_cvfi(v,dcao,dcai,main_ion,2,cperm);
+    navfi = calc_cvfi(v,dnao,dnai,main_ion,1,naperm);
+    kvfi  = calc_cvfi(v,dko,dki,main_ion,1,kperm);
+    clvfi = calc_cvfi(v,dclo,dcli,main_ion,-1,clperm);
+
+    cvfi = ( cavfi +
+             navfi +
+             kvfi  +
+             clvfi);
+
+    i = v * cvfi;
+
+    chgfrac = cvfi + calc_chgfrac(v,dcao,dcai,main_ion,2,cperm) + 
+                     calc_chgfrac(v,dnao,dnai,main_ion,1,naperm) + 
+                     calc_chgfrac(v,dko,dki,main_ion,1,kperm) + 
+                     calc_chgfrac(v,dclo,dcli,main_ion,-1,clperm);
+
+    chgvrev = v - i/chgfrac; 
+ 
+
+    print v, i, chgfrac, chgvrev;
+
+//    print v, 0, chdf;
+
+};
+  
+

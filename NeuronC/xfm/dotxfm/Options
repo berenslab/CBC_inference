@@ -1,0 +1,4 @@
+#XFM
+xfontsel:::font.xpm:exec xfontsel:
+xcolorsel:::Plaid.xpm:exec xcolorsel:
+Save Desktop:::desk.xpm:exec savedesktop:

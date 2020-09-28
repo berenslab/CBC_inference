@@ -1,0 +1,441 @@
+<html>
+<body bgcolor="#f0d662">
+<title>NeuronC News</title>
+<head>
+
+
+<h2>RECENT    NEWS 
+</h2>
+
+<h3> Many improvements have been made since the NeuronC simulator was
+first described in J. Neuroscience Methods in 1992.  </h3> 
+
+<h3>
+Highlights 
+</h3>
+
+<li> The <b>retsim</b> retinal simulator script generates a model
+of a ganglion cell and its presynaptic circuit. Both interpreted and 
+compiled versions are provided.
+<p>
+
+<li> Completely <b>compiled version of NeuronC</b> is now available.
+Construction mode runs ~2-3 fold faster, and all the power of C++, 
+and widely used math and matrix libraries is available.
+<p>
+
+<li> <b>Save</b> and <b>restore</b> a simulation's state. This allows you to
+equilibrate a model, then save it for a later restore operation.
+This saves time when running repetitive models.
+<p>
+
+<li> <b>Calcium</b> T- and L-type channels, Ca diffusion, dynamic
+buffering, membrane transporters, and realistic Ca currents from
+GHK equations.<p>
+
+<li> <b>GHK current equation</b> can be utilized for any channel type.<p>
+
+<li> The simulator runs several <b>channel types</b> including Markov
+sequential-state versions of Hodgkin-Huxley Na, Nav1.1, Nav1.6, K, KA, 
+Kca and Ih channels. AMPA, NMDA, cGMP, and GABA ligand-gated Markov
+channels. Channel types contain individual <b>data structures</b> for
+unitary conductance, rate functions, temperature dependence of
+conductance and rates, relative permeabilities to major ions,
+and sensitivities to receptor ligands.<p>
+  
+<li> Synaptic and voltage-gated channel functions can implement
+<b>Markov</b> channel descriptions. Noise kinetics derived from Markov
+description. Synaptic, channel, and photoreceptor noise can originate in
+<b>independent noise generators</b> to maintain the same noise
+waveshape when you change the neural circuit. Synapses can be 
+controlled <b>calcium concentration</b>, allowing a presynaptic terminal's 
+release to be defined by any calcium channel type.<p>
+
+<li> Photoreceptors have <b>adaptation</b> through feedback from
+calcium. The photoreceptor <b>spectral sensitivity functions</b> have
+second-order interpolation from sensitivity tables and turtle
+cone functions (default=primate). Photoreceptor kinetics can be
+varied, and their state can be stored and recalled to save on
+equilibration time. Stimuli and optical blur can be generated at
+any scale (default=1 um) to allow very fine resolution.<p>
+
+<li> The <b>stimulus generator</b> can create spot, bar, grating, gabor,
+or concentric stimuli.  Transparency and masking allow
+combinations of stationary objects and motion.  Stimuli can be in
+any wavelength and with any blur or scatter function.
+Point-spread functions for the human eye at 2 and 5.8 mm pupils
+are included.<p>
+
+<li> The simulator generates <b>realistic images</b> of neural
+circuits using the "povray" ray tracer, and <b>movies</b> of the spread of
+voltage or calcium in neural circuits, and can display them
+at a variable rate for careful study. <p>
+
+<hr>
+<h4>
+Feb, 2018 addition:  
+</h4>
+<li>The model of channel-rhodopsin-2 from Williams et al (2013) 
+has been added. This model is one of the most complete models of 
+channel-rhodopsin. It can be run with or without noise properties.
+It shows adaptation from bright photopic (daylight) light levels, 
+and qualitatively matches channel-rhodopsin in transgenic mice.
+</li>
+<p>
+
+<hr>
+<h4>
+Dec, 2017 addition:  
+</h4>
+<li>The model of mouse rod phototransduction from Invergo et al (2014) 
+has been added. This model is one of the most complete models of rod 
+phototransduction and contains 96 differential equations. It shows
+adaptation well into photopic (daylight) light levels, and qualitatively
+matches transgenic knockouts of the transduction cascade.
+</li>
+<p>
+
+<hr>
+<h4>
+Dec, 2016 additions:  
+</h4>
+<li> Several new random number sequence generators have been added, 
+a) Mersenne Twister, b) Tiny MT, c) Taus113.  Each of the random
+sequence generators has its advantage. They can all be started at
+different points in their sequences with a seed, which can be set
+constant or can change automatically with each job. The original Taus
+sequence (from GSL) is the fastest, with a sequence length of
+2^88 (10^26), Taus113 is almost as fast with a sequence length of
+2^113 (10^34), the Mersenne Twister has a very long sequence
+(2^19937) and is almost as fast as Taus113, and TinyMT is a
+little slower, but can generate many different sequences. 
+</li><p>
+
+<li>A model of CICR has been added, which is important for some
+synapses because it can produce extra gain.  Several new channel
+types have been added (NMDA, GABA, CYCG). A new method for
+fitting models to data has been added.  Called "modelfit", it
+allows multi-stage Levenberg-Marquardt fitting (Stincic et al.,
+2016).
+<p>
+
+
+<hr>
+<h4>
+2014 additions:  
+</h4>
+<li> Previously only Ca channels used the GHK current equation. Now any channel
+type, both voltage-gated and ligand-gated, can utilize the nonlinear GHK
+equation, based on ionic gradients set from the overall defaults, or gradients
+specifically defined for the channel type, or gradients defined for the
+specific channel.
+<p>
+
+<li>
+An expanded least-squares model fitting program has been added. It is called
+"modelfit", and uses the Levenberg-Marquardt algorithm for fitting. It runs the
+simulator, either "nc" or "retsim" and provides a command line with parameters
+selected by the LM fitting algorithm. Up to 12 parameters can be fitted, each
+limited (if wanted) to a specific range. The output of the simultor is
+correlated with a template that selects which part of the output to compare to
+the original data. A simple program is included to create templates that can be
+edited with a text editor.
+
+To increase fitting speed, the modelfit program can run in parallel on several
+processors or computers in a network (using Mosix job tasking).  
+</li>
+<p>
+
+<hr>
+<h4>
+Mar, 2013 additions:  
+</h4>
+<li> Cooperative calcium control of synaptic release added, 
+allowing Ca flux to control release through a power function.
+<p>
+
+<hr>
+<h4>
+June, 2009 additions:  
+</h4>
+<li> 2D Levenberg-Marquardt least-squares fitting further
+developed, allowing compiled version to quickly fit a
+user-defined function to a set of data points. Constraints on the
+values of the points can be set.  An example
+difference-of-Gaussians fitting procedure is included.<p>
+
+<hr>
+<h4>
+Feb, 2008 additions:  
+</h4>
+<li> Levenberg-Marquardt least-squares fitting added, allowing
+either interpreted or compiled version to quickly fit a
+user-defined function to a set of data points. Constraints
+on the values of the points can be set.
+<p>
+<hr>
+<h4>
+July, 2007 additions:  
+</h4>
+<li> Retsim extended by M. Schachter with C++ classes to provide 
+flexible interface for defining channel properties.
+<p>
+<hr>
+
+<h4>
+Oct, 2006 additions:  
+</h4>
+<li> Completely compiled version of NeuronC, runs exactly the
+same as interpreted version, with slightly different syntax. 
+Construction mode runs ~2-3 fold faster, and all the power of C++, 
+and widely used math and matrix libraries is available.
+<p>
+"Retsim" retinal simulator generates a model of ganglion cell and its
+presynaptic circuit. Both interpreted and compiled versions are
+provided.
+<p>
+<p>
+<hr>
+
+<h4>
+Feb, 2006 additions:  
+</h4>
+<li> simulator state save, restore
+<p>
+<hr>
+
+<h4>
+August, 2005 additions:  
+</h4>
+<li> synaptic release can be controlled by calcium
+<li> input and output streams defined for C++ standard
+library, allowing simulator to be run without command line.
+Precursor to multi-platform graphics.
+<p>
+<hr>
+
+<h4>
+April, 2005 additions:  
+</h4>
+<li> Nav1.8, Markov channel type added.<p>
+<li> Vid can create movies with variable interval.
+<p>
+<hr>
+
+<h4>
+Jan, 2005 additions:  
+</h4>
+<li> Line editor added to allow interactive editing.
+<p>
+<hr>
+
+<h4>
+Oct, 2004 additions:  
+</h4>
+
+<li> Nav1.1, Nav1.5 and Nav1.6 Markov channel types added.<p>
+
+<hr>
+
+<h4>
+May, 2003 additions:  
+</h4>
+
+<li> Sine-wave, gabor, concentric sine-wave stimuli added.
+
+<li> Masking and transparency added to stimuli.<p>
+
+<hr>
+
+<h4>
+<h4>
+Nov, 2002 additions:  
+</h4>
+
+<li> Arrays can be passed (by reference) into procedures and returned 
+from functions.  Many operators work with arrays of numbers and
+strings.  Arrays can be initialized in several ways. 
+
+<li> Pre-processing of scripts with CPP to allow macros to modify the
+basic simulator script language.
+
+<li> Scatter and blur functions for stimuli improved.  Several
+point-spread functions added for the cat and human eye, including
+human for 2 mm and best-refracted 5.8 mm pupil.<p>
+
+<hr>
+
+<h4>
+Jan, 2001 additions:  
+</h4>
+
+<li> Synaptic transfer function can include dynamic
+auto-regulation by the "readily releasible pool".
+
+<li> Multiple traces can be assigned to each separate plot. Each
+plot can have its size assigned.  Plots can be labeled.
+
+<li> Multiple presynaptic and postsynaptic mechanisms can be assigned to each
+synapse.
+
+<li> Any function may be directly plotted.
+
+<li> Stochastic search simulated annealing curve fitter to find
+the best-fitting model to a template function.<p>
+
+<hr>
+
+<h4>
+June, 2000 additions:  
+</h4>
+
+<li> All channels are defined at 22 deg C to allow standard
+application of temperature coefficients.
+
+<li> Function that returns the minimum distance between two neural elements.
+
+<li> Tapered cables.<p>
+
+
+<hr>
+
+<h4>
+December, 1998 additions:  
+</h4>
+
+<li> Dynamic calcium buffering.
+
+<li> Default unitary conductance for each channel type.
+
+<li> Temperature dependence of unitary conductance, Ca pump, Ca
+exchanger, Ca buffering.
+
+<li> Markov channel types for postsynaptic mechanism.
+
+<li> Multiple neurotransmitter types, affinity for postsynaptic
+receptors.
+
+<li> Permeabilities of channels to major ions.
+
+<li> Use of GHK current equation to define Ca currents.
+
+<li> Use of GHK voltage equation to define reversal potential for
+Na, K, and Ca channels.
+
+<li> Membrane voltage offset generated optionally by external
+Ca concentration (surface charge effects).
+
+<li> Johnson noise with independent random noise generator for
+each compartment.<p>
+
+<hr>
+
+<h4>
+October, 1998 additions:  
+</h4>
+
+ <li> Membrane channel definition code improved to simplify adding
+new channel types.
+
+ <li> Na type 2 channel from Vandenberg and Bezanilla, 1991.
+
+ <li> AMPA, NMDA, cGMP, and GABA Markov channels.
+
+ <li> Integrate-and-fire Markov channel.
+
+ <li> Number of shells in Ca diffusion model can be varied.
+
+ <li> Weighted neurotransmitter action for multiple ligands.
+
+<hr>
+
+<h4>
+July, 1998 additions:  
+</h4>
+
+  <li> Set Q10 for Na channels = 2 (instead of 3 for K chans).
+
+  <li> Corrected ion current in Ca-Na exchanger.
+
+  <li> Modified KA kinetics to be more like Fohlmeister & Miller (1997)
+
+  <li> Tapered cables.
+
+  <li> Function to return 3D distance between 2 neural elements.
+
+<hr>
+
+<h4>
+April, 1998 additions:  
+</h4>
+
+  <li> Sequential-state versions of Hodgkin-Huxley Na and K channels,
+	KA, Kca, Ih channels.
+
+  <li> Sequential-state channels can produce Markov state noise
+     with noise kinetics set by rate functions.
+
+  <li> Synaptic vesicle fluctuation noise is set by Poisson function with optional refractory period. 
+
+  <li> Synaptic vesicle noise can be set by Gamma function for more regularity.
+
+  <li> Synaptic and Hodgkin-Huxley channels can produce 2-state
+	Markov noise with Lorenzian rolloff frequency.
+
+  <li> Synaptic temporal filters can be low-pass or high-pass with arbitrary
+order and time constants. 
+
+  <li> Postsynaptic binding of neurotransmitter can be cooperative 
+	(Hill coeff can be > 1)
+
+  <li> Postsynaptic second-messenger cascade can include sign inversion and threshold nonlinearity.
+
+  <li> Photoreceptor sensitivity functions include turtle cone spectral sensitivities.
+
+  <li> Photoreceptor spectral sensitivity functions include second-order interpolation. 
+
+  <li> Simulation language contains array operators +, -, *, /, print
+
+<hr>
+
+<h4>
+July, 1997 additions:  
+</h4>
+
+  <li> Voltage-gated gap junctions with optional rectification.
+
+  <li> Photoreceptor impulse response duration can be set faster or slower. 
+
+  <li> State of photoreceptors can be saved and restored for fast equilibration.
+
+  <li> Drag'n drop NeuronC files and commands with 'xfm' and 'tkdesk'
+
+  <li> Stim file can be compressed with gzip.
+ 
+  <li> Simulation language includes local dynamically allocated arrays.
+
+  <li> Simulator includes DOS version.
+
+  <li> Simulator can be run as subroutine from standard C program
+    with access to simulator variables and arrays.
+
+<hr>
+
+<h4>
+Jan, 1995 additions:  
+</h4>
+
+  <li> Calcium channels, compartments, and diffusion.
+
+  <li> Ca-sensitive K channels.
+
+  <li> Independent noise generators for individual photoreceptors and synapses.
+
+  <li> Stimuli and optical blur can be set to any scale for finer resolution.
+
+  <li> 3D surfaces rendered by ray-tracing with "povray".
+ 
+  <li> Windowed trimming of neural elements.
+
+</body>
+</html>

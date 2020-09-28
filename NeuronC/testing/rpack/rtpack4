@@ -1,0 +1,6 @@
+
+nc -s timinc 2e-5 -s complam .02 tpack4 > tpack4.aa
+nc -s timinc 2e-4 -s complam .02 tpack4 > tpack4.ab
+nc -s timinc 2e-5 -s complam .3 tpack4  > tpack4.ac
+nc -s timinc 2e-4 -s complam .3 tpack4  > tpack4.ad
+

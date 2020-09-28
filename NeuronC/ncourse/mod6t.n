@@ -1,0 +1,27 @@
+/* amacrine dendrite with varicosities */
+/*  temporal plot */
+
+drm = 5000;
+endexp = .02;
+
+nsegs = 10;
+seglen = 10;
+totlen = seglen * nsegs;
+varicos = 4;
+synap = 100;
+
+for (i=1; i<=nsegs; i++) {
+  at   [i][synap] sphere dia 3;
+  conn [i][synap] to [i] synapse expon 5 maxcond 5e-9 thresh -.04 vrev -.01;
+  at i sphere dia varicos;			/* the varicosity */
+  conn i to i+1 cable length seglen dia 0.1;	/* the fine cable */
+  if (i==5) stim node [i][synap] vclamp -.025 start 0 dur .01;
+/*  else      stim node [i][synap] vclamp -.030 start 0 dur .05; */
+};
+at i sphere dia 5;
+
+for (i=1; i<=nsegs; i++) {
+  plot V[i] max -.01 min -.07;
+};
+
+step .02;

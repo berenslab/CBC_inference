@@ -1,0 +1,16 @@
+#! /bin/sh -f
+#
+# nval_subrow
+#  script to subtract one row from nval.n
+#
+#  usage: nval_subrow 5 nval.n
+#
+#    to subract a row at row 5
+#
+awk "BEGIN {rownum = $1; co = 1;}
+      /^#/ {co++; print}
+     !/^#/ {ce = match(\$0,\"#\"); row = substr(\$0,ce+2,3)}
+     !/^#/ && NR< (co+rownum) {print}
+     !/^#/ && NR> (co+rownum) {x = sprintf (\"%3g\",row-1); print substr(\$0,0,ce),x, substr(\$0,ce+6)}
+    " $2
+

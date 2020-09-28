@@ -1,0 +1,380 @@
+/* simann.n */
+
+/* Procedure for Simulated annealing */
+
+SAVAL=0;
+SAMAX=1;
+SAMIN=2;
+SASTD=3;
+NSTV =4;
+
+/*------------------------------------------------------------*/
+
+if (notinit(nsap)) nsap = 1;
+
+dim sastart[NSTV][nsap]; /* The starting, max, min values, set by user */
+dim saname[nsap];	   /* Names of the free parameters */
+dim satest[nsap];	/* The test values, used by simulation */
+
+/*
+if (notinit(sastart[0][0])) {
+    local i,j;
+ for (i=0; i<NSTV; i++) {
+   for (j=0; j<nsap; j++) {
+     sastart[i][j] = 0;
+   };
+ };
+};
+*/
+
+/*
+func runsim()
+
+{
+  return 1;
+};
+*/
+
+/* Simulated annealing routine to be called from the main script.
+This routine calculates new values for the free parameters and
+calls the simulation function in the main script.  The simulation
+function runs the simulation (from a different set of test values for
+the free parameters each time) and computes how close the
+simulation is to a template using a matching function.
+The simulated annealing procedure decides how to modify the test
+values using only the value of the matching function as a guide.
+This process is repeated until the difference between the
+simulation and the template is minimized.  The best matching
+parameters are left in the "bp" array. 
+
+-----------------------------------------------------------
+H o w   t o   u s e   t h i s   p r o c e d u r e:
+
+1) Include this file in your script with:
+
+     include "simann.n";
+
+2) Put the number of free parameters into "nsap".
+
+3) Put the free parameters into the "sastart" array.  It has 2
+dimensions; the first dimension always has a size of 3, and the
+second dimension is the size of the number of free parameters.
+In the 1st dimension the first value (SAVAL) is the starting
+value, the second value (SAMAX) is the maximum limit, and the
+third value (SAMIN) is the minimum.
+
+     sastart[3][nsap]
+
+The first set of parameters are the starting values with which
+the simulation is to be run, and the second and third are the
+maximum and minimum values.  The "runsa" procedure decides what
+to do with the starting values for the free parameters.  They are
+modfied according to the simulated annealing algorithm, and are
+passed to the simulation as test values in the "satest" array:
+
+    satest[nsap]
+
+4) Write a simulation function, called "runsim()" which runs the
+simulation using the test values for the free parameters given by
+the "satest[]" array, then reports how closely the simulation
+matches the template by returning the value calculated by the
+match function.
+
+5) Write a match function. Usually the match is computed by taking
+the difference between the simulation's output and a template of
+data values to match.  The difference values are squared and
+summed to provide a least-squares estimate, which is returned as
+the match value.
+
+6) Run the ssrch() procedure, which will run the simulated
+annealing, calling the runsim() function to evaluate the match.
+At the end, you can print out the bp[] array for the best match.
+
+*/
+
+/*------------------------------------------------------------*/
+
+
+/* Set by the SA algorithm: */
+
+sa_yb = 1e20;			/* best y value */
+sa_tt = 0;			/* Communicates with saexpnd */
+sa_rnd = 1;			/* sets which random number generator to use */
+sa_iter = 100;			/* returned from saexpnd() */
+sa_itot = 0;			/* total iterations */
+sa_yhi = 0;			/* returned from saexpnd() */
+
+dim sa_p[nsap+1][nsap];		/* vertices of the simplex */
+dim sa_y[nsap+1];		/* starting y values */
+dim sa_pb[nsap];		/* best test values */
+dim sa_psum[nsap];
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+func runsimann()
+
+{
+   local y;
+
+ if (info>=4) {
+     fprintf (prout," p %-4g ",sa_itot);
+     for (j=0; j<nsap; j++) {
+         fprintf (prout,"%-10.5g ",satest[j]);
+     };
+ };
+
+ y = runsim();
+ sa_itot++;
+
+ if (info>=4) fprintf (prout, " m %-9.4g\n",y);
+ return (y);
+
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+func saexpnd(ndim, ihi, fac) 
+
+/* Extrapolates by a factor fac through the face of the simplex */
+/*  across from the high point, tries it, and replaces the high point */
+/*  if the new point is better. */
+/*  Adapted from "Simulated Annealing" in Numerical Recipes in C".
+
+{
+    local j,fac1,fac2,yflu,ytry;
+    local dim ptry[ndim];
+
+ fac1=(1.0-fac)/ndim;
+ fac2=fac1-fac;
+ for (j=0; j<ndim; j++) {
+	ptry[j] = sa_psum[j]*fac1-sa_p[ihi][j]*fac2;
+	if (ptry[j] > sastart[SAMAX][j]) ptry[j] = sastart[SAMAX][j];/*max min*/
+	if (ptry[j] < sastart[SAMIN][j]) ptry[j] = sastart[SAMIN][j]; 
+ };
+ for (j=0; j<ndim; j++)
+	satest[j] = ptry[j];
+
+ ytry=runsimann();
+ if (ytry <= sa_yb) {	/* Save the best-ever. */
+	for (j=0; j<ndim; j++) sa_pb[j]=ptry[j];
+	sa_yb=ytry;
+ };
+ yflu=ytry-sa_tt*log(rrand(sa_rnd)); /* We add thermal flucts to all the cur */
+ if (yflu < sa_yhi) {		/* vertices, but we subtr it here, to give */
+	sa_y[ihi]=ytry;		/* the simplex a thermal Brownian motion: It */
+	sa_yhi=yflu;		/* likes to accept any suggested change. */
+	for (j=0;j<ndim; j++) {
+	    sa_psum[j]  += ptry[j] - sa_p[ihi][j];
+ 	    sa_p[ihi][j] = ptry[j];
+	};
+  };
+ return yflu;
+};
+
+/*------------------------------------------------------------*/
+
+proc runsa(ndim, ftol, temptr)
+
+{
+    local i,ihi,ilo,j,m,n,mpts;
+    local rtol,sum,swap,ylo,ynhi,ysave,yt,ytry;
+
+ mpts = ndim+1;
+ sa_tt = -temptr;
+ for (n=0; n<ndim; n++) { 
+   for (sum=0.0,m=0; m<mpts; m++) sum += sa_p[m][n]; 
+   sa_psum[n]=sum; 
+ };
+ for (z=1; z; z) {
+	ilo=0;		/* Determine which point is the highest (worst), */
+	ihi=1;		/*   next-highest, and lowest (best). */
+
+ 			/* When Looking at vertex, it gets */
+			/* a random thermal fluctuation.*/
+
+	ynhi=ylo=sa_y[0]+sa_tt*log(rrand(sa_rnd));
+//fprintf (stderr,"y %g r %g\n",sa_y[0],ylo-sa_y[0]);
+	sa_yhi  =sa_y[1]+sa_tt*log(rrand(sa_rnd));     
+	if (ylo > sa_yhi) {
+		ihi=0;
+		ilo=1;
+		ynhi=sa_yhi;
+		sa_yhi=ylo;
+		ylo=ynhi;
+	};
+	for (i=2; i<mpts; i++) { /* Loop over the points in the simplex. */
+		yt=sa_y[i]+sa_tt*log(rrand(sa_rnd)); /* More thermal flucts. */
+
+		if (yt <= ylo) {
+			ilo=i;
+			ylo=yt;
+		};
+		if (yt > sa_yhi) {
+			ynhi=sa_yhi;
+			ihi=i;
+			sa_yhi=yt;
+		} else if (yt > ynhi) {
+			ynhi=yt;
+		};
+	};
+	//for (i=0; i<mpts; i++) 
+        //      fprintf (stderr,"y %g\n",sa_y[i]);
+        //fprintf (stderr,"ylo %g yhi %g ynhi %g\n",ylo,sa_yhi,ynhi);
+       
+/* Compute the fract range from highest to lowest and return if OK. */
+
+	rtol=2.0*abs(sa_yhi-ylo)/(abs(sa_yhi)+abs(ylo)); 
+
+//fprintf (stderr,"sa_iter %g rtol %g %g %g\n",sa_iter, rtol, sa_yhi, ylo);
+	if ((rtol<ftol) || (sa_iter < 0)) {   /* If returning, put best point */ 
+		swap=sa_y[0];		      /* and value in first slot. */
+		sa_y[0] = sa_y[ilo];
+		sa_y[ilo]=swap;
+		for (n=0; n<ndim; n++) {
+			swap      = sa_p[0][n];
+			sa_p[0][n]   = sa_p[ilo][n];
+			sa_p[ilo][n] = swap;
+		};
+	break;
+	};
+
+	sa_iter -= 2;
+
+/* Begin a new iteration. 
+   First extrapolate by a factor -1 through the face of the 
+   simplex across from the high point, i.e., reflect the 
+   simplex from the high point. */
+
+	if (info>=3) fprintf (prout,"reflect\n");
+	ytry = saexpnd(ndim,ihi,-1.0);
+
+	if (ytry <= ylo) {
+
+	/* Gives a result better than the best point, so try an */
+	/* additional extrapolation by a factor of 2. */
+
+	  if (info>=3) fprintf (prout,"expand ***\n");
+	  ytry = saexpnd(ndim,ihi,2.0);
+
+	} else if (ytry >= ynhi) {
+
+	/* The reflected point is worse than the second-highest, */
+	/* so look for an intermediate lower point, i.e., do a  */
+	/* one-dimensional contraction. */
+
+	ysave=sa_yhi;
+
+	if (info>=3) fprintf (prout,"contract\n");
+	ytry=saexpnd(ndim,ihi,0.5);
+
+	if (ytry >= ysave) {	/* Can't seem to get rid of that high point. */
+ 	   for (i=0; i<mpts; i++) {	/* Better contract around the lowest */
+		if (i != ilo) {		/* (best) point. */
+		   for	(j=0; j<ndim; j++) {
+			sa_psum[j]=0.5*(sa_p[i][j] + sa_p[ilo][j]);
+     			if (sa_psum[j] > sastart[SAMAX][j]) /* test max min */
+				sa_psum[j] = sastart[SAMAX][j]; 
+     			if (sa_psum[j] < sastart[SAMIN][j]) 
+				sa_psum[j] = sastart[SAMIN][j]; 
+			sa_p[i][j]=sa_psum[j];
+		   };
+		   if (info>=3) fprintf (prout,"contract further %g\n",i);
+ 		   for (j=0; j<ndim; j++)
+			satest[j] = sa_psum[j];
+ 		   sa_y[i]=runsimann();
+ 	//	   if (sa_y[i] < sa_yb) {	/* Save the best-ever. */
+	//			for (j=0; j<ndim; j++) sa_pb[j]=sa_psum[j];
+	//			sa_yb=sa_y[i];
+ 	//	   };
+		};
+	   };
+	   sa_iter -= ndim;
+	   for (n=0; n<ndim; n++) { 
+	     for (sum=0.0,m=0; m<mpts; m++) sum += sa_p[m][n]; 
+             sa_psum[n]=sum; 
+	   };
+	};
+     } else ++sa_iter;	/* Correct the evaluation count. */
+  };  /* for (;;) */
+};
+
+/*------------------------------------------------------------*/
+
+proc ssrch() 
+
+ {  local i,j,ii,jj,u,epsilon,found; 
+    local ftol, temptr;
+
+  if (info==6) prout=stderr     /* set output to stderr when using vid */
+  else         prout=stdout;    /*  otherwise use stdout */
+
+  initrand(sa_rnd);
+  epsilon = 1.05;
+  if (info>=2) {                                /* print header */
+	fprintf (prout,"# Simulated Annealing\n");
+	fprintf (prout,"#  i    ");
+	for (j=0; j<nsap; j++) {
+	    fprintf (prout,"%-10.5s ",saname[j]);
+	};
+	fprintf (prout," match        temperature\n");
+  };
+
+   /* first, calculate the initial vertices of the simplex */
+
+  for (i=0; i<=nsap; i++) {			/* ndim+1 rows */
+    for (j=0; j<nsap; j++) {			/* ndim cols */
+     if (i==j) sa_p[i][j] = sastart[0][j] * epsilon
+     else      sa_p[i][j] = sastart[0][j] * (1+rrand(1)*.01);
+     if (sa_p[i][j] > sastart[SAMAX][j]) sa_p[i][j] = sastart[SAMAX][j]; 
+     if (sa_p[i][j] < sastart[SAMIN][j]) sa_p[i][j] = sastart[SAMIN][j]; 
+   };
+  };
+  for (i=0; i<=nsap; i++) {			/* ndim+1 rows */
+    for (j=0; j<nsap; j++) {			/* ndim cols */
+      satest[j] = sa_p[i][j]; 			/* copy free params */
+    };
+    sa_y[i] = runsimann (); 			/* run initial y values */
+  };
+  ftol = 1e-4;				/* tolerance for early return */
+  temptr = 1e-8;
+  oldt = temptr;
+  for (u=1; u; u) {
+    sa_iter = 20;
+    //sa_yb = 1e20;
+    runsa(nsap, ftol, temptr);
+    if (info>=2) {                                /* print initial test */
+        fprintf (prout,"bp %-4g ",sa_itot);
+        for (j=0; j<nsap; j++) {
+            fprintf (prout,"%-10.5g ",sa_pb[j]);
+        };
+        fprintf (prout," m %-9.5g t %-g\n",
+                        sa_yb, temptr);
+    };
+    temptr *= .98;
+    //temptr = sa_yb;
+   
+/*
+  if (oldt != 0 && temptr/oldt < .5) {
+      if (info>=3) fprintf (prout, "inserting best point ***************\n");
+      oldt = temptr;
+      for (ii=0; ii<=nsap; ii++) {
+        for (found=1,jj=0; jj<nsap; jj++) {
+          if (sa_p[ii][jj]!=sa_pb[jj]) found=0;
+        };
+        if (found) break;
+      };
+      if (!found) {   
+        for (jj=0; jj<nsap; jj++) {
+          sa_p[0][jj] = sa_pb[jj];
+          sa_p[0][jj] = sa_pb[jj];
+          sa_p[0][jj] = sa_pb[jj];
+        };
+        sa_y[0] = sa_yb;
+      };
+   };
+*/
+
+  };
+};
+
+/*------------------------------------------------------------*/

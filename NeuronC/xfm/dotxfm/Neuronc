@@ -1,0 +1,9 @@
+#XFM
+display:::app_neuronc.xpm:exec ncdisp -d 1 -v %File to display%:exec ncdisp -d 1 -v $1
+plot:::app_neuronc_plot.xpm:exec neurc %File to plot%:exec neurc $1
+comps:::app_neuronc_dcomp.xpm:exec ncdisp -d 6 -v %File to display%:exec ncdisp -d 6 -v $1
+output text:::app_neuronc_text.xpm:exec rxvt -e runnc -t %File to run%:exec rxvt -e runnc -t $1
+nc->file.r:::app_neuronc_mtext.xpm:exec nc -t %File to run--file.n% %File to create--file.r%:exec nc -t $1 $1\:r.r
+output comps:::app_neuronc_comps.xpm:exec rxvt -e runnc -t -p 1 %File to run%:exec rxvt -e runnc -t -p 1 $1
+nc->pov:::app_neuronc_pov.xpm:exec ncpov %File for povray%:exec ncpov $1
+povray:::app_pov.xpm:exec povray -w%width--200% -h%height--200% -i%Input file for povray--file.pov% -o%Output file--file.tga%:exec povray -w200 -h200 -i$1 -o$1\:r.tga

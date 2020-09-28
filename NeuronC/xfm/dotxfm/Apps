@@ -1,0 +1,18 @@
+#XFM
+Xterm:::terminal.xpm:exec rxvt -ls:
+text:~/.xfm:Text:edit.xpm:LOAD:exec xedit $2
+Mail:~/.xfm:Mail:mail.xpm:LOAD:exec xmail >/dev/console
+Graphics:~/.xfm:Graphics:drawing.xpm:LOAD:
+Toolbox:~/.xfm:Toolbox:tools.xpm:LOAD:
+Netscape:::xmosaic.xpm:exec netscape:
+News:~/.xfm:News:news.xpm:LOAD:exec rxvt -T pine -n pine -e pine
+Options:~/.xfm:Options:apps.xpm:LOAD:
+Modem:~/.xfm:Modem:xfm_phone.xpm:LOAD:
+Manual:::man2.xpm:exec xman:
+Host:~/.xfm:Hosts:rlogin.xpm:LOAD:
+Printer:::printer.xpm:lpq >/dev/console:lpr $*
+Home::.:citadel.xpm:OPEN:
+Root:/:.:citadelroot.xpm:OPEN:
+Trash::.trash:recycle.xpm:OPEN:shift; mv -f -b -V numbered $* $HOME/.trash
+Dos:~/.xfm:Dos:dos.xpm:LOAD:
+NeuronC:~/.xfm:Neuronc:neuronc_group.xpm:LOAD:

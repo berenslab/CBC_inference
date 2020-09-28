@@ -1,0 +1,314 @@
+#! /usr/mont/bin/ncv 
+
+/* Display of conductance in KCa type 2,3,6 channels  */
+
+timinc = 1e-5;
+ploti  = 1e-5;
+tempcel = 35;
+implicit=1;
+crit=1e-10;
+rseed = 12497;
+endexp=.4;
+
+dpcak = 0;
+
+kca6mult = 1;
+
+expt = 1;
+expt = 2.1;
+
+x = setvar();
+
+if (expt==1) {			/* voltage clamp, record single chan current */
+
+  ploti = 1e-5;
+
+  kcadens = .35;		/* single channel */
+  kcanois = 1;
+  skcai = 200e-9;
+  bkcai = 1000e-9;
+}
+else if ((expt>=2) && (expt<3)) { /* voltage clamp, record macroscopic current */
+
+				/* experiments 2.1, 2.2, and 2.3 */
+				/* duplicate Figure 9 of Cox et al 1997) */
+				/* J. Gen Physiol 110: 257-281. */
+
+  ploti = 1e-4;
+
+  kcadens = 200;		/* many channels */
+  kcanois = 0;
+  skcai = 100e-9;
+  bkcai = 500e-9;
+  kca6mult = 2;
+
+  if (expt==2.05)     {bkcai = 500e-9;  kca6mult = 2;}
+  else if (expt==2.1) {bkcai = 840e-9;  kca6mult = 2;}
+  else if (expt==2.2) {bkcai = 10.2e-6; kca6mult = 1;}
+  else if (expt==2.3) {bkcai = 124e-6;  kca6mult = 1;}
+  else if (expt==2.4) {bkcai = 10.2e-6;  kca6mult = 5;};
+}
+
+else if (expt==3) {		/* Response to puff of Ca */
+
+  ploti = 1e-4;
+
+  kcadens = 200;		/* many channels */
+  kcanois = 1;
+  skcai = 10e-9;
+  bkcai = 50e-9;
+
+};
+
+drm=40000;
+
+at 1 sphere dia 1 vrest -.075 jnoise=10;
+at 1 cacomp cai=skcai;
+
+at 2 sphere dia 1 vrest -.075 jnoise=10;
+at 2 cacomp cai=skcai;
+
+at 3 sphere dia 1 vrest -.075 jnoise=10;
+at 3 cacomp cai=skcai;
+
+at 4 sphere dia 1 vrest -.075 jnoise=10;
+at 4 cacomp cai=skcai;
+
+at 5 sphere dia 1 vrest -.075 jnoise=10;
+at 5 cacomp cai=bkcai;
+
+at 6 sphere dia 1 vrest -.075 jnoise=10;
+at 6 cacomp cai=bkcai;
+
+at 7 sphere dia 1 vrest -.075 jnoise=10;
+at 7 cacomp cai=bkcai;
+
+at 1 chan KCa type 0 		/* sk */
+   ndensity=kcadens 
+   chnoise=kcanois 
+   k1=1e-7
+   k2=1e-7
+   ename kca0;
+
+at 2 chan KCa type 1 
+   ndensity=kcadens 
+   chnoise=kcanois 
+   k1=1e-7
+   k2=1e-7
+   ename kca1;
+
+at 3 chan KCa type 4 
+   ndensity=kcadens 
+   chnoise=kcanois 
+   ename kca4;
+
+at 4 chan KCa type 5 
+   ndensity=kcadens 
+   chnoise=kcanois 
+   ename kca5;
+
+at 5 chan KCa type 2 		/* bk */
+   ndensity=kcadens 
+   chnoise=kcanois 
+   offset= .04
+   k1=1e-6
+   k2=1e-6
+   ename kca2;
+
+at 6 chan KCa type 3 		/* bk */
+   ndensity=kcadens 
+   chnoise=kcanois 
+   offset= .04
+   k1=1e-6
+   k2=1e-6
+   ename kca3;
+
+at 7 chan KCa type 6 
+   ndensity=kcadens * kca6mult 
+   chnoise=kcanois 
+   taua=1
+   taub=1
+   tauc=1
+   taud=1
+   offset= 0
+   d1=1
+   d2=1
+   ename kca6;
+
+if (expt==1) {		/* Look at all sK and bK chans, single-channel expt */
+
+  endexp=.2;
+
+  stimstart = .04;
+  stimdur = 5;
+  vstim = .05;
+
+  stim node 1 vclamp -.07 start 0 dur stimstart;
+  stim node 1 vclamp vstim start stimstart dur stimdur;
+
+  stim node 2 vclamp -.07 start 0 dur stimstart;
+  stim node 2 vclamp vstim start stimstart dur stimdur;
+  
+  stim node 3 vclamp -.07 start 0 dur stimstart;
+  stim node 3 vclamp vstim start stimstart dur stimdur;
+
+  stim node 4 vclamp -.07 start 0 dur stimstart;
+  stim node 4 vclamp vstim start stimstart dur stimdur;
+  
+  stim node 5 vclamp -.07 start 0 dur stimstart;
+  stim node 5 vclamp vstim start stimstart dur stimdur;
+  
+  stim node 6 vclamp -.07 start 0 dur stimstart;
+  stim node 6 vclamp vstim start stimstart dur stimdur;
+ 
+  stim node 7 vclamp -.07 start 0 dur stimstart;
+  stim node 7 vclamp vstim start stimstart dur stimdur;
+ 
+  plgain = 10e-11 * (exp(log(dqc) * (tempcel - 22)/10));
+
+  off0 =  0;
+  off1 = .15;
+  off4 = .3;
+  off5 = .45;
+  off2 = .6;
+  off3 = .75;
+  off6 = .9;
+ 
+  plot G(I) kca0 max  (off0+0)*plgain min (off0-1)*plgain filt [.1e-3,.05e-3]; 
+  plot G(I) kca1 max  (off1+0)*plgain min (off1-1)*plgain filt [.1e-3,.05e-3]; 
+  plot G(I) kca4 max  (off4+0)*plgain min (off4-1)*plgain filt [.1e-3,.05e-3];
+  plot G(I) kca5 max  (off5+0)*plgain min (off5-1)*plgain filt [.1e-3,.05e-3];
+  plot G(I) kca2 max  (off2+0)*plgain min (off2-1)*plgain filt [.1e-3,.05e-3];
+  plot G(I) kca3 max  (off3+0)*plgain min (off3-1)*plgain filt [.1e-3,.05e-3];
+  plot G(I) kca6 max  (off6+0)*plgain min (off6-1)*plgain filt [.1e-3,.05e-3];
+
+}
+
+else if ((expt>=2) && (expt<3)) { /* Measure bk kinetics, macro current expt */
+
+  endexp=.04;
+
+  stimstart = .01;
+  stimdur = .02;
+  rundur = .04;
+  afterstim = rundur - stimdur - stimstart;
+  vstep  =  .01;
+  vrepol =  -0.01;
+  nstim = 1;
+  vhold  =  0;			/* for 840 nM [Ca] */
+  vbase  = .02;
+
+  if (expt==2.05) {
+    vhold  =  0;			/* for 840 nM [Ca] */
+    vbase  = .02;
+    nstim = 7;
+  }
+  else if (expt==2.1) {
+    vhold  =  0;			/* for 840 nM [Ca] */
+    vbase  = .02;
+    nstim = 7;
+  }
+
+  else if (expt==2.2) {
+    vhold  =  -0.1;		/* for 10.2 uM [Ca] */
+    vbase  = -.01;
+    nstim = 11;
+  }
+
+  else if (expt==2.3) {
+    vhold  =  -0.12;		/* for 124. uM [Ca] */
+    vbase  = -.02;
+    nstim = 12;
+  }
+  else if (expt==2.4) {		/* check inactivation tau */
+    vstep  =  .1;
+    vrepol =  -0.08;
+    vhold  =  -0.12;
+    nstim = 1;
+  };
+
+  //plot G(I) kca2 max 10e-9 min -5e-9; /* */
+  //plot G(I) kca3 max 10e-9 min -5e-9; /* */
+  plot G(I) kca6 max 10e-9 min -5e-9 pen 4; /* */
+
+  //plot G(0) kca6 max 100e-9 min -50e-9 pen 1; /* */
+  //plot G(1) kca6 max 1 min 0; /* */
+  //plot G(2) kca6 max 1 min 0; /* */
+  //plot G(3) kca6 max 1 min 0; /* */
+  //plot G(4) kca6 max 1 min 0; /* */
+  //plot G(5) kca6 max .5 min 0; /* */
+  //plot G(6) kca6 max .5 min 0; /* */
+  //plot G(7) kca6 max .5 min 0; /* */
+  //plot G(8) kca6 max .5 min 0; /* */
+  //plot G(9) kca6 max .5 min 0; /* */
+  //plot G(10) kca6 max .5 min 0; /* */
+  //plot V 7 max .04 min -.09;
+
+for (i=0; i<nstim; i++) {
+  time = 0;
+  stim node 5 vclamp vhold start 0 dur stimstart;
+  stim node 5 vclamp vbase+i*vstep start stimstart dur stimdur;
+  stim node 5 vclamp vrepol start stimstart+stimdur dur afterstim;
+
+  stim node 6 vclamp vhold start 0 dur stimstart;
+  stim node 6 vclamp vbase+i*vstep start stimstart dur stimdur;
+  stim node 6 vclamp vrepol start stimstart+stimdur dur afterstim;
+
+  stim node 7 vclamp vhold start 0 dur stimstart;
+  stim node 7 vclamp vbase+i*vstep start stimstart dur stimdur;
+  stim node 7 vclamp vrepol start stimstart+stimdur dur afterstim;
+
+  step rundur;
+};
+
+
+}
+
+else if (expt==3) {		/* measure Ca kinetics, macroscopic expt */
+
+  endexp=.5;
+
+  stimstart = .00;
+  stimdur = 5;
+  vstim = .02;
+
+  stim node 1 vclamp vstim start stimstart dur stimdur;
+  stim node 2 vclamp vstim start stimstart dur stimdur;
+  stim node 3 vclamp vstim start stimstart dur stimdur;
+  stim node 4 vclamp vstim start stimstart dur stimdur;
+  stim node 5 vclamp vstim start stimstart dur stimdur;
+  stim node 6 vclamp vstim start stimstart dur stimdur;
+  stim node 7 vclamp vstim start stimstart dur stimdur;
+
+  castart = .01;
+  cadur = .25;
+ 
+  stim node 1 puff Ca 250e-9 start castart dur cadur;
+  stim node 2 puff Ca 250e-9 start castart dur cadur;
+  stim node 3 puff Ca 250e-9 start castart dur cadur;
+  stim node 4 puff Ca 250e-9 start castart dur cadur;
+  stim node 5 puff Ca 1000e-9 start castart dur cadur;
+  stim node 6 puff Ca 1000e-9 start castart dur cadur;
+  stim node 7 puff Ca 2000e-9 start castart dur cadur;
+
+  plot G(I) kca0 max 2e-9 min -2e-9; /* sk0 */
+  plot G(I) kca1 max 2e-9 min -2e-9; /* sk1 */
+  plot G(I) kca4 max 1e-9 min -1e-9; /* sk4 */
+  plot G(I) kca5 max 1e-9 min -1e-9; /* sk5 */
+  plot G(I) kca2 max 10e-9 min -5e-9; /* bk  */
+  plot G(I) kca3 max 10e-9 min -5e-9; /* bk  */
+  plot G(I) kca6 max 10e-9 min -5e-9; /* bk  */
+
+  plot Ca(1) 3 max 3e-6 min 0; /* */
+
+};
+
+//plot G(1) kca max 2 min -2; /* */
+//plot G(2) kca max 2 min -2; /* */
+//plot G(3) kca max 2 min -2; /* */
+//plot G(4) kca max 2 min -2; /* */
+//plot G(5) kca max 2 min -2; /* */
+//plot G(6) kca max 2 min -2; /* */
+
+
+run;

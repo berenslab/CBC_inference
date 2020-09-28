@@ -1,0 +1,63 @@
+/* amacrine dendrite with varicosities */
+/*  spatial plot */
+
+drm = 5000;
+
+nsegs = 12;
+seglen = 10;
+totlen = seglen * nsegs;
+varicos = 4;
+synap = 100;
+somadia = 8;
+midnode=7;
+arb1 = 8;
+arb2 = 12;
+
+for (i=1; i<=nsegs; i++) {
+ conn i loc(i*seglen,arb1) to i+1 cable length seglen dia 0.1; /* fine cable */
+  if (i==midnode) 
+    at i loc (i*seglen,0) sphere dia somadia		/* the soma */
+  else {
+    at i loc (i*seglen,arb1) sphere dia varicos;	/* a varicosity */
+    at   [i][synap] loc (i*seglen,arb2) sphere dia 2;
+    conn [i][synap] to [i] synapse expon 5 maxcond 5e-9 thresh -.04 vrev -.01;
+    if (i==4) stim node [i][synap] vclamp -.025 start 0 dur .01
+    else      stim node [i][synap] vclamp -.030 start 0 dur .05;  
+  };
+};
+at   [i][synap] loc (i*seglen,arb2) sphere dia 2;
+conn [i][synap] to [i] synapse expon 5 maxcond 5e-9 thresh -.04 vrev -.01;
+at i loc(i*seglen,arb1) sphere dia 5;
+
+display size 200;
+display center (50,0);
+display calibline 5;
+display matching [-1];
+if (disp&6) step .0001;
+
+if (!(disp&7)) {
+
+graph X max totlen min 0;
+graph Y max -.01 min -.07;
+graph init;
+gpen (7);                                 /* labels for graph */
+gmove (0.02,0.85);
+gtext ("Volts");
+gmove (0.45,0.01);
+gtext ("microns");
+
+
+graph pen (2);
+stepsiz=.001;
+for (t=0; t<.02; t+=stepsiz) {
+   step stepsiz;
+   graph restart;
+   if (t>=.01) graph pen (4);
+   if (t==.01) stim node [i][synap] vclamp -.045 start .01 dur .02;
+   for (i=0; i<=nsegs; i++) {
+      graph (i*seglen, V[i+1]);     	  /* graph volts vs. distance */
+   };
+};
+};
+
+

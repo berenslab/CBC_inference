@@ -1,0 +1,52 @@
+#! /bin/csh -f
+#
+#  conversion from temporal to spatial plots
+#
+#  parameters:
+#  hzpn start stop center scale offset file
+#
+# hz284l.t: 80 x 80 array of cones
+#
+grep -v node-- hz284nf.r      | hzpn 1 23 3240 1 0   >hz284nf.pn
+grep -v node-- hz284nf.r      | hzp  1 23 3240 1 0   >hz284nf.p
+#
+grep -v node-- hz284lx.r      | hzpn 1 23 3240 1 0   >hz284lx.pn
+grep -v node-- hz284lx.r      | hzp  1 23 3240 1 0   >hz284lx.p
+#
+# the type A hz cells:
+#
+grep -v node-- hz284oa.r      | hzpn 24 29 16055 7 0.2  > hz284oa.pna
+grep -v node-- hz284ob.r      | hzpn 24 29 16055 7 0.2  > hz284ob.pna
+grep -v node-- hz284oc.r      | hzpn 24 29 16055 7 0.2  > hz284oc.pna
+grep -v node-- hz284od.r      | hzpn 24 29 16055 7 0.2  > hz284od.pna
+grep -v node-- hz284oe.r      | hzpn 24 29 16055 7 0.2  > hz284oe.pna
+grep -v node-- hz284of.r      | hzpn 24 29 16055 7 0.2  > hz284of.pna
+grep -v node-- hz284og.r      | hzpn 24 29 16055 7 0.2  > hz284og.pna
+grep -v node-- hz284oh.r      | hzpn 24 29 16055 7 0.2  > hz284oh.pna
+#
+grep -v node-- hz284oa.r      | hzp 24 29 16055 7 0.2  > hz284oa.pa
+grep -v node-- hz284ob.r      | hzp 24 29 16055 7 0.2  > hz284ob.pa
+grep -v node-- hz284oc.r      | hzp 24 29 16055 7 0.2  > hz284oc.pa
+grep -v node-- hz284od.r      | hzp 24 29 16055 7 0.2  > hz284od.pa
+grep -v node-- hz284oe.r      | hzp 24 29 16055 7 0.2  > hz284oe.pa
+grep -v node-- hz284of.r      | hzp 24 29 16055 7 0.2  > hz284of.pa
+grep -v node-- hz284og.r      | hzp 24 29 16055 7 0.2  > hz284og.pa
+grep -v node-- hz284oh.r      | hzp 24 29 16055 7 0.2  > hz284oh.pa
+#
+# the type B hz cells:
+#
+grep -v node-- hz284na.r      | hzpn 35 43 15171 3.5 0  >hz284na.pnb
+grep -v node-- hz284nb.r      | hzpn 35 43 15171 3.5 0  >hz284nb.pnb
+grep -v node-- hz284nc.r      | hzpn 35 43 15171 3.5 0  >hz284nc.pnb
+grep -v node-- hz284nd.r      | hzpn 35 43 15171 3.5 0  >hz284nd.pnb
+grep -v node-- hz284ne.r      | hzpn 35 43 15171 3.5 0  >hz284ne.pnb
+grep -v node-- hz284nf.r      | hzpn 35 43 15171 3.5 0  >hz284nf.pnb
+grep -v node-- hz284ng.r      | hzpn 35 43 15171 3.5 0  >hz284ng.pnb
+#
+grep -v node-- hz284na.r      | hzp 35 43 15171 3.5 0  >hz284na.pb
+grep -v node-- hz284nb.r      | hzp 35 43 15171 3.5 0  >hz284nb.pb
+grep -v node-- hz284nc.r      | hzp 35 43 15171 3.5 0  >hz284nc.pb
+grep -v node-- hz284nd.r      | hzp 35 43 15171 3.5 0  >hz284nd.pb
+grep -v node-- hz284ne.r      | hzp 35 43 15171 3.5 0  >hz284ne.pb
+grep -v node-- hz284nf.r      | hzp 35 43 15171 3.5 0  >hz284nf.pb
+grep -v node-- hz284ng.r      | hzp 35 43 15171 3.5 0  >hz284ng.pb

@@ -1,0 +1,47 @@
+   /* horizontal cell dendrite, with spine and soma. */
+      
+   drm = 5000;
+
+   pre = 100;                           /* convenient node definitions */
+   spine1 = 10;
+   spine2 = 20;
+
+   numsegs = 4;                         /* number of segments */
+   seglen = 60;                         /* lengths of segments */ 
+   spinelen = 5;
+   totlen = numsegs * seglen + 2 * spinelen;
+   soma = 5;                            /* soma is connected to node 5 */ 
+
+   at pre sphere dia 1;
+   conn pre to spine1 synapse expon 5 thresh -.05 maxcond 2e-9;
+
+   conn spine1 to 1 cable length spinelen dia 0.1;
+   conn spine2 to 5 cable length spinelen dia 0.1;
+
+   for (i=1; i<=numsegs; i++)
+        conn i to i+1 cable length seglen dia 1;
+
+   at soma sphere dia 30;
+
+   stim node pre vclamp -.01 start 0 dur .01;
+
+   step .01;                                 /* run model for 10 msec */
+
+   graph X max totlen min 0;                 /* commands to scale graph */
+   graph Y max 0 min -.07;
+   graph init;
+
+   graph pen (12);
+   graph (0, V[spine1]);                     /* post-synaptic potential */
+   for (i=0; i<=numsegs; i++) {
+      if (i==1) graph pen (2);
+      graph (i*seglen+spinelen, V[i+1]);     /* graph volts vs. distance */
+   };
+   graph pen (1);
+   graph (totlen, V[spine2]);                /* output signal at spine 2*/    
+
+   gpen (7);                                 /* labels for graph */
+   gmove (0.02,0.85);
+   gtext ("Volts");
+   gmove (0.45,0.01);
+   gtext ("microns");

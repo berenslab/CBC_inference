@@ -1,0 +1,33 @@
+/* XPM */
+static char * tga_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"16 16 11 1",
+/* colors */
+" 	s None	c None",
+".	c LightSlateGray",
+"X	c cyan",
+"o	c black",
+"O	c DarkSlateGray",
+"+	c LightGray",
+"@	c red",
+"#	c ForestGreen",
+"$	c MediumSpringGreen",
+"%	c gainsboro",
+"&	c firebrick",
+/* pixels */
+"                ",
+"............... ",
+".XXXXXXXXXXXXX.o",
+".XXXXXXXXXXXXX.o",
+".OXXXXOXXXOXXX.o",
+".+OXXO+OXO+OXX.o",
+".++O++++++++OO.o",
+".++++@+++++#++.o",
+".+++@@@+++###+.o",
+".$$@%%%@$$#&#$.o",
+".$$.%%%.$$$&$$.o",
+".$$.%%%.$$$&$$.o",
+".$$.....$$$&$$.o",
+".$$$$$$$$$$$$$.o",
+"...............o",
+" ooooooooooooooo"};

@@ -1,0 +1,27 @@
+/* test of "plot V @ cable" statement */
+
+complam = .2;
+timinc = 1e-5;
+ploti = 1e-5;
+implicit=1;
+conn 1 loc (0,0) to 2 cable length 100 dia .1 ename nam2; /* */
+stim node 1 vclamp -.03 start 0 dur .01;
+
+plot V @ cable nam2 : 0;
+plot V @ cable nam2 :.05;
+plot V @ cable nam2 :.1;
+plot V @ cable nam2 :.125;
+plot V @ cable nam2 :.2;
+plot V @ cable nam2 :.3;
+plot V @ cable nam2 :.4;
+plot V @ cable nam2 :.5;
+plot V @ cable nam2 :.6;
+plot V @ cable nam2 :.7;
+plot V @ cable nam2 :.8;
+plot V @ cable nam2 :.90;
+plot V @ cable nam2 :.99;
+plot V @ cable nam2 : 1;
+plot V [2];
+endexp = .001;
+run;
+

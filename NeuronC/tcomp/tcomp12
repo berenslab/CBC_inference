@@ -1,0 +1,27 @@
+/* tcomp12 test of synapse onto horiz cell */
+
+
+plmax = -.03;
+plmin = -.08;
+endexp = .05;
+
+at 1 sphere dia 5;
+conn 1 to 2 cable length 50 dia 1.5 rm 5000;
+at 2 sphere dia 5;
+
+conn 2 to 3 synapse linear 1 thresh -.06 timec1 1.5;
+
+/*
+conn 3 to 2 synapse linear 1 thresh -.06 timec1 1.5;
+*/
+
+conn 3 to 5 cable length 10 dia .1;
+conn 5 to 6 cable length 10 dia .5;
+conn 6 to 7 cable length 10 dia 2;
+at 7 sphere dia 30;
+conn 7 to 8 cable length 50 dia 5;
+
+stim node 1 cclamp 1e-11 start .002 dur .02; 
+stim node 5 cclamp 1e-10 start 0 dur .03;
+plot V[6],V[5],V[3],V[2],V[1];
+run;

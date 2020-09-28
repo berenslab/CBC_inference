@@ -1,0 +1,27 @@
+/* test of noise in Na channel */
+
+timinc= 1e-4;
+ploti = 1e-4;
+
+Vclamp = 1;
+Cclamp = 0;
+
+drm=50000;
+
+at 1 sphere dia 10;
+
+at 1 chan Na maxcond=1e-8 chnoise=1 tau=1 unit=20e-12;
+
+if (Vclamp) {
+  stim node 1 vclamp -.07 start time dur .01;
+  stim node 1 vclamp -.04 start time+.01 dur .01;
+  plot I[1] max 5e-11 min -5e-11;
+};
+
+if (Cclamp) {
+  stim node 1 cclamp 1e-11 start .01 dur .01;
+  plot V[1] max -.04 min -.08;
+};
+
+endexp=.02;
+run;

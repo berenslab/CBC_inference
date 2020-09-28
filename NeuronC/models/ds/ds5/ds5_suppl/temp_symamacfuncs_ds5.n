@@ -1,0 +1,825 @@
+//functions for generating amacrine cells
+//last update 6-13-2003
+//branching-angles for each branchpoint: set one value for all
+
+if (notinit(am_dend_dia))  am_dend_dia = 0.5; /* dendritic cable diameter */
+if (notinit(xradius)) xradius=150;		  /* set dendrite radius */
+if (notinit(sbrangles)) sbrangles = 15;
+if (notinit(varicos)) varicos = 0; 	//default no varicosities
+
+//or set different angle for each branchpoint
+if (notinit(ang_brpt1)) ang_brpt1=sbrangles;
+if (notinit(ang_brpt2)) ang_brpt2=sbrangles;
+if (notinit(ang_brpt3)) ang_brpt3=sbrangles;
+if (notinit(ang_brpt4)) ang_brpt4=sbrangles;
+if (notinit(ang_brpt5)) ang_brpt5=sbrangles;
+
+dim arr_sbrangles[5] =
+  {{ang_brpt1,ang_brpt2,ang_brpt3,ang_brpt4,ang_brpt5}};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+//set distance between branchpoints [NOT distance of branchpoints from soma]
+if (notinit(branchdist)) branchdist = xradius/2.5; //-> 2brpts per den
+
+dim arr_branchdist[5] = {{branchdist}}; //set all distances default
+
+//allow setting of individual branchdistances by hand
+if (!notinit(branchdist1)) arr_branchdist[0] = branchdist1;
+if (!notinit(branchdist2)) arr_branchdist[1] = branchdist2;
+if (!notinit(branchdist3)) arr_branchdist[2] = branchdist3;
+if (!notinit(branchdist4)) arr_branchdist[3] = branchdist4;
+if (!notinit(branchdist5)) arr_branchdist[4] = branchdist5;
+
+//make array of branchdistances based on nr of branchpoints
+proc make_arr_branchdist(nbranchpoints)
+{
+ local i;
+
+ for(i=0;i<nbranchpoints;i++){
+   arr_branchdist[i]=arr_branchdist[i];
+ };
+
+ arr_branchdist[nbranchpoints]=xradius; //make last branchdistance very long
+};
+
+//if user specifies nbranchpoints, change branchdistances accordingly
+if (!notinit(nbranchpoints)) make_arr_branchdist(nbranchpoints)
+else make_arr_branchdist(nbranchpoints=2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+//make amacrine cell
+if (am_morph>0)
+{
+func extend_branch(brnum,obrnum,ctype,cellnum,xsoma,ysoma,sdia,nonbrlen,rad,
+                       seglen,branchthresh,growthresh)
+
+  /* Extend an existing branch on a starburst cell dendrite. */
+  /*  Includes competition between branches of same cell type. */
+
+{
+        local i, nconn,nelem;
+        local cnod, cbrnum;
+        local dx,dy;
+        local leng, dist;
+        local mdist, mdist1, mdist2, mdist3;
+        local n1a, n1b, n1c, n1d;
+        local n2a, n2b, n2c, n2d, csn, nsdia;
+
+        local slen, sangl;
+        local angl1, angl2, angl3;
+        local nsn, nsn2, nsn3;
+        local xm1, ym1, zm;
+        local xm2, ym2;
+        local xm3, ym3;
+        local xden, yden, zden, xden1,yden1;
+        local bt,bt2,gt;
+        local radfrac,radtaper,currad;
+	local newrad, newrad2, newrad3;
+	local done, pvaricos;
+
+   if (notinit(denddiataper)) denddiataper=1; //default do dend diam tapering
+
+   pvals = 0;
+   if (info>3) pvals = 1;
+   if (info>4) pvals = 2;
+   if (pvals) printf ("entering extend_branch %g %g l %g\n",
+			brnum,obrnum,nonbrlen);
+
+        /* find branches at distal end of segment */
+
+   n1a = element brnum -> node1a;	/* descendent node */
+   n1b = element brnum -> node1b;
+   n1c = element brnum -> node1c;
+   n1d = element brnum -> node1d;
+
+   n2a = element brnum -> node2a;	/* parent node */
+   n2b = element brnum -> node2b;
+   n2c = element brnum -> node2c;
+   n2d = element brnum -> node2d;
+
+   if (n2a < 0) {		/* must be sphere, copy second node */
+    n2a = element brnum -> node1a;
+    n2b = element brnum -> node1b;
+    n2c = element brnum -> node1c;
+    n2d = element brnum -> node1d;
+   };
+
+   nconn = node [n1a][n1b][n1c][n1d] -> numconn;
+   xden  = node [n1a][n1b][n1c][n1d] -> xloc;
+   yden  = node [n1a][n1b][n1c][n1d] -> yloc;
+   zden  = node [n1a][n1b][n1c][n1d] -> zloc;
+
+   xden1 = node [n2a][n2b][n2c][n2d] -> xloc;   /* location of parent node */
+   yden1 = node [n2a][n2b][n2c][n2d] -> yloc;
+
+
+   dx = xden - xden1;
+   dy = yden - yden1;
+   sangl = atanx(dx,dy) * DEG;
+
+   /* if (pvals>1) printf ("xden %g %g %g %g %g %g\n",
+                        n1c,xden1,yden1,n2c,xden1,yden1); /* */
+   csn = n1c;
+
+   if (pvals>1) printf ("tracing from node %g %g %g\n",
+                        n1a,n1b,n1c);
+   if (pvals>1) printf ("nconn %g\n",nconn);
+   if (pvals>1) printf ("sangl %g\n",sangl);
+
+        /* follow each branch to its end */
+
+   if (nconn>1) {
+     done = 1;
+     if ((nconn>=3) && (brnum!=obrnum)) nonbrlen = 0;/* reset dist from br pt */
+						     /* but skip soma */
+     for (i=1; i<=nconn; i++) {
+        nelem = node [n1a][n1b][n1c] -> i;
+        if (pvals>1) printf ("conn %g: elem %g type %s\n",
+                     i,nelem, element nelem->type);
+        if (nelem==brnum) continue;
+        if (nelem==obrnum) continue;
+        if (element nelem->ntype != ntype(cable)) continue;
+        if (pvals>1) printf ("following conn %g: elem %g\n\n", i,nelem);
+
+        leng = element nelem->length;
+        done &= extend_branch(nelem,brnum,ctype,cellnum,xsoma,ysoma,
+			sdia,nonbrlen+leng,rad,seglen,branchthresh,growthresh);
+     };
+    if (pvals)printf ("extend_branch endm done %g\n",done);
+     return done;
+   }
+   else {       /* If this is the end, add to it */
+
+
+     if (pvals>1) printf ("found the end at node %g %g %g\n", n1a,n1b,n1c);
+
+
+     slen  = rrange (0.8,1.2) * seglen;
+
+     dx = xsoma - xden;
+     dy = ysoma - yden;
+     currad = sqrt (dx*dx + dy*dy);
+     if (currad > rad) {      //*rrange(.1,1.9))  {
+       //build in some randomness in radlength
+       if (pvals)printf ("extend_branch end done %g\n",1);
+       return 1;
+     };
+
+     radfrac = currad/rad;		/* fraction of final radius */
+     radtaper = (1-radfrac)*.6 + .4; 	/* 1 - fraction of final radius */
+
+     /* try 3 locations for new tip */
+
+     dangl = 30;
+     angl1 = sangl + rrange (-1,1);
+     angl2 = angl1 + dangl;
+     angl3 = angl1 - dangl;
+
+     if (angl1 < 0) angl1 += 360;
+     if (angl2 < 0) angl2 += 360;
+     if (angl3 < 0) angl3 += 360;
+
+     xm1 = cos(angl1/DEG) * slen + xden;
+     ym1 = sin(angl1/DEG) * slen + yden;
+     zm = zden;
+     xm2 = cos(angl2/DEG) * slen + xden;
+     ym2 = sin(angl2/DEG) * slen + yden;
+     xm3 = cos(angl3/DEG) * slen + xden;
+     ym3 = sin(angl3/DEG) * slen + yden;
+
+     /* check to make sure branch doesn't curve back towards soma */
+
+     dx = xsoma - xm2;
+     dy = ysoma - ym2;
+     newrad2 = sqrt(dx*dx+dy*dy);
+     if (currad > newrad2) {
+       xm2 = xm1;
+       ym2 = ym1;
+     };
+     dx = xsoma - xm3;
+     dy = ysoma - ym3;
+     newrad3 = sqrt(dx*dx+dy*dy);
+     if (currad > newrad3) {
+       xm3 = xm1;
+       ym3 = ym1;
+     };
+     dx = xsoma - xm1;
+     dy = ysoma - ym1;
+     newrad = sqrt(dx*dx+dy*dy);
+     if (currad > newrad) {
+       if (pvals)printf ("extend_branch end done %g\n",1);
+       return 1;
+     };
+
+     nsn = ++celden[ctype][cellnum];
+     nsn2 = nsn + 1;
+     nsn3 = nsn + 2;
+     at [ctype][cellnum][nsn] loc(xm1,ym1,zm);
+     at [ctype][cellnum][nsn2] loc(xm2,ym2,zm);
+     at [ctype][cellnum][nsn3] loc(xm3,ym3,zm);
+
+     /* Check proximity of other branches of same cell. */
+
+     mdist1 = mdist2 = mdist3 = 1e10; /* now find closest dendrite */
+     cbrnum = -1;
+     foreach cable ?cbrnum node [ctype] [cellnum] ?cnod {
+       if (cbrnum==brnum) continue;             /* ignore this cable */
+       if (cbrnum==obrnum) continue;            /* ignore this cable */
+
+       if ((dist=e3dist([ctype][cellnum][nsn],cbrnum)) < mdist1) {
+           mdist1 = dist;                     /* remember this dist */
+       };
+       if ((dist=e3dist([ctype][cellnum][nsn2],cbrnum)) < mdist2) {
+           mdist2 = dist;
+       };
+       if ((dist=e3dist([ctype][cellnum][nsn3],cbrnum)) < mdist3) {
+           mdist3 = dist;
+       };
+
+ //if (pvals>1) printf ("cnod %g n1c %g dist %g\n", cnod,n1c,dist);
+     };   /* foreach cable, remember dist. */
+
+      /* find which direction is farthest away from nearest branches */
+
+      erase node [ctype][cellnum][nsn2];
+      erase node [ctype][cellnum][nsn3];
+      if (mdist1 >= mdist2 && mdist1 >= mdist3) {
+         mdist = mdist1;
+         at [ctype][cellnum][nsn] loc(xm1,ym1,zm);
+      } else if (mdist2 >= mdist1 && mdist2 >= mdist3) {
+         mdist = mdist2;
+         at [ctype][cellnum][nsn] loc(xm2,ym2,zm);
+      } else if (mdist3 > mdist1 && mdist3 > mdist2) {
+         mdist = mdist3;
+         at [ctype][cellnum][nsn] loc(xm3,ym3,zm);
+      };
+                /* Extend this branch if other branches are far enough away. */
+
+     if (pvals>1) printf ("closest branch %g\n", mdist);
+
+     gt  = growthresh * radtaper * rrange(.8,1.2);
+
+     bt  = growthresh * 2 * radtaper * rrange(.8,1.2);
+     bt2 = branchthresh * rrange(.8,1.2);
+
+     if (varicos) {			//default 0
+      pvaricos=radfrac*rrange(0,1);
+      if (pvaricos>.5) nsdia = sdia*4	 //make varicosities
+      else nsdia = sdia;
+     }
+     else if (denddiataper)		//default 1
+       nsdia = sdia * radtaper
+     else
+       nsdia = sdia;
+
+if (pvals)
+ printf ("mdist %g gt %g bt %g bt2 %g nonbrlen %g\n",mdist, gt, bt, bt2, nonbrlen);
+
+     if (mdist >= gt) {               	      /* extend dendrite */
+       if (mdist >= bt && nonbrlen > bt2) {   /* branch into 2 */
+         if (pvals>1) printf ("splitting branch into 2\n");
+         erase node [ctype][cellnum][nsn];
+         radtaper = (1-radfrac)*.5 + .5; 	/* 1 - fraction of final radius */
+         dangl = 55 * radtaper * rrange (.7,1.3);
+         angl2 = sangl + dangl;
+         angl3 = sangl - dangl;
+
+         if (angl2 < 0) angl2 += 360;
+         if (angl3 < 0) angl3 += 360;
+
+         zm = zden;
+         xm2 = cos(angl2/DEG) * slen + xden;
+         ym2 = sin(angl2/DEG) * slen + yden;
+
+         xm3 = cos(angl3/DEG) * slen + xden;
+         ym3 = sin(angl3/DEG) * slen + yden;
+         nsn2 = nsn;
+         nsn3 = ++celden[ctype][cellnum];
+         at [ctype][cellnum][nsn2] loc(xm2,ym2,zm);
+         at [ctype][cellnum][nsn3] loc(xm3,ym3,zm);
+         if (pvals>1) printf ("dividing branch from %g to %g and %g\n",
+                                       csn, nsn2,nsn3);
+         make_amseg (cellnum, nsn2, csn, nsdia, amrm, DEND);
+         make_amseg (cellnum, nsn3, csn, nsdia, amrm, DEND);
+       }
+       else {                                 /* straight */
+
+         if (pvals>1) printf ("extending branch from %g to %g\n", csn, nsn);
+         make_amseg (cellnum, nsn, csn, nsdia, amrm, DEND);
+       };         /* mdist >= growthresh */
+    }
+    else {
+       erase node [ctype][cellnum][nsn];
+       if (pvals) printf ("branch too close, stopping\n");
+       if (pvals) printf ("extend_branch end done %g\n",0);
+       return 1;
+    };
+
+   };   /* add onto the end */
+   if (pvals)printf ("extend_branch end done %g\n",0);
+   return 0;
+};
+
+func extend_branch2(brnum,obrnum,ctype,cellnum,xsoma,ysoma,sdia,nonbrlen,rad,
+                       seglen,branchthresh,growthresh,nbranchpts)
+
+  /* Extend an existing branch on a starburst cell dendrite. */
+  /*  Includes competition between branches of same cell type. */
+
+{
+        local i, nconn,nelem;
+        local cnod, cbrnum;
+        local dx,dy;
+        local leng, dist;
+        local mdist1, mdist2, mdist3;
+        local n1a, n1b, n1c, n1d;
+        local n2a, n2b, n2c, n2d, csn, nsdia;
+
+        local slen, sangl;
+        local angl1, angl2, angl3;
+        local nsn, nsn2, nsn3;
+        local xm1, ym1, zm;
+        local xm2, ym2;
+        local xm3, ym3;
+        local xden, yden, zden, xden1,yden1;
+        local bt,bt2,gt;
+        local radfrac,radtaper,currad;
+	local newrad, newrad2, newrad3;
+	local done;
+
+   if (notinit(denddiataper)) denddiataper=0; //default no dend diam tapering
+
+   pvals = 0;
+   if (info>3) pvals = 1;
+   if (info>4) pvals = 2;
+   if (pvals) printf ("entering extend_branch2 %g %g l %g %g\n",
+			brnum,obrnum,nonbrlen,nbranchpts);
+
+   /* find branches at distal end of segment */
+
+   n1a = element brnum -> node1a;	/* descendent node */
+   n1b = element brnum -> node1b;
+   n1c = element brnum -> node1c;
+   n1d = element brnum -> node1d;
+
+   n2a = element brnum -> node2a;	/* parent node */
+   n2b = element brnum -> node2b;
+   n2c = element brnum -> node2c;
+   n2d = element brnum -> node2d;
+
+   if (n2a < 0) {		/* must be sphere, copy second node */
+    n2a = element brnum -> node1a;
+    n2b = element brnum -> node1b;
+    n2c = element brnum -> node1c;
+    n2d = element brnum -> node1d;
+   };
+
+   nconn = node [n1a][n1b][n1c][n1d] -> numconn;	//nr of conns from n1
+   xden  = node [n1a][n1b][n1c][n1d] -> xloc;
+   yden  = node [n1a][n1b][n1c][n1d] -> yloc;
+   zden  = node [n1a][n1b][n1c][n1d] -> zloc;
+
+   xden1 = node [n2a][n2b][n2c][n2d] -> xloc;   /* location of parent node */
+   yden1 = node [n2a][n2b][n2c][n2d] -> yloc;
+
+
+   dx = xden - xden1;		//x-distance from n1 to n2
+   dy = yden - yden1;		//y-distance from n1 to n2
+   sangl = atanx(dx,dy) * DEG;	//angle with respect to x-axis between n1 and n2
+
+   csn = n1c;
+
+   if (pvals>1) printf ("tracing from node %g %g %g\n",
+                        n1a,n1b,n1c);
+   if (pvals>1) printf ("nconn %g\n",nconn);
+   if (pvals>1) printf ("sangl %g\n",sangl);
+
+        /* follow each branch to its end */
+
+   if (nconn>1) {	//if n1 has >1 connection (ie >1 parents)
+     done = 1;
+     if ((nconn>=3) && (brnum!=obrnum)){
+       nonbrlen = 0;/* reset dist from br pt */
+       nbranchpts++;
+     };
+						     /* but skip soma */
+     for (i=1; i<=nconn; i++) {
+        nelem = node [n1a][n1b][n1c] -> i;
+        if (pvals>1) printf ("conn %g: elem %g type %s\n",
+                     i,nelem, element nelem->type);
+        if (nelem==brnum) continue;
+        if (nelem==obrnum) continue;
+        if (element nelem->ntype != ntype(cable)) continue;
+        if (pvals>1) printf ("following conn %g: elem %g\n\n", i,nelem);
+
+        leng = element nelem->length;
+        done &= extend_branch2(nelem,brnum,ctype,cellnum,xsoma,ysoma,
+			sdia,nonbrlen+leng,rad,seglen,branchthresh,growthresh,nbranchpts);
+     };
+    if (pvals)printf ("extend_branch2 endm done %g\n",done);
+     return done;
+   }
+   else {       /* If this is the end, add to it */
+
+
+     if (pvals>1) printf ("found the end at node %g %g %g\n", n1a,n1b,n1c);
+
+     slen  =  seglen;
+
+     dx = xsoma - xden;		//x-distance of n1 to soma
+     dy = ysoma - yden;		//y-distance of n1 to soma
+     currad = sqrt (dx*dx + dy*dy);	//distance of n1 to soma (current radius)
+     if (currad > rad)  {	//if desired final radius < current radius, stop
+       if (pvals)printf ("extend_branch2 end done %g\n",1);
+       return 1;
+     };
+
+     radfrac = currad/rad;		/* current fraction of desired final radius */
+     radtaper = (1-radfrac)*.6 + .4; 	/* 1 - fraction of final radius */
+
+
+     /* make new tip */
+
+     angl1 = sangl;
+     if (angl1 < 0) angl1 += 360;
+
+     xm1 = cos(angl1/DEG) * slen + xden;
+     ym1 = sin(angl1/DEG) * slen + yden;
+     zm = zden;
+
+     nsn = ++celden[ctype][cellnum];
+
+     at [ctype][cellnum][nsn] loc(xm1,ym1,zm);
+
+     /* Extend this branch if other branches are far enough away. */
+
+     if (pvals>1) printf ("closest branch %g\n", mdist);
+
+     gt  = growthresh * radtaper ;
+     bt  = growthresh * 2 * radtaper ;
+     bt2 = arr_branchdist[nbranchpts] ;
+     if (denddiataper)
+       nsdia = sdia * radtaper
+     else
+       nsdia = sdia;
+
+     //for now, mdist is set to some large value so always mdist>gt,bt
+     mdist = 1000;
+
+     if (mdist >= gt) {               	      /* extend dendrite */
+       if (mdist >= bt && nonbrlen > bt2) {   /* branch into 2 */
+         if (pvals>1) printf ("splitting branch into 2\n");
+         erase node [ctype][cellnum][nsn];
+         radtaper = (1-radfrac)*.5 + .5; 	/* 1 - fraction of final radius */
+         dangl = arr_sbrangles[nbranchpts];	  //arr hold angles for every branchpoint
+         angl2 = sangl + dangl;
+         angl3 = sangl - dangl;
+
+         if (angl2 < 0) angl2 += 360;
+         if (angl3 < 0) angl3 += 360;
+
+         zm = zden;
+         xm2 = cos(angl2/DEG) * slen + xden;
+         ym2 = sin(angl2/DEG) * slen + yden;
+
+         xm3 = cos(angl3/DEG) * slen + xden;
+         ym3 = sin(angl3/DEG) * slen + yden;
+         nsn2 = nsn;
+         nsn3 = ++celden[ctype][cellnum];
+         at [ctype][cellnum][nsn2] loc(xm2,ym2,zm);
+         at [ctype][cellnum][nsn3] loc(xm3,ym3,zm);
+         if (pvals>1) printf ("dividing branch from %g to %g and %g\n",
+                                       csn, nsn2,nsn3);
+         make_amseg (cellnum, nsn2, csn, nsdia, amrm, DEND);
+         make_amseg (cellnum, nsn3, csn, nsdia, amrm, DEND);
+       }
+       else {                                 /* straight */
+
+         if (pvals>1) printf ("extending branch from %g to %g\n", csn, nsn);
+         make_amseg (cellnum, nsn, csn, nsdia, amrm, DEND);
+       };         /* mdist >= growthresh */
+    }
+    else {
+       erase node [ctype][cellnum][nsn];
+       if (pvals) printf ("branch too close, stopping\n");
+       if (pvals) printf ("extend_branch2 end done %g\n",0);
+       return 1;
+    };
+
+   };	/* add onto the end */
+   if (pvals)printf ("extend_branch2 end done %g\n",0);
+   return 0;
+
+};
+
+};	//if (am_morph)
+
+if (make_am)
+{				/* make amacrine cells */
+
+  //rotate the cell with "amtheta"
+  if (notinit(am_dend)) am_dend = 1;          /* sets which amac dendrite */
+  if (amacfile=="sbac3" && notinit(amtheta))
+     amtheta = 0;
+  if (notinit(amtheta)) amtheta = PI;  /* rot to make am dend = 0 deg*/
+
+  if (am_morph>0)
+  {
+    if (notinit(am_den_seg))   am_den_seg  = 10;  /* number of segs/branch */
+    if (notinit(am_seglen))      am_seglen = 10;   /* length of segment */
+    if (notinit(am_nden))           am_nden = 5;   /* number of primary dendrites*/
+
+/* -     -     -     -     -     -     -     -     -    */
+
+   proc makamacs(cellnum,x,y,z,t,nbr)	//generate straight dens
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+     local d, dbr, dt, i, r, u;
+     local amdia, amregion, amdia_fac, rmrange;
+
+    at [am][cellnum][soma] loc (x,y,z);
+    make_amseg(cellnum, soma, soma, amdia=8, amsomrm, amregion=SOMA);
+
+    dt = 2 * PI / nbr;
+
+    for (d=1; d<=am_den_seg; d++) {
+
+      r = d * am_seglen;                /* extend branches one varicosity  */
+                                        /* at a time */
+
+      for (i=0; i<nbr; i++) {           /* make "nbr" branches */
+         dbr = d + i*am_den_seg;
+         u = t + i*dt;
+         at [am][cellnum][dbr] loc (x+r*cos(u),y+r*sin(u),z);
+         //make_amseg(cellnum, dbr, dbr, amdia=2, amrm, amregion=VARICOS);
+
+	 if (d<3) amdia_fac=2
+	 else amdia_fac=1;
+	 //rmrange=10000;		//the range over which rm changes along the den
+         //amsegrm=sigm(0,am_den_seg,amsomrm,rmrange,d); //vary rm sigmoidally
+	 amsegrm=amrm;
+	 if (d==1) { /* connect varicosities with thin cable */
+           make_amseg(cellnum, dbr, soma, amdia=am_dend_dia*amdia_fac, amsegrm, amregion=DEND);
+         }
+         else {
+           make_amseg(cellnum, dbr, dbr-1, amdia=am_dend_dia*amdia_fac, amsegrm, amregion=DEND);
+         };
+      };
+    };
+    n_amseg = am_den_seg * nbr ;
+  };    /* proc makamacs() */
+
+/* -     -     -     -     -     -     -     -     -    */
+
+   proc makamacx(cellnum,x,y,z,t,nbr)
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+   /* Split branch whenever growing tip is farther than a threshold distance
+      from nearest node in the cell.  Tip grows in direction farthest away
+      from nearest node in the cell.
+   */
+
+    local d, dbr, dt, i, r, u, ut, ta;
+    local amdia, amsomdia, amregion;
+    local soma_elnum, nonbrlen, rad, sdia;
+    local branchthresh, growthresh, seglen;
+    local dim randa[nbr];
+
+    if (notinit(denddiataper)) denddiataper=1; //default do dend diam tapering
+    amsomdia = 10;	//soma diameter
+
+    at [am][cellnum][soma] loc (x,y,z);
+    make_amseg(cellnum, soma, soma, amdia=amsomdia, amsomrm, amregion=SOMA);
+
+    /* start the dendritic branches */
+    dt = 2 * PI / nbr;
+    r = am_seglen;
+    dbr = 1;			  /* dendrite node number */
+    for (ut=i=0; i<nbr; i++) {    /* get "nbr" random numbers */
+      u = rrange(.6,1.4);
+      randa[i] = u;
+      ut += u;
+    };
+    for (i=0; i<nbr; i++) {       /* normalize to total of 1 */
+      randa[i] *= nbr/ut;
+    };
+    for (ta=t+amtheta,i=0; i<nbr; i++) {       /* start "nbr" branches */
+       ta += dt * randa[i];	//total angle
+       at [am][cellnum][dbr] loc (x+r*cos(ta),y+r*sin(ta),z);
+       make_amseg(cellnum, dbr, soma, amdia=am_dend_dia*2, amrm, amregion=DEND);
+       dbr++;
+       celden[am][cellnum]++;
+    };
+
+    /* grow the dendritic branches */
+
+    soma_elnum = node [am][cellnum][soma]->1;
+
+    for (done=i=0; i<35 && !done; i++) {
+      varbt = (xradius/4.5) - (1.05^i);
+      done=extend_branch(soma_elnum,soma_elnum,am,cellnum,x,y, sdia=am_dend_dia,
+		nonbrlen=25, rad=xradius,seglen=4,branchthresh=varbt, growthresh=7);
+    };
+    n_amseg = celden[am][cellnum];
+
+    if (notinit(makeamacfile)) makeamacfile=0;
+    if (makeamacfile==1) {
+      makanatfile (am,cellnum);
+      exit;
+    };
+   };    /* proc makamacx() */
+
+   /* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+
+   proc makamacc(cellnum,x,y,z,t,nbr)
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+   /* Make nonrandom symmetric cell, according to user specifications
+   */
+
+    local d, dbr, dt, i, r, u, ut, ta;
+    local amdia, amregion;
+    local soma_elnum, nonbrlen, rad, sdia;
+    local branchthresh, growthresh, seglen;
+    local dim randa[nbr];
+
+    at [am][cellnum][soma] loc (x,y,z);
+
+    if (notinit(nonrand)) nonrand = 1;	//make default nonrandom
+    if (notinit(denddiataper)) denddiataper=0; //default no dend diam tapering
+
+    make_amseg(cellnum, soma, soma, amdia=8, amsomrm, amregion=SOMA);
+
+    /* start the dendritic branches */
+    if (nbr==1 && nbranchpoints==1 && branchdist==0){
+     /* Special case: make 2 straight cables from soma */
+       dt=sbrangles/DEG;
+       arr_branchdist[0]=xradius*2; //make cable without branchpoints
+       nbr=2;	             //make 2 cables
+       amtheta=amtheta-.5;
+       }
+    else dt = 2 * PI / nbr;
+    r = am_seglen;
+    dbr = 1;			  /* dendrite node number */
+    for (ut=i=0; i<nbr; i++) {    /* get "nbr" random numbers */
+      u = rrange(.6,1.4);
+      randa[i] = u;
+      ut += u;
+    };
+    for (i=0; i<nbr; i++) {       /* normalize to total of 1 */
+      randa[i] *= nbr/ut;
+    };
+
+    for (ta=t+amtheta,i=0; i<nbr; i++) {       /* start "nbr" branches */
+       ta += dt * randa[i];	//total angle
+       at [am][cellnum][dbr] loc (x+r*cos(ta),y+r*sin(ta),z);
+       make_amseg(cellnum, dbr, soma, amdia=am_dend_dia*2, amrm, amregion=DEND);
+       dbr++;
+       celden[am][cellnum]++;
+    };
+
+    /* grow the dendritic branches */
+
+    soma_elnum = node [am][cellnum][soma]->1;
+
+    for (done=i=0; i<35 && !done; i++) {
+      done=extend_branch2(soma_elnum,soma_elnum,am,cellnum,x,y, sdia=am_dend_dia,
+		nonbrlen=25, rad=xradius,seglen=6,branchthresh=branchdist, growthresh=7,nbranchpts=0);
+    };
+
+    n_amseg = celden[am][cellnum];
+
+  };    /* proc makamacc() */
+
+ }  /* am_morph */
+
+/* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+
+ else {		/* realistic amacrine morphology */
+
+   if (notinit(amdia))   amdia   = .5;     /* diameter of sb dendrites in file */
+
+   fread (amacfile, amcabldata, amlines, amcols);      /* read anatomy file */
+
+/* -    -    -    -    -    -    -    -    -    -    -   */
+
+   /* Here make just one of the dendrites, set by "am_dend"
+      and rotate it with "amtheta". Then rotate it
+      randomly within a small range to give some randomness.  The dendrites
+      are labeled by the "dendn" column in the anatomy file.  To set the
+      dendrite number this way is a little arbitrary since a "dendrite"
+      invariably branches.  */
+
+   /* orig combination for sbac3 anatomy -- am_dend=3,amtheta=-40*PI/180 */
+
+  /* Allow the user to change the diameter of the dendrites in a
+     convenient way.  The diameter of dendrites can be specified with a
+     number or with the the "amdia" variable in the anatomy file (e.g.
+     sb1).  This variable sets the value of the diameter that is
+     stored in the "cabldata" array for use by the script.
+
+     The factor "am_dia_factor" multiplies all the dendrites, whether
+     they were set as constants or by the "amdia" variable.
+
+     The factor "am_dia_prox_factor" multiplies only the dendrites
+     within the radius specified by "am_dia_prox_rad".  This is to
+     allow the primary dendrites to be a little larger as originally
+     described by Tauchi & Masland (1984). */
+
+  if (notinit(am_dia_prox_rad)) am_dia_prox_rad = 25; /* radius for prox dia */
+  if (notinit(am_dia_prox_factor)) am_dia_prox_factor = 2; /* dia factor */
+
+   proc makamacr(cellnum,x,y,z,t,nbr)
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+      local i, n, r, ax, ay, az, dx, dy, dt, dia_prox_factor;
+
+   for (i=0; i<amlines; i++)
+   {              /* locate the nodes first */
+
+      /* If "am_dend" is set non-negative, */
+      /*  allow constructing only a single dendrite */
+      if (amcols>DENDN)
+      {
+        dend = amcabldata[i][DENDN];
+        if ((am_dend>=0) && (dend > soma) && (dend!=am_dend)) continue;
+      };
+
+      n =  amcabldata[i][NODE];		/* node number of segment */
+      ax = amcabldata[i][AX];		/* assume soma at (0,0) */
+      ay = amcabldata[i][AY];
+      az = amcabldata[i][AZ];
+
+      r = sqrt(ax*ax + ay*ay);
+      dt = t + amtheta;
+      dx = ax * cos(dt) + ay * sin(dt);
+      dy = ax * sin(dt) - ay * cos(dt);
+
+      at [am][cellnum][n]               /* locate the nodes */
+              loc(x+dx, y+dy, z+az);
+
+      /* set additional dia factor */
+       /* but only for sb1 for now */
+
+      if (i>0 && r < am_dia_prox_rad && amacfile=="sb1")
+      {
+         dia_prox_factor = am_dia_prox_factor;
+      }
+      else dia_prox_factor = 1;
+
+      /* make the dendritic tree and axon */
+      make_amseg (cellnum, n, amcabldata[i][PAR],
+                   amcabldata[i][DIA] * dia_prox_factor, amrm,
+                   amcabldata[i][REG]);
+   };
+
+   n_amseg = amlines + 100;	/* make room for missed node numbers */
+  };
+ };  /* if !am_morph */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+   /* Make only enough amacrine cells to fill GC's dendritic field */
+
+   if (notinit(am_nn))  am_nn = 20;
+
+   n_am = gausnn (amarr, center (xcent,ycent), size (xsize,ysize),
+		nnd=am_nn, reg=5, rsd=431, ginfo=info);
+   n_am = 1;
+   if (info>=2) {
+     printf ("# number of amacrine cells %g\n",n_am);
+   };
+
+   ds_orientr = ds_orient * PI / 180;   /* convert from degrees to radians */
+   ds_odtr    = ds_odt    * PI / 180 * 0.5;
+
+   if (notinit(am_nden)) am_nden = 5;
+   if (am_nden < 0) am_nden = 0;
+
+   for (i=0; i<n_am; i++) {
+        local amx,amy,amt,amd;
+
+      /* make random amacrine array */
+
+      amx = amarr[i][0];		/* make random offset */
+      amy = amarr[i][1];
+      if (n_am==1) amt=0		//for 1 cell, no randomness
+      else
+      amt = rrange(ds_orientr-ds_odtr, ds_orientr+ds_odtr); /* make rand theta */
+
+      amd = am_nden;
+      if (i>1) amd = rrange(am_nden*.7, am_nden*1.5);
+
+      if      (am_morph==1) makamacs(i+1,amx,amy,am_zloc,amt,amd)
+      else if (am_morph==2) makamacx(i+1,amx,amy,am_zloc,amt,amd)
+      else if (am_morph==3) makamacc(i+1,amx,amy,am_zloc,amt,amd)
+      else                   makamacr(i+1,amx,amy,am_zloc,amt,amd);
+
+   };
+};    /* make_am */

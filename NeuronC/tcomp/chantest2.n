@@ -1,0 +1,49 @@
+/* Display of states in Na channel during spike */
+/* with and without noise */
+
+timinc = 1e-4;
+ploti=1e-4;
+tempcel = 25;
+implicit=0;
+crit=1e-10;
+rseed = 12443;
+
+nchan=50;
+nchan=0;
+
+x = setvar();
+
+drm=40000;
+
+at 1 sphere dia  20 vrest -.075;
+
+at 1 chan Na type 1 density 200e-3 chnoise=1 N=nchan ename nass;
+at 1 chan K  type 1 density 50e-3 ename kss;  
+at 1 chan K  type 2 density 50e-3 k1 5e-7 ename kca;
+at 1 chan K  type 3 density 36e-3 ename ka; 
+
+
+at 1 chan Ca type 0 density 10e-3 
+	   chnoise=1 N=0 
+	   capump vmax 10e-4 
+	   caexch cbound 1 
+           ename cachan;
+/* */
+
+plmax = .04;
+plmin = -.08;
+
+plot V[1];
+plot G0 nass max 2e-7 min 0; /* */
+plot G0 kss max 2e-7 min 0; /* */
+plot G0 kca max 2e-7 min 0; /* */
+plot G0 ka  max 2e-8 min 0; /* */
+plot G0 cachan  max 2e-8 min 0; /* */
+
+stimtime = .0002;
+stimdur = .1;
+
+stim node 1 cclamp 2e-10 start stimtime dur stimdur; /**/
+
+endexp=.1;
+run;

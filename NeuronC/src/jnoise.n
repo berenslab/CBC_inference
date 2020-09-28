@@ -1,0 +1,38 @@
+/*  jnoise.n  test of Johnson noise */
+
+timinc=1e-5;
+ploti =1e-5;
+endexp=.002;
+tempcel=15;
+rseed = 12318;
+
+djnoise=0;		/* if > 0, this turns on Johnson noise */
+drm=10000;
+
+x = setvar();
+
+vc= -.00;
+
+r=1119;
+jr=8;
+
+at 1 sphere dia .5 vrest=-.07 vrev=vc vrest=-.07 jnoise 1e-10 rsd=jr;
+
+at 2 sphere dia .5 vrest=-.07 vrev=vc vrest=-.07 jnoise 1e-10 rsd=jr;
+
+//conn 1 to 2 cable length 100 dia .5 vrest=-.07 vrev=vc;
+
+at 1 chan Na type 1 ndensity 1 chnoise=1 rsd=r;
+at 2 chan Na type 1 ndensity 1 chnoise=1 rsd=r ename naxx;
+
+stim node 1 vclamp=vc start 0 dur 1;
+stim node 2 vclamp=vc start 0 dur 1;
+
+
+plot I [1] max 0 min -2e-12 filt [1.6e-5, 1.2e-5];
+plot I [2] max 0 min -2e-12;
+
+//plot V [1] max -.069 min -.071;
+//plot V [2] max -.069 min -.071;
+
+run;

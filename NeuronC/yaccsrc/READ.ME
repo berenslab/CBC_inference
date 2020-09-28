@@ -1,0 +1,26 @@
+
+  This version of "yacc" source code is from an old BSD
+version of UNIX.  It is included with this distribution
+because the version of yacc found on some machines
+does not have enough space to define all the symbols 
+required for the ".y" files used.
+
+  The "dextern" file defines for the C compiler how large
+the arrays are for the inner workings of "yacc".
+These set the definitions to the minimum necessary 
+to compile the ".y" file.  From time to time, whenever
+more statements are added to the ".y" file,  these definitions
+must be increased to allow space inside yacc for more symbols.
+
+  This version of yacc requires its own "yaccpar" which
+normally exists on most UNIX systems in "/usr/lib".  The
+"yaccpar" for the yacc in this directory exists in the
+subdirectory "./lib" directory.  If you don't want to
+change the /usr/lib/yaccpar file, you can change the
+pathname for "yaccpar" in the "./files" file before you
+make yacc. 
+
+  Instead of yacc you can also use "bison" (a yacc-like
+compiler-compiler) available from "GNU" Software.  
+"bison" runs faster than yacc but is otherwise similar.
+

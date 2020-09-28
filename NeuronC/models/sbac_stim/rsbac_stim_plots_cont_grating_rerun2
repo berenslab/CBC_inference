@@ -1,0 +1,128 @@
+#! /usr/bin/perl
+#
+#
+#  run variable contrast with/without inhibition
+#
+@inhvals = (0, 1);
+$inhnum = $#inhvals + 1;
+# $ristart = 200;
+# $ristop  = 800;
+# $ristep  = 100;
+
+# @sbspacvals = (115,135,155);
+@sbspacvals = (135,155);
+$sbspacnum = $#sbspacvals + 1;
+
+# @sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+# 167,171,113
+@sbcondvals = (1,1,1);  # weights for sbac inhibition according to num of synapses
+$sbcondnum = $#sbcondvals + 1;
+
+# @barvals = (70,150,300);  # bar length
+@barvals = (70,300);  # bar length
+$barnum = $#barvals + 1;
+
+@contvals = (0.0030, 0.0035, 0.0040, 0.0045, 0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080, 0.0085, 0.0090, 0.0095, 0.0100);
+$contnum = $#contvals + 1;
+# $nastart = 600;
+# $nastop  = 2000;
+# $nastep  = 100;
+
+$relangle = 360;
+# $sdia = 0.22;
+# $sdia = 0.3;
+$sdia = 0.27;
+$spdia = 0.5;
+$noinh = 0;
+$sbarr = 107;
+$sbspac = 155;
+$barlength = 70;
+$barwidth = 30;
+$cadist = 2.2e-3;
+$nadist = 0e-3;
+$velocity = 2000;
+$stimtype = 5;
+# $wac_g = 8e-10;
+$wac_g = 0;
+$minten = -0.034;
+$cont_mult = 15;
+$ncycles = 5;
+$nsb = 7;
+
+$predur = 0.25;
+$synanpo = 90;
+$synanpov = $synanpo;
+
+# $dbp1_cond = 5e-10;
+# $dbp1_cond = 3e-10;
+$dbp1_cond = 2.3e-10;
+# $sb_inhib  = $sbac_inhib= 100;
+$sb_inhib = $sbac_inhib = 80;
+$wac_g = 0;
+$wacg = sprintf("%3.1f",$wac_g*1e10);
+
+# $mosrun = "mosrun -l -b -g";
+$mosrun = "";
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f"  => \$relangle,
+             "nsb=f"       => \$nsb,
+             "sdia=f"      => \$sdia,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "barwidth=f"  => \$barwidth,
+	     "cadist=f"    => \$cadist,
+	     "synanpo=f"   => \$synanpo,
+	     "dbp1_cond=f" => \$dbp1_cond,
+	     "sb_inh=f"  => \$sb_inhib
+	    );
+
+
+sub rerun_grating
+{
+      $contval  = $_[0];
+        $sb_inh = $_[1];
+      $barwidth = $_[2];
+      $sbspacx  = $_[3];
+    $barlength  = $_[4];
+     $stimtype  = $_[5];
+           $ca = $_[6];
+           $na = $_[7];
+
+          $cont = sprintf("%6.4f",$contval);
+        $sbspac = sprintf("%.3d",$sbspacx);
+       $synanpo = sprintf("%.3d",$synanpov);
+            $sd = sprintf("%4.2f",$sdia);
+           $vel = $velocity;
+     $sb_inhib  = sprintf("%g",$sb_inh*1e-12);
+       $cadist  = sprintf("%g",$cad*1e-3);
+       $nadist  = sprintf("%g",$nad*1e-3);
+           $cad = sprintf("%3.1f",$ca);
+           $nad = sprintf("%3.1f",$na);
+
+     system ("echo nsb $nsb relangle $relangle contrast $cont inh $sb_inh barwidth $barwidth sbspac $sbspac barlength $barlength stimtype $stimtype cadist $cadist nadist $nadist synanpo $synanpov sdia $sd wac_g $wacg");
+
+     system ("$mosrun retsim --runbar2 1 --expt sbac_stim --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --sbac_densfile2 dens_sbacd.n --sb_rm 1e4 --sbarr $sbarr --sbspac $sbspac --sb_vs -0.049 --sb_vr -0.060 --radincr 20 --soma_z -50 --sbac_thetax 4 --sbac_thetay 4 --predur $predur --vhold -0.06 --minten $minten --scontrast $cont --outward 0 --iscal 2e-9 --dri 100 --ninfo 2 --set_vclamp 0 --sdia $sd --spdia $spdia --dSomaDia 10 --sbac_dend1 1 --sbac_dend_cplam 0.1 --stimtype $stimtype --ncycles $ncycles --barwidth $barwidth --barlength $barlength --velocity $vel --waveshape 0 --stimdur 0.5 --nadist $nadist --namid $nadist --kdist 2e-3 --kmid 2e-3 --kprox 2e-3 --ksoma 3e-3 --cadist $cadist --camid $cadist --plotlabel sb$nsb.midbp.$relangle.$cont.$sb_inh.$barwidth.$sbspac.$stimtype.$cad.$nad.$synanpov.$sd.$wacg -r 12346 --n_hpb1 0 --dbp1_cond $dbp1_cond --dbp1_nscale -2.1 --sbac_nscale -3.05 --sbaclm 0.1 --no_excit 1 --set_inhib $sb_inhib --no_inhib $noinh --wac_g $wac_g --sbac_isynanpo 60 --sbac_isynrngi -1$relangle --sbac_isynanni 80 --dbp1_anpi 20 --dbp1_anpo $synanpov --sbac_ithr -0.051 --stim_theta 0 --mxrot 0 --make_movie 0 --space_time 1 --frame_int 0.0002 --Vmin -0.06 --Vmax -0.045 >& sbac$nsb.midbp_ca.$relangle.$cont.$sb_inh.$barwidth.$sbspac.$barlength.$stimtype.$cad.$nad.$sd.$wacg.r &");
+     sleep(4);
+}
+
+# sbac$nsb.midbp_ca.$relangle.$cont.$sb_inh.$barwidth.$sbspac.$barlength.$stimtype.$cad.$nad.$sd.$wacg.r &");
+
+# sbac7.midbp_ca.360.0.0750.0.90.155.70.5.2.2.0.5.0.27.0.0.r
+#      &rerun_grating(0.0750,0,90,155,70,5,2.2,0.5);
+#
+# sbac7.midbp_ca.360.0.0750.160.240.155.300.5.2.2.0.5.0.27.0.0.r
+      &rerun_grating(0.0750,160,240,155,300,5,2.2,0.5);
+
+# sbac7.midbp_ca.360.0.1050.160.240.155.300.5.0.0.0.0.0.27.0.0.r
+      &rerun_grating(0.1050,160,240,155,300,5,0.01,0.0);
+
+# sbac7.midbp_ca.360.0.1125.160.240.155.300.5.2.2.0.5.0.27.0.0.r
+      &rerun_grating(0.1125,160,240,155,300,5,2.2,0.5);
+
+# sbac7.midbp_ca.360.0.1125.160.90.155.300.5.0.0.0.5.0.27.0.0.r
+      &rerun_grating(0.1125,160,90,155,300,5,0.01,0.5);
+
+

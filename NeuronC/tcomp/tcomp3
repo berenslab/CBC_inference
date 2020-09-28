@@ -1,0 +1,15 @@
+
+timinc = 1e-4;
+plsep = 0;
+euler = 0;
+crit = 1e-8;
+complam=.1;
+endexp=.5;
+ploti = endexp/200;
+relax=0.57;
+
+conn [1] to [2] cable length 150 dia .2;
+conn [2] to [3] cable length 150 dia .4;
+stim node [1] vclamp -.02 start .002 dur .2;
+plot V[2],V[1];
+run;

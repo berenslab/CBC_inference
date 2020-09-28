@@ -1,0 +1,27 @@
+
+
+/* calculate presynaptic voltage required to give given release rate */
+
+info = 0;
+endexp = .02;
+
+Vdark   = -0.043;
+sgexpon = 3;
+thresh1 = -0.045;
+vsiz    = 100;
+vnoise = 1;
+
+print "Vdark          = ", Vdark;
+
+dark_rate     = 0.025*exp((Vdark -thresh1)/sgexpon*1000)/vsiz*10000;
+Vdark_calc    = log(dark_rate * vsiz/0.025/10000*sgexpon)/1000 + thresh1;
+
+print "Calc Vdark     = ", Vdark_calc;
+print "Calc dark rate = ",  dark_rate;
+
+at 1 sphere dia 3;
+at 2 sphere dia 3;
+conn 1 to 2 synapse expon=sgexpon thresh=thresh1 vesnoise=vnoise vsize=vsiz ename xsyn;
+stim node 1 vclamp Vdark start 0 dur endexp;
+step endexp;
+print "Sim dark rate  = ", FA9 xsyn;

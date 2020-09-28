@@ -1,0 +1,44 @@
+/* tcomp29: plot of voltage vs distance along cable */
+
+timinc = 5e-5;
+ploti = timinc;
+endexp = .01;
+implicit = 1;
+
+drm = 5000;
+
+totlen = 800;
+rnodes = 40;
+
+x = setvar();
+
+nsegs = rnodes - 1;
+seglen = totlen / nsegs;
+segdia = 2;
+
+for (i=1; i<=nsegs; i++) {
+  conn i to i+1 cable dia segdia length seglen;
+};
+
+stimdur = .0005;
+stim node 1 vclamp -.02 start 0 dur stimdur;
+
+/* plot 7,6,5,4,3,2,1; */
+
+graph X max nsegs*seglen min 0;			/* volts */
+graph Y max -.02 min -.07;			/* psp (volts) (expon)  */
+graph pen (4);
+graph init;					/* draw axes */
+
+stime = 5e-5;
+
+for (t=0; t<endexp; t += stime) {
+   graph restart;
+   step stime;
+   if (t+1e-6 >= stimdur) graph pen (1);
+   for (i=1; i<=nsegs; i++) {
+     graph (i*seglen, V[i]);
+   };
+
+};  /* for (t;;) */
+

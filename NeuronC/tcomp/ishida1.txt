@@ -1,0 +1,50 @@
+
+Andy,
+
+  Here is a script of a one-compartment ganglion cell.  Please
+let me what you can do with it.  It has several channels defined
+as in the Fohlmeister & Miller model, and I've also added Ih.
+
+  The rate functions are defined in the script file.  Their names
+are special, and any function with that name overrides the
+default function in the simulator. I imagine that the first thing
+you'll want to do is change the rate functions.
+
+  You can run several "experiments" by setting the "expt"
+variable from the command line (or in the script, call it gc.n) like this: 
+
+   nc -v --expt 1.1 gc.n | vid
+  
+Expt=1 is the plot of minf, hinf, mtau, and htau.  You can set 
+
+expt=1.1    for   Na
+expt=1.2    for   Kdr
+expt=1.3    for   KA
+expt=1.4    for   Ih
+
+To plot the currents in voltage clamp mode, set expt=2.  This
+displays 4 graphs on the screen.  The experiment is a cell that
+is voltage clamped through a resistor.  The capacitive transients
+are canceled by subtracting corresponding transients from a dummy
+cell with no active channels.  It is pretty obvious that the
+voltage clamp isn't so good when Rm >= 1e6 Ohms.
+
+To see the currents in current clamp mode during a spike, set expt=3.
+This generates a spike at 2 msec and plots the membrane voltage
+and the separate channel currents.
+
+To see spike train behavior, set expt=4.
+
+My hope is that you can understand how the script works and then
+fine-tune it for your own purposes.  If you have any questions
+about the script or the simulator, please let me know. I would be
+happy to explain it further or to make changes. 
+
+You'll need to download the latest version of the simulator
+(5.4.16) and compile it.  I hope this isn't too much work for
+you.
+
+Best wishes,
+
+Rob
+

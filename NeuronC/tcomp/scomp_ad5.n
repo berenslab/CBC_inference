@@ -1,0 +1,521 @@
+#! /usr/mont/bin/nc -c
+#
+
+/* Test of spike generator */ 
+/* single compartement */
+/* based on Fohlmeister Miller params. */
+
+/* scomp_ad5.n: spike generator with SK and BK currents */
+/*   tuned for Mark's scomp_clean.n parameter set */
+
+timinc	= 1e-5;
+ploti	= 1e-5;
+tempcel	= 35;
+implicit= 0;
+crit	= 1e-10; 
+rseed	= 2;
+
+dpcana	= 0.00; //0.01;
+dpnaca	= 0;
+
+dpcak	= 0;
+dpkca	= 0;
+
+dpnak	= 0;
+dpkna	= 0;
+dcavoff = 0;
+calcnernst=0;
+
+dqm	= 3;
+dqh	= 3;
+
+vna	=  0.040; 
+vk	= -0.075; 
+vcl	= -0.060;
+
+grest	= -.06;
+dcai	= 50e-9; // calcium concentration inside at t0
+//dcai	= 0;
+drm	= 20000;
+
+expt = "minf";		/* draw minf, hinf curves */
+expt = "spike";		/* look at spike shape */
+expt = "spikehi";	/* look at magnified spike shape */
+expt = "isifast";	/* look at one inter-spike interval */
+expt = "isislow";	/* look at several inter-spike intervals */
+expt = "ahp";		/* look at after-hyperpolarization */
+expt = "mstimhi";	/* look at maintained fast spiking */
+expt = "f/i";		/* look at F/I, adaptation */
+
+			/*  Mark's experiments */
+
+expt = "vc";		/* voltage clamp, look at currents */
+expt = "single";	/* just a few spikes for phase plot */
+expt = "mstim";		/* current clamps with steps, look at spikes, Ca */
+
+expt = "spike";		/* look at spike shape */
+
+plot_freq = 1;		/* =1 -> turns on spike frequency plot */
+channoise = 1;		/* =1 -> turns on channel noise */
+channoise = 0;
+
+x = setvar();
+
+if (channoise) {	/* turn on all channel noise */
+  if (notinit(nanois))  nanois  = 1;
+  if (notinit(canois))  canois  = 1;
+  if (notinit(kdrnois)) kdrnois = 1;
+  if (notinit(kanois))  kanois  = 1;
+  if (notinit(sk1nois)) sk1nois = 1;
+  if (notinit(sk2nois)) sk2nois = 1;
+  if (notinit(bknois))  bknois  = 1;
+}
+else {			/* turn off channel noise, can set on individually */
+  if (notinit(nanois))  nanois  = 0;
+  if (notinit(canois))  canois  = 0;
+  if (notinit(kdrnois)) kdrnois = 0;
+  if (notinit(kanois))  kanois  = 0;
+  if (notinit(sk1nois)) sk1nois = 0;
+  if (notinit(sk2nois)) sk2nois = 0;
+  if (notinit(bknois))  bknois  = 0;
+};
+
+/*---------------------------------------------*/
+
+func qcond (cond) {
+
+/* convert from "density" S/cm2 to "ndensity" N/um2 */
+
+  return (1e8 * cond);
+};
+
+/*---------------------------------------------*/
+
+if (notinit(na_mult))   na_mult =    120;  // Na
+if (notinit(ca_mult))   ca_mult =    0.2;  // L-type Ca
+if (notinit(k1_mult))   k1_mult =    50;   // Kdr
+if (notinit(k3_mult))   k3_mult =    60;   // KA
+if (notinit(skca1_mult)) skca1_mult = 0.03;//0.06  // sKCa, apamin-sensitive
+if (notinit(skca5_mult)) skca5_mult = 0.1; //0.2   // sKCa, apamin-insensitive
+if (notinit(bkca_mult)) bkca_mult =  0;   // bKCa
+if (notinit(ifactor))   ifactor =   0;   //.02..0.05 // slow Na;
+
+soma = 1;
+at soma sphere dia 25 vrest grest vrev -.06;
+/* area=2000 um^2 =20*10^-6 cm ^2
+/* note: density in -S-/cm2 */
+
+
+at soma chan 
+   Na type 1 ndensity (1-ifactor)*1e-3*na_mult/qcond(dnau) 
+	offsetm=0.01
+	offseth=0.01
+	//taum = .5		/* sets taum equal to Q10=3 at 22 deg */
+	//tauh=1
+	chnoise=nanois 
+       ename nahh;
+
+at soma chan 
+   Na type 1 ndensity ifactor*1e-3*na_mult/qcond(dnau) 
+	offsetm=0.010
+	offseth=0.010
+	tauc=30*.5 taud=30
+	chnoise=nanois 
+	ename naslo;
+
+catau = 50e-3;
+ddca = 1e-12;
+
+at soma chan 
+       Ca type 1 ndensity ca_mult*1e-3/qcond(dcalu) offset= -.005
+	chnoise=canois 
+        capump vmax=5e-9/catau km=5e-6
+        //cabuf vmax 1e6
+	cshell 1
+        ename ca1;
+
+at soma chan 
+       K type 1 
+	ndensity k1_mult*1e-3/qcond(dku) 
+	offset=.035
+	tau=3		// tau=1.5
+	chnoise=kdrnois
+	ename kdr;  
+
+at soma chan 		/* K_A channel */
+       K type 3  
+	ndensity k3_mult*1e-3/qcond(dkau) 
+	//offset=-.01
+	tau = 1
+	chnoise=kanois
+	ename ka; 
+
+at soma chan 
+       KCa type 4 
+	ndensity skca1_mult*1e-3/qcond(dkcasu) 
+	chnoise=sk1nois 
+	ename skca1;
+
+at soma chan 
+       KCa type 5 
+	ndensity skca5_mult*1e-3/qcond(dkcasu) 
+	chnoise=sk2nois 
+	ename skca2;
+
+at soma chan 
+       KCa type 6 offset= -.04
+	ndensity bkca_mult*1e-3/qcond(dkcabu) 
+	chnoise=bknois 
+	ename bkca;
+
+totcur = 0;
+stimampl = 0;
+
+func calc_totcur() {		/* calculate total current for plot */
+ return (G(I)nahh + G(I)naslo + G(I)kdr + G(I)ka + G(I)ca1 +
+		 G(I)bkca + G(I)skca1 + G(I)skca2 - stimampl);
+}; 
+
+include "onplot.m";		/* functions to calculate spike frequency */
+
+
+if (expt=="minf") {			/* look at activation curve */
+
+ if (notinit(ch)) ch = "na";
+ if (notinit(chtyp)) chtyp = 1;
+ if (notinit(mtaumax)) mtaumax = 2e-3;
+ if (notinit(htaumax)) htaumax = 2e-3;
+
+ include "minf.n";
+
+}
+else if (expt=="ninf") {			/* look at activation curve */
+
+ if (notinit(ch)) ch = "k";
+ if (notinit(chtyp)) chtyp = 1;
+ if (notinit(mtaumax)) mtaumax = 2e-3;
+ if (notinit(htaumax)) htaumax = 2e-3;
+
+ include "minf.n";
+
+}
+else if (expt=="dinf") {			/* look at activation curve */
+
+ if (notinit(ch)) ch = "k";
+ if (notinit(chtyp)) chtyp = 3;
+ if (notinit(mtaumax)) mtaumax = 5e-3;
+ if (notinit(htaumax)) htaumax = 5e-3;
+
+ include "minf.n";
+
+}
+else if (expt=="kinf") {			/* look at activation curve */
+
+ if (notinit(ch)) ch = "kca";
+ if (notinit(chtyp)) chtyp = 6;
+ if (notinit(mtaumax)) mtaumax = 5e-3;
+ if (notinit(htaumax)) htaumax = 5e-3;
+
+ include "minf.n";
+
+}
+else if (expt=="spike") {			/* look at spike shape */
+
+//dcai = 300e-9;
+
+  stim node soma cclamp  150e-12 start  0    dur .0015;
+  stim node soma cclamp  180e-12 start .0015 dur .0005;
+  stim node soma cclamp  250e-12 start .002  dur .003;
+
+  endexp = .005 * 35/tempcel;
+
+  plgain = 50e-10;
+
+  plot G(I) nahh  pen 1  max plgain  min -plgain;
+  plot G(0) nahh  pen 1  max plgain*50  min -plgain*50;
+  plot G(I) kdr   pen 2  max plgain  min -plgain;
+  plot G(I) ka    pen 14 max plgain  min -plgain;
+  plot G(I) ca1   pen 3  max plgain  min -plgain;
+
+if (!notinit(skca1))
+    plot G(I) skca1 pen 5 max plgain min -plgain;
+if (!notinit(skca2))
+    plot G(I) skca2 pen 8 max plgain min -plgain;
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max plgain min -plgain;
+
+  //plot V[soma]    pen 4  max .16 min -.08;
+  plot V[soma]    pen 4  max .04 min -.08;
+  plot Ca(1)[soma] pen 6 max 3e-6 min 0;      /* [Ca]i */
+  plot S totcur max plgain min -plgain;	 /* total current from onplot() */ 
+}
+else if (expt=="spikehi") {		/* look at magnified spike shape */
+
+dcai = 200e-9;
+
+  stim node soma cclamp  30e-12 start  0    dur .0015;
+  stim node soma cclamp  60e-12 start .0015 dur .0005;
+  stim node soma cclamp  150e-12 start .002  dur .1;
+
+  endexp = .005 * 35/tempcel;
+
+  plgain = 500e-12;
+
+  plot G(I) nahh  pen 1  max plgain  min -plgain;
+  plot G(0) nahh  pen 1  max plgain*50  min -plgain*50;
+  plot G(I) kdr   pen 2  max plgain  min -plgain;
+  plot G(I) ka    pen 14 max plgain  min -plgain;
+  plot G(I) ca1   pen 3  max plgain  min -plgain;
+
+if (!notinit(skca1))
+    plot G(I) skca1 pen 5 max plgain min -plgain;
+if (!notinit(skca2))
+    plot G(I) skca2 pen 8 max plgain min -plgain;
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max plgain min -plgain;
+
+  plot V[soma]    pen 4  max .16 min -.08;
+  plot Ca(1)[soma] pen 6 max 3e-6 min 0;      /* [Ca]i */
+  plot S totcur max plgain min -plgain;	 /* total current from onplot() */ 
+}
+else if (expt=="isifast") {		/* look at inter-spike interval */
+
+dcai = 100e-9;
+
+  waittime = 0.0004; 
+  stimdur  = 1;
+  afterstim = 0.10;
+  stimampl = 25e-12;
+
+  stim node soma cclamp 200e-12 start 0 dur waittime;
+  stim node soma cclamp stimampl start waittime dur stimdur;
+
+  endexp = .018 * 35/tempcel;
+  //endexp = .5;
+
+  plgain = 50e-12;
+  moff = 1;
+
+  plot G(I) nahh  pen 1  max plgain  min -plgain;
+  plot G(I) kdr   pen 2  max plgain  min -plgain;
+  plot G(I) ka    pen 14 max plgain  min -plgain;
+  plot G(I) ca1   pen 3  max plgain  min -plgain;
+
+if (!notinit(skca1)) {
+    plot G(I) skca1 pen 5 max plgain min -plgain;
+    //plot G(0) skca1 pen 6 max plgain*50 min -plgain*50;
+};
+if (!notinit(skca2)) {
+    plot G(I) skca2 pen 8 max plgain min -plgain;
+    //plot G(0) skca2 pen 9 max plgain*50 min -plgain*50;
+};
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max plgain min -plgain;
+
+  plot V [soma]    pen 4  max .16 min -.08;
+  plot Im[soma]    pen 12  max (moff+1)*plgain min (moff-1) * plgain;
+  plot Ca(1)[soma] pen 6 max 3e-6 min 0;      /* [Ca]i */
+  //plot S totcur    pen 3 max plgain min -plgain; /* total cur from onplot() */ 
+
+}
+else if (expt=="isislow") {		/* look at inter-spike interval */
+
+  waittime = 0.0004; 
+  stimdur  = 1;
+  afterstim = 0.10;
+  stimampl = 30e-12;
+
+  stim node soma cclamp 200e-12 start 0 dur waittime;
+  stim node soma cclamp stimampl start waittime dur stimdur;
+
+  endexp = .2 * 35/tempcel;
+  //endexp = .5;
+
+  plgain = 50e-12;
+  moff = 1;
+
+  plot G(I) nahh  pen 1  max plgain  min -plgain;
+  plot G(I) kdr   pen 2  max plgain  min -plgain;
+  plot G(I) ka    pen 14 max plgain  min -plgain;
+  plot G(I) ca1   pen 3  max plgain  min -plgain;
+
+if (!notinit(skca1)) {
+    plot G(I) skca1 pen 5 max plgain min -plgain;
+    //plot G(0) skca1 pen 6 max plgain*50 min -plgain*50;
+};
+if (!notinit(skca2)) {
+    plot G(I) skca2 pen 8 max plgain min -plgain;
+    //plot G(0) skca2 pen 9 max plgain*50 min -plgain*50;
+};
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max plgain min -plgain;
+
+  plot V [soma]    pen 4  max .16 min -.08;
+  plot Im[soma]    pen 12  max (moff+1)*plgain min (moff-1) * plgain;
+  plot Ca(1)[soma] pen 6 max 3e-6 min 0;      /* [Ca]i */
+  //plot S totcur    pen 3 max plgain min -plgain; /* total cur from onplot() */ 
+
+}
+else if (expt=="ahp") {
+
+  /* current clamp, then record spike train and [Ca] */
+
+dcai = 50e-9;
+
+  waittime = 0; // Let the system relax before stimulus.
+  stimdur  = 2;
+  afterstim = 0;
+  nstim=1;
+  ndstim=0;
+  endexp=0.05;
+  stimampl = 6e-12;
+
+  for (i=1; i<=nstim; i++) {
+    stim node soma cclamp i*stimampl start waittime+(i-1.0)*(stimdur+afterstim) 
+		dur stimdur; 
+  };
+
+  plgain = 1200e-12;
+
+  plot V[soma] pen 4 max .08 min -.08;
+  plot Ca(1)  [soma] max 5e-6 min 0 pen 2; /*[ca]*/
+  plot G(0) nahh  pen 1  max plgain  min -plgain;
+  plot G(0) kdr   pen 2  max plgain  min -plgain;
+  plot G(0) ka    pen 14 max plgain  min -plgain;
+  plot G(0) skca1 pen 5 max plgain min -plgain;
+  plot G(0) skca2 pen 8 max plgain min -plgain;
+  plot G(0) bkca    pen 7 max plgain min -plgain;
+  plot S totcur    pen 11 max plgain/10 min -plgain/10; /* total cur from onplot() */ 
+
+}
+else if (expt=="mstimhi") {
+
+  /* current clamp, then record spike train and [Ca] */
+
+  waittime = 0; // Let the system relax before stimulus.
+  stimdur  = 2;
+  afterstim = 0;
+  nstim=1;
+  ndstim=0;
+  endexp=0.5;
+  stimampl = 50e-12;
+
+  for (i=1; i<=nstim; i++) {
+    stim node soma cclamp i*stimampl start waittime+(i-1.0)*(stimdur+afterstim) 
+		dur stimdur; 
+  };
+
+  plot V[soma] pen 4 max .04 min -.08;
+  plot Ca(1)  [soma] max 5e-6 min 0 pen 2; /*[ca]*/
+
+} else if (expt=="mstim") {
+
+  /* current clamps with steps, record spike train and [Ca] */
+
+    waittime = 0.4; // Let the system relax before stimulus.
+    stimdur  = 0.2;
+    afterstim = 0.10;
+    nstim=10;
+    ndstim=0;
+    endexp=waittime+nstim*(stimdur+afterstim)+ndstim*stimdur;
+    stimampl = 10e-12;
+
+    //stimback = 5e-12;
+    //stim node soma cclamp stimback start 0 dur 2;
+
+    for (i=1; i<=nstim; i++) {
+    stim node soma cclamp (i-0*nstim/2)*stimampl start waittime+(i-1.0)*(stimdur+afterstim) 
+        dur stimdur; 
+    };
+  
+    plot V[soma] pen 4 max .04 min -.08;
+    plot Ca(1)  [soma] pen 5 max 3e-4 min 0;
+
+} else if (expt == "vc") {        /* current clamps with steps */
+
+    timinc  = 1e-5; // only ok without noise 
+    ploti   = 1e-5;
+        
+    waittime = 0.001; // Let the system relax before stimulus.
+    stimdur  = 0.002;
+    endexp=waittime+stimdur*3;
+        
+    stimampl = 20e-12;
+
+    stim node soma vclamp -0.070 start 0 dur waittime;      
+    stim node soma vclamp 0.000  start waittime dur stimdur;
+    stim node soma vclamp -0.060 start waittime+stimdur dur stimdur;
+    stim node soma vclamp 0.000  start waittime+2*stimdur dur stimdur; 
+
+  
+//  plot V[soma] pen 4 max .04 min -.08;
+    plot G(I) nahh max 1.3e-8 min -1.6e-8; /*I_na*/
+    plot G(I) kdr max  1.3e-8 min -1.6e-8; /* I_k_dr */
+    plot G(I) ka max   1.3e-8 min -1.6e-8;
+//  plot I[soma] pen 5 max 1e-9 min -1e-9;
+
+    plot_freq = 0;		/* turn of spike frequency plot */
+
+} else if (expt=="single") {    /* one or two spike, for phase plot */
+        
+    timinc  = 1e-5; // only ok without noise 
+    ploti   = 1e-5;
+        
+    waittime = 0.2; // Let the system relax before stimulus.
+    stimdur  = 0.2;
+    afterstim = 0.10;
+    endexp=waittime+stimdur;
+    stimampl = 20e-12;
+
+    stim node soma cclamp stimampl start waittime dur stimdur;              
+  
+    plot V[soma] pen 4 max .04 min -.08;
+
+    plot_freq = 0;		/* turn of spike frequency plot */
+
+} else if (expt=="f/i") {
+
+  /* current clamp, then record spike train and [Ca] */
+
+    waittime = 0.1; // Let the system relax before stimulus.
+    stimdur  = 0.2;
+    afterstim = 0.10;
+    nstim=4;
+    ndstim=0;
+    endexp=waittime+nstim*(stimdur+afterstim)+ndstim*stimdur;
+    stimampl = 20e-12;
+
+    //stimback = 5e-12;
+    //stim node soma cclamp stimback start 0 dur 2;
+
+    for (i=1; i<=nstim; i++) {
+      stim node soma cclamp i*stimampl start waittime+(i-1.0)*(stimdur+afterstim)         dur stimdur; 
+    };
+
+ plot V[soma] pen 4 max .04 min -.08;
+//  plot G(I) ka pen 5 max 0 min -1e-10;
+//  plot I[soma] pen 5 max 1e-9 min -1e-9;
+//  plot G(I) nahh ; /*I_na*/
+//  plot G(I) kdr; /* I_k_dr */
+//  plot G kca max 10e-9 min 0; /* I Kca */
+//  plot Ca(I) [soma]; /* ica*/
+  plot Ca(1)  [soma] max 5e-6 min 0 pen 2; /*[ca]*/
+//  plot Ca(IP)  [soma] max 1e-12 min 0 pen 3; /*[ca]*/
+//  plot Ca(10) [soma] max 1e-6 min 0 pen 2; /*[ca]*/
+//  plot cabuf(1) [soma] max 30e-6 min 0 pen 6; /*[ca]*/
+//  plot G(I) ka max 1e-9 min -1e-9; /* IKA*/
+// plot V[hillock] pen 3;
+// plot G kdr pen 5 max 100e-9 min 0;
+// plot G ka pen 2 max 1e-9 min 0;
+// plot Ca(vrev) [soma] max .1 min 0; 
+// plot Ca(5)  [soma] pen 5 max 3e-6 min 0;
+//  plot Ca(99) [soma] pen 5 max 3e-6 min 0;
+// plot  G kca pen 6 max 200e-12 min 0;
+
+
+};
+
+if (plot_freq) plot S spikrate max 200 min 0 Char 'o' size .012 vpen freq_color;
+
+run;
+

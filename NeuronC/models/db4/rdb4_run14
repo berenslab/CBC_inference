@@ -1,0 +1,22 @@
+#! /usr/bin/perl
+#
+#
+# run 14 with Na5 at soma = 1.5e-3
+#  Just run trace 3, for vstart = -0.055
+#
+$ristart = 200;
+$ristop  = 800;
+$ristep  = 100;
+
+$nastart = 600;
+$nastop  = 1500;
+$nastep  = 100;
+
+for ($ri=$ristart; $ri<=$ristop; $ri+=$ristep) {
+ for ($na=$nastart; $na<=$nastop; $na+=$nastep) {
+system ("echo $ri $na");
+	system ("mosrun -l retsim --expt cbp_vclamp --dbp1_densfile dens_db4_run13.n --dbp1_densfile2 dens_db4x_run13.n --dbp1_file morph_DB4_120605_02.na1b --prestepdur 0.02 --stepdur .1 --tailcurdur 0.1 --poststepdur 0.01 --vhold -0.07 --vstart -0.055 --vstop -0.054 --vstep 0.005 --ivplot 0 --outward 0.5 --gscal 10e-9 --iscal 3e-10 --set_drm 30e3 --drmab 30e3 --dri 100 --dria $ri --driab $ri --dcm 1e-6 --dcmab 1e-6 --dvreva -0.07 --axdia 0.8 --cbplam 0.01 --naax 0e-3 --nahd $na.e-3 --naab 0 --set_timinc 1e-6 --set_ploti 2e-5 --mxrot -90 --plotlabel db4_run14_na$na_ri$ri > db4_run14_na$na.ri$ri.r &");
+  }
+}
+
+

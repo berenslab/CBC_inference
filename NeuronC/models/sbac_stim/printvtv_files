@@ -1,0 +1,79 @@
+#! /usr/bin/perl
+#
+#  printvt_files 
+#
+
+@contvals = (0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080);
+$contnum = $#contvals + 1;
+
+@sbspacvals = (135);         # cell spacing
+$sbspacnum = $#sbspacvals + 1;
+
+@barvals = (70,300);             # bar length
+$barnum = $#barvals + 1;
+
+# @synanvals = (90,100,110,150);       # synanpo
+@synanvals = (90);       # synanpo
+$synannum = $#synanvals + 1;
+
+@thetavals = (0, 30, 60, 90, 120, 150);
+$thetanum = $#thetavals + 1;
+
+@degvals = (0, 180);
+$degnum = $#degvals + 1;
+
+@signalvals = ("c","v");
+$signalnum = $#signalvals + 1;
+
+
+ $relangle = 300;
+     $sdia = 0.3;
+    $noinh = 0;
+    $sbarr = 107;
+   $sbspac = 155;
+$barlength = 70;
+   $cadist = 2.2e-3;
+  $synanpo = 90;
+     $cont = 0.0075;
+$dbp1_cond = 2.3e-10;
+
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "synanpo=f"   => \$synanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib
+            );
+
+ $sd = sprintf("%4.2f",$sdia);
+
+ for ($g=0; $g<$signalnum; $g++) {
+     $signal = $signalvals[$g];
+     for ($s=0; $s<$sbspacnum; $s++) {
+          $sbspac = sprintf("%.3d",$sbspacvals[$s]);
+          for ($b=0; $b<$barnum; $b++) {
+             $barlength = sprintf("%.3d",$barvals[$b]);
+             for ($a=0; $a<$synannum; $a++) {
+	       $synanpo = sprintf("%.3d",$synanvals[$a]);
+	        for ($c=0; $c<$contnum; $c++) {
+	             $cont = sprintf("%6.4f",$contvals[$c]);
+                     system ("rm -f sbac_theta.$relangle.$cont.$sbspac.$barlength.$synanpo.$sd.$signal.txt");
+                     for ($d=0; $d<$degnum; $d++) {
+	                  $deg = sprintf("%.3d",$degvals[$d]);
+
+system ("echo relangle $relangle sbspac $sbspac barlength $barlength synanpo $synanpo sdia $sd");
+system ("sbac_theta.$deg.print$signal sbac_theta.$relangle.$cont.$sbspac.$barlength.$synanpo.$sd.txt >> sbac_theta.$relangle.$cont.$sbspac.$barlength.$synanpo.$sd.$signal.txt ");
+                     }
+                 }
+             }
+         }
+      }
+  }
+

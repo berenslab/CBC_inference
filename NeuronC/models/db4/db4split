@@ -1,0 +1,75 @@
+#! /usr/mont/bin/nc -c  
+#
+# #! ../../bin/nci -c
+#
+# Split .r files with repeating zero time into separate traces
+#
+z = setvar();
+
+info = 0;
+if (notinit(ninfo)) ninfo = 0;
+
+if (notinit(ntraces)) ntraces = 16;		// number of traces (voltage clamp steps)
+if (notinit(tracelen)) tracelen = 0;		// number of rows in each trace 
+if (notinit(plotn)) plotn = 5;			// the plot number to split (0=time column)
+
+fread ("stdin",data_in,nrows,ncols);
+
+// print ncols, nrows;
+
+
+// find start of data
+
+for (x=0; x<nrows; x++) {
+   if (data_in[x][0] == 0) break;
+};
+
+xstart = x;
+
+// find length of first trace
+
+for (x++; x<nrows; x++) {
+ if (data_in[x][0] == 0) break;
+};
+xend = x;
+
+// count traces
+
+for (x=n=0; x<nrows; x++) {
+   if (data_in[x][0] == 0) n++;
+};
+
+ntraces = n;
+if (tracelen==0)  tracelen = xend - xstart - 1;
+
+if (ninfo>=1) print "ntraces",ntraces, "tracelen", tracelen, "xstart", xstart;
+
+dim data_out[tracelen+1][ntraces] = {{0}};
+
+// remove predur
+
+len = nrows - xstart;
+for (x=0; x<len; x++) {
+  for (y=0; y<ncols; y++) {
+    data_in[x][y] = data_in[x+xstart][y];
+  };
+};
+
+// split the traces
+
+for (x=k=y=0; x<len; x++) {
+     data_out[k][y] = data_in[x][plotn];
+     if (k++>=tracelen) {
+       k = 0;
+       y++;
+     };
+     if (y>=ntraces) break;
+};
+
+for (x=0; x<tracelen; x++) {
+  for (y=0; y<ntraces; y++) {
+    printf ("%g\t",data_out[x][y]);
+  };
+  printf ("\n");
+};
+

@@ -1,0 +1,70 @@
+/* tcomp18:  test of voltage clamp current recording
+   from a rod with simultaneous voltage recording */
+
+/* calibrate at 1 photon for 1 msec for 8e-12 A peak response */
+
+
+
+timinc = 1e-4;
+plmax = -.01;
+plmin = -.06;
+endexp = 3;
+endexp = 500;
+//ploti = endexp / 200;
+ploti = 1e-3;
+
+
+rodrm=3000;
+at 1 sphere dia 1 rm rodrm;		/* rod anatomy */
+at 1 rod (0,0) pigm 22 maxcond 19e-12 photnoise=0 dia 0.74 linit 0e2; 
+
+/*at 2 sphere dia 1 rm rodrm;			/* rod anatomy */
+/*at 2 rod (0,0); 
+*/					/* synapse from rod to horiz */
+
+stim backgr 0;
+
+// flash = 1e4 * 1e3;
+
+flash8 = 4630;
+flash7 = 1406;
+flash6 = 444;
+flash5 = 125;
+flash4 = 39.4;
+flash3 = 15.2;
+flash2 = 4.8;
+flash1 = 1.7;
+
+// flash1 = 1.1;
+
+// flash1 = 1.0e3;
+// flash1 = 1;
+// flash1 = 1;
+
+// stim rod 1 inten flash1 start 0.100 dur 0.001;
+// stim rod 1 inten flash1 start 0.100 dur 200;
+// stim rod 1 inten flash7 start 0.100 dur 0.02;
+// stim rod 1 inten flash1 start 0.100 dur 5;
+// stim rod 1 inten flash6 start 1 dur 0.02;
+
+stim node 1 vclamp -.06 start 0 dur endexp+1;
+
+predur = 0;
+setxmin = 0;
+time = -predur;
+
+step predur;
+// save model ("xxx"); 
+// restore model ("rod_adapt_1.1"); 
+
+/*
+stim rod 2 inten flash start .009 dur .001;
+*/
+
+plot I[1] max 15e-12 min -20e-12;
+
+/*plot V[1] max .04 min -.06;
+*/
+step endexp;
+save model ("xxx"); 
+

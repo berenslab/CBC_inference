@@ -1,0 +1,57 @@
+
+Advice on running model.
+
+The model has many options -- the GC and AM cells can have simple
+automatically-generated morphology or they can be "realistic,"
+generated from a digitized cell.  They can have no "biophysics,"
+i.e. just morphology, synaptic connections, and membrane
+resistance and capacitance, or they can have complex biophysical
+properties, i.e. full sets of membrane channels.  The model runs
+reasonably fast with simple morpology and without biophysics but
+is slower with more complicated morphology or membrane channels. 
+
+There are several experiments. "epsp" defines a response to a
+flashed spot of light.  "tofro" is a current clamp recording,
+and "tofro_vc" is a voltage clamp experiment, both with a bar of
+light that sweeps across the ganglion cell at a constant speed:
+
+Here are some typical runs:
+
+  nc -d 1 -v ds3.n | vid                 (displays full model anatomy)
+  nc -d 1 -v --make_am 0 ds3.n | vid     (displays model without amacrines)
+  nc -d 1 -v --bp_nn 15  ds3.n | vid     (displays model with 15 um bp nn dist)
+
+  nc -v --expt tofro     ds3.n | vid     (runs "tofro" experiment)
+  nc -v --expt tofro --exponbp 3 ds3.n | vid   (change bp synaptic gain)
+  nc -v --expt tofro --nchanbpgc 20 ds3.n | vid   (change bp->gc synaptic cond)
+
+To change the size of the display window:
+
+  nc -v --expt tofro ds3.n | vid -w 2    (bigger "vid' window)
+
+Another way to run "vid":
+
+  ncv --expt tofro   ds3.n      ("ncv" is made by "ln -s nc ncv") 
+
+To save the output in columns of numbers in a file:
+
+  nc --expt tofro --exponbp 3 ds3.n > file.tofro.3.r  (set unique file name)
+
+Typically one looks at the "vid" output and then makes a script
+file to search parameter space.  Each run makes a unique file
+name.  You can then analyze these "run files" in standard ways
+with any plotting program or you can look at them with "vid":
+
+  plotmod file.tofro.3.r | vid         (look at run file with vid)
+
+Please let me know if you have comments or requests for changes
+on the script -- or advice about how we should proceed or
+communicate.   
+
+Best wishes,
+
+Rob
+
+rob@retina.anatomy.upenn.edu
+Aug, 2001
+

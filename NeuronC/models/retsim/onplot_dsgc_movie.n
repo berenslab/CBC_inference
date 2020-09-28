@@ -1,0 +1,43 @@
+
+/* onplot_dsgc_movie */
+
+if (notinit(frame_int))     frame_int = 0.0002;
+
+if (notinit(V_min)) V_min = -0.08;
+if (notinit(V_max)) V_max =  0.00;
+
+proc draw_inputs ()
+
+{
+	/* use cmap=3 (red) for red - blue, cmap=7 for gray scale */
+	/* use cmap=4 (red) for excitatory, cmap=6 (blue) for inhib */
+
+  	/* show voltage in presynaptic terminals */
+    if (show_stim_volts) {
+       display sphere matching [cbp][-1][soma] only color=vcolor 
+		  min -0.045 max -0.04 cmap=4 dscale .5;
+       display sphere matching [ams][-1][soma] only color=vcolor 
+		  min -0.045 max -0.04 cmap=6 dscale .5;
+    };
+
+     /* show poisson release rate for inputs */
+
+     if (show_poisson_rate) {
+       display sphere matching [cbp][-1][axtrm] only color=srcolor 
+  		  min 0 max 400 cmap=4 dscale 5;
+       display sphere matching [ams][-1][axtrm] only color=srcolor 
+  		  min 0 max 400 cmap=6 dscale 5;
+     };
+
+	/* show actual vesicle release of inputs */
+
+     if (show_actual_release) {
+       display sphere matching [cbp][-1][axtrm] only color=sgcolor 
+  		  min 0 max 5e-11 cmap=4 dscale 5;
+       display sphere matching [ams][-1][axtrm] only color=sgcolor 
+  		  min 0 max 5e-11 cmap=6 dscale 5;
+     };
+};
+
+include "onplot_movie.n";
+

@@ -1,0 +1,144 @@
+#
+#  rdsgc_sbac
+#
+# retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --n_dbp1 0 --ninfo 2 --sbarrsiz 300 | & less
+#
+# retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.04 --ninfo 2 -v | vid
+#
+# retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.030 --disp_ct 6 --ninfo 2 | & less
+#
+# retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.035 --ninfo 2 -v | vid
+#
+# daz:~/nc/models/retsim> retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.039 --movein 1 --ninfo 2 -v | vid
+
+# mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.039 --velocity 500 --no_inhib 0 --movein -1 --ninfo 2 -v | vid &
+
+# mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --n_sbac 2 --sbarrsiz 280 --theta 30 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 -v | vid &
+#
+#
+# new array config, no sbarrsiz, no theta
+#
+# retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbarr 2 -d 1 -v | vid
+#
+# mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.038 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbarr 7 -d 1 >& sbac_2000_inh_7b.r 
+#
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.038 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbarr 7 >& sbac_2000_inh_7dli.r
+#
+#
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 1 -d 1 -v |& vid -c >& sbac_so.ps &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 1 >& sbac_2000_so_inh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 1 >& sbac_2000_so_noinh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 1 >& sbac_200_so_inh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 1 >& sbac_200_so_noinh.r &
+
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 2 -d 1 -v |& vid -c >& sbac_lo.ps &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 2 >& sbac_2000_lo_inh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 2000 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 2 >& sbac_2000_lo_noinh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 0 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 2 >& sbac_200_lo_inh.r &
+
+mosrun -l retsim --expt dsgc_sbac_bar --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --sbfile morph_sbac3b --sbarr 2 >& sbac_200_lo_noinh.r &
+
+#
+#
+#
+retsim --expt dsgc_sbac_bar --n_dsgc 1 --n_dbp1 0 --sbarr 0 --ninfo 2 -d 1 -v | vid
+
+#
+#  display sbac_168 
+#
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 2 -d 1 -v | vid
+
+ retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 200 --endwait 0.2 --no_inhib 1 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 102 -d 1 -v --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 | vid -c > xx.ps
+
+
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 0 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 4 -d 1 -v --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 | vid -c > xx.ps
+
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 200 -d 1 -v --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 | vid
+
+
+# rabbit
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 300 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_dens 400 --sbac_nscale -2.05 -d 9 > x.r
+
+# mouse
+#
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 300 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_mouse 1 --sbac_nscale -2.05 -d 9 > x.r
+
+# testing syn_savefile
+#
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_mouse 1 --sbac_nscale -2.05 -r 3221 -d 1 --syn_restorefile xxx | & less
+
+#
+# use morph_sbac_168c4 with flat arborization, sbac_maxsdist 7, dsgc denzdist 3
+#
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_mouse 1 --sbac_nscale -2.05 -d 1 --syn_savefile xxx | & less
+
+
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 0 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 1 --syn_savefile save_dsgc_sbac_mouse_330_54_7 | & less
+
+# 2017-1019
+# testing circuit
+
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 100000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.8 --sbarr 25 --sbarrsiz 110 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 --predur 0 --sbaclm 0.2 --stimtime 0.2 -v | vid
+
+#
+# show 45 sbacs, 1 dsgc
+#
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 200 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 300 --remove_nconns 1 --make_sbac_sbac 1 --n_dbp1 0 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 1 --syn_restorefile save_dsgc_sbac_mouse_300_45_7 -v | vid -w 1.6
+
+#
+# cbps, 45 sbacs, 1 dsgc
+#
+time retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 300 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 16 --syn_restorefile save_dsgc_sbac_mouse_cbp_300_45_7
+
+#
+# sineann stimulus, must set scontrast 0 - 1
+#
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbansfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 120 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse-sbac_nscale -2.05 --sbac_color 8 -d 16 --stimtype 3 --annrad 100 --scontrast 0.5 --waveshape 0 -v | vid -w 1.24 
+
+#
+# moving spot stimulus, scontrast 0.01
+#
+ retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 120 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 16 --stimtype 4 -v | vid -w 1.24
+
+#
+# moving grating stimulus, must set scontrast 0 - 1
+#
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 120 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 16 --stimtype 5 --scontrast 0.2 -v | vid -w 1.24
+
+#
+# flashed annulus, scontrast 0.01
+#
+ retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 120 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 16 --stimtype 6 -v | vid -w 1.24
+
+# now, test stimulus file with sineann, "use_stimfile" "makestim"
+
+retsim --expt dsgc_sbac_bar --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 16 --stimtype 3 --annrad 500 --scontrast 1 --makenv 0 --waveshape 0 --use_stimfile 1 --makestim 1 -v | vid -w 1.24
+
+# rotate horizontal and set Off-arbor red
+#
+set_dsgc_file_arbors --arbor_thresh 12 --thetax 4 morph_DS060627 > morph_DS060627b
+
+#
+#
+retsim --expt dsgc_sbac_bar --dsgc_file morph_DS060627b --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 9 --stimtype 3 --annrad 500 --scontrast 1 --makenv 0 --waveshape 0 --use_stimfile 0 --makestim 0 --n_dbp1 0 --n_sbac 0 --mxrot -85 -v | vid -c > xx.ps
+
+
+retsim --expt dsgc_sbac_bar --dsgc_file morph_DS060826b --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 9 --stimtype 3 --annrad 500 --scontrast 1 --makenv 0 --waveshape 0 --use_stimfile 0 --makestim 0 --n_dbp1 0 --n_sbac 0 --mxrot 0 -v | vid
+
+# dbp1 -> dsgc postsyn region is "dbp1_dsgc_reg"
+#
+retsim --expt dsgc_sbac_bar --dsgc_file morph_DS060822b --sbac_file morph_sbac_168c4 --sbac_thetax 0 --sbac_thetay 0 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 2000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 150 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 -d 1 --stimtype 3 --annrad 500 --scontrast 1 --makenv 0 --waveshape 0 --use_stimfile 0 --makestim 0 --n_sbac 0 --mxrot -90 --dbp1_dsgc_reg 2 -v | vid -w 1.24
+
+# dbp1_dsgc_reg = R2, needs tuning
+#
+retsim --expt dsgc_sbac_bar --dsgc_file morph_ds1eb --sbac_file morph_sbac_168c4 --sbac_densfile dens_sbacc.n --n_dsgc 1 --minten -0.039 --velocity 10000 --endwait 0.2 --no_excit 1 --no_inhib 0 --movein -1 --ninfo 2 --dSomaDia 10 --sdia 0.2 --sbarr 25 --sbarrsiz 50 --remove_nconns 1 --make_sbac_sbac 1 --sbac_mouse 1 --sbac_nscale -2.05 --sbac_color 8 --stimtype 1 --scontrast 0.02 --mxrot 0 --predur 0.001 -v | vid -w 1.24
+
+

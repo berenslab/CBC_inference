@@ -1,0 +1,79 @@
+#!/bin/sh
+
+NC_CMD="nc"
+
+run_nc() {
+echo "$NC_CMD --expt $EXPT --expt_desc $1 --ninfo 3 --rseed $2 $MISC_VARS $CHAN_VARS $STIM_VARS $RECORD_VARS -v retsim1.n" > dsgc_rfmap_$1.txt
+  $NC_CMD --expt $EXPT --expt_desc $1 --ninfo 3 --rseed $2 $MISC_VARS $CHAN_VARS $STIM_VARS $RECORD_VARS -v retsim1.n >> dsgc_rfmap_$1.txt 2>> dsgc_rfmap_$1.txt&
+}
+
+run_nc_debug() {
+  $NC_CMD --expt $EXPT --expt_desc $1 --ninfo 3 --rseed $2 $MISC_VARS $CHAN_VARS $STIM_VARS $RECORD_VARS -v retsim1.n | vid -S .1 -w 1.85
+}
+
+rseed1=49573252385
+rseed2=36932478098
+rseed3=90175289544
+rseed4=69884821923
+rseed5=89071483482
+rseed6=15858375187
+rseed7=71583758263
+rseed8=28571758385
+rseed9=58910748734
+rseed10=58709824375
+
+run_nc_trials() {
+  run_nc rseed1_$1 $rseed1
+  run_nc rseed2_$1 $rseed2
+  run_nc rseed3_$1 $rseed3
+  run_nc rseed4_$1 $rseed4
+  run_nc rseed5_$1 $rseed5
+  run_nc rseed6_$1 $rseed6
+  run_nc rseed7_$1 $rseed7
+  run_nc rseed8_$1 $rseed8
+  run_nc rseed9_$1 $rseed9
+  run_nc rseed10_$1 $rseed10
+}
+
+
+#######################################################
+#Parameter Space:
+#            Na/K Conductance in DSGC Dendrites
+#   none       .025        .050       .075     .100
+#                |
+#            -----------------
+#            |               |
+#            w/o K dec.     w/ K dec.
+#######################################################
+
+EXPT=dsgc_cbp_rfmap
+STIM_VARS="--stimtype spot --stimdur 0.1 --stiminterval 0.1 --sdia 55 --rfmap 1 --randomstims 1 --sinten 0.010 --starttime 0.005"
+RECORD_VARS="--recordspikes 1 --recordvavg 1 --postrecordtime 0.003 --make_movie 1 --space_time 1 --show_inputs 1 --show_actual_release 1"
+MISC_VARS="--dsgcdensfile dsgc_dens_dend.n --hpfilt 0 --complam 0.05 --dend_dia_factor 0.5 --light_inhib 1"
+
+# no Na or K conductance in dendrites
+CHAN_VARS="--dsgc_na_dend 0 --dsgc_kdr_dend 0 --dsgc_ka_dend 0 --dsgc_kih_dend 0 --dsgc_kca1_dend 0 --dsgc_kca2_dend 0"
+#run_nc_trials none_.5
+
+#.025 with decrease in K
+CHAN_VARS="--dsgc_na_dend 25e-3 --dsgc_kdr_dend 5e-3 --dsgc_ka_dend 2.5e-3 --dsgc_kih_dend .25e-3 --dsgc_kca1_dend .01e-3 --dsgc_kca2_dend .005e-3"
+run_nc_trials 25wk_.5
+
+#.025 without decrease in K
+CHAN_VARS="--dsgc_na_dend 25e-3 --dsgc_kdr_dend 10e-3 --dsgc_ka_dend 5e-3 --dsgc_kih_dend .5e-3 --dsgc_kca1_dend .02e-3 --dsgc_kca2_dend .01e-3"
+run_nc_trials 25wok_.5
+
+
+#.05 pS/cm^2 Na in dendrites
+CHAN_VARS="--dsgc_na_dend 50e-3 --dsgc_kdr_dend 10e-3 --dsgc_ka_dend 5e-3 --dsgc_kih_dend .5e-3 --dsgc_kca1_dend .02e-3 --dsgc_kca2_dend .01e-3"
+#run_nc_trials 50_.5
+
+
+#.075 pS/cm^2 Na in dendrites
+CHAN_VARS="--dsgc_na_dend 75e-3 --dsgc_kdr_dend 15e-3 --dsgc_ka_dend 8.5e-3 --dsgc_kih_dend .75e-3 --dsgc_kca1_dend .03e-3 --dsgc_kca2_dend .015e-3"
+#run_nc_trials 75_.5
+
+
+#.1 pS/cm^2 Na in dendrites
+CHAN_VARS="--dsgc_na_dend 100e-3 --dsgc_kdr_dend 20e-3 --dsgc_ka_dend 10e-3 --dsgc_kih_dend 1e-3 --dsgc_kca1_dend .04e-3 --dsgc_kca2_dend .01e-3"
+#run_nc_trials 100_.5

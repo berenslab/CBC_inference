@@ -1,0 +1,38 @@
+/* tcomp30:  Hodgkin-Huxley channels */
+
+timinc = 1e-5;
+
+crit = 1e-8;
+endexp = .05;
+ploti= 1e-4;
+
+drm=2500;
+
+tempcel=15;
+
+at 10 sphere dia 5 vrev -.06;
+conn 10 to 1 synapse open expon 5 maxcond 2e-9 thresh -.05;
+conn 1 to 2 cable dia .8 length 20 vrev -.06;
+at 2 sphere dia 10 vrev -.06;
+conn 2 to 3 cable dia 2 length 5 vrev -.07 rm 5000;
+conn 3 to 4 cable dia 2 length 5 vrev -.07 rm 5000;
+
+/* Na type 0 vrev .04 density 1e-7;			 /* */
+
+at 3 chan Na type 0 vrev .04 maxcond 1e-6;
+at 3 chan K  type 0 vrev -.08 maxcond 2e-7; 		/* */
+
+at 4 chan Na type 0 vrev .04 maxcond 1e-6;
+at 4 chan K  type 0 vrev -.08 maxcond 2e-7; 		/* */
+
+stim node 10 vclamp -.020 start .005 dur .020;
+
+/* plot I[1] max 5e-11 min -5e-11;   /* */
+
+plot V[1] max .04 min -.08;   /* */
+plot V[2] max .04 min -.08;   /* */
+plot V[3] max .04 min -.08;   /* */
+plot V[10] max .04 min -.08;   /* */
+
+run;
+

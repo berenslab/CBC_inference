@@ -1,0 +1,88 @@
+
+/* na0type.n: Test of Na type 0 channel kinetics */
+
+/*  expt = 1  ->    check activation voltage sensitivity
+    expt = 2  ->    check inactivation voltage sensitivity
+    expt = 3  ->    check kinetics
+*/
+
+timinc = 5e-5;
+crit   = 1e-8;
+endexp = 1.0;
+ploti  = 1e-4;
+
+tempcel= 22;
+
+vna =  .04;
+vk  = -.08;
+vcl = -.07;
+
+dpnak = 0;
+dpkna = 0;
+calcnernst = 0;
+dcavoff = 0;
+
+expt = 1;		/* plot rate constants and ninf curve */
+expt = 2;		/* plot ctau curve */
+expt = 3;		/* plot activation kinetics  */
+expt = 4;		/* plot deactivation kinetics */
+
+natyp = 1;		/* SS type Na channel */
+natyp = 0;		/* HH type Na channel */
+natyp = 2;		/* HH type Na channel */
+
+expt = 1;
+
+x = setvar();
+
+/*----------------------------------------*/
+
+/* The model: a sphere and a channel */
+
+nchan = 1;
+
+at 1 sphere dia 10 rm=500000 vrev -.07 vrest -.07;
+at 1 chan Na type natyp maxcond 300e-12 vrev=0.05 ename nahh;	/* */
+
+
+/*----------------------------------------*/
+
+if (expt==1) {
+
+/*  Graph cinf and its slope, ctau, and calpha and cbeta rate functions */
+/*  to show activation behavior */
+
+
+xvmax =  0.03;
+xvmin = -0.10;
+xstep = 0.001;
+
+ graph X max xvmax min xvmin;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 1 min 0;
+ graph Y max 20e-3 min 0;
+ graph Y max 300 min 0;
+ graph Y max 300 min 0;
+ graph init;
+
+ gmove (.20,.8);
+ gcwidth(.025);
+ gtext ("Na channel activation");
+
+ oldc = c= 0;
+ vh = -0.044;
+ kh = .0100;
+ boltz = 0;
+
+ for (v=xvmin; v <= xvmax; v += xstep) {
+  
+  m = minf(v,nahh);
+  h = hinf(v,nahh);
+
+   graph (v,m,h);
+
+  oldc = c;
+ };
+
+};

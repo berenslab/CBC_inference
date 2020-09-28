@@ -1,0 +1,11 @@
+
+mosrun -l retsim --expt aii_flash --arrsiz 50 -r 223145 --vnoise 1 --pnoise 0 --scontrast .01 --complam .2 --bg_inten 2.0e5 --ninfo 2 --info_chan 0 --gc_biophys 0 --n_aii 3 --mxrot 0 > aii_flash.r
+
+retsim --expt aii_flash --arrsiz 50 -r 223145 --vnoise 1 --pnoise 0 --scontrast .01 --complam .2 --bg_inten 2.0e5 --ninfo 2 --info_chan 0 --gc_biophys 0 --n_gc 1 --mxrot 0 -d 1 -v | vid   
+
+# For testing rod -> RB signals
+retsim --expt aii_flash --arrsiz 30 --pnoise 1 --vnoise 1 --dnoise 0.2 --scontrast .01 --complam .2 --bg_inten 300 --ninfo 2 --info_chan 0 --gc_biophys 0 --n_rbp 1 --n_cbp 0 --n_aii 0 --n_gc 0 --mxrot 0 --ntrials 1 -v | vid
+
+retsim --expt aii_flash --arrsiz 60 --pnoise 1 --vnoise 1 --dnoise 0.2 --scontrast .01 --complam .2 --bg_inten 300 --ninfo 2 --info_chan 0 --gc_biophys 0 --n_rbp 25 --n_cbp 0 --n_aii 1 --n_gc 0 --mxrot 0 --ntrials 1 -v | vid
+
+

@@ -1,0 +1,24 @@
+
+The files in this directory are useful for
+measuring the speed of "nc" with the Rallpack
+standard benchmarks.
+
+The files "rcabl2" and "rax2" will run Rallpack1 and Rallpack3
+respectively.  The "comp" script will then cut the output
+of "nc" and arrange the columns so that it can be compared with
+the "ref_cable.x" files from the rallpack benchmark (available
+from ftp to "mordor.cns.caltech.edu").  To use "comp" you must
+first compile all the ".c" files in this directory.
+
+   Usage:  comp filename
+
+
+
+total 103              5 pcrf.m*           5 rms.c             9 srms.c
+   1 README            7 rax2*             5 rmsa.c            4 tpack1.comp2
+   1 column*           8 rcabl2*           1 rmscut*           2 tpack1e.comp
+   1 comp*             9 rcabl2e*          1 rpack1            2 tpack3.comp1
+   3 grcl*             8 rcabl2i*          1 rpack1.rep        2 tpack3.comp2
+   3 grcll*            6 rcabl3*           2 rpack3            2 tpack4
+   3 grcx*             6 rcabl4*           1 rpack3.rep
+   3 hc.c              1 rfix*             1 rtpack4*

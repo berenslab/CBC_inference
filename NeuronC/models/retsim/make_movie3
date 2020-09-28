@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+ps2ppm150 *
+
+cnt=0
+
+#count files
+for file in `find ./ -name 'dsgc_video_*.ps'`
+do
+    fname=`basename $file`;
+    dname=`dirname $file`;
+    fullname=$dname/$fname;
+    cnt=$(($cnt+1))
+    
+    #echo "cnt=$cnt, $fullname";
+done
+
+#blend together backgrounds using movconvert
+movconvert -f dsgc_video_ -n $cnt
+
+#join .ppms together into video
+ffmpeg -f image2 -i dsgc_video_%04d.ppm dsgc_video.mpg

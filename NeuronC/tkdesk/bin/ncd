@@ -1,0 +1,4 @@
+#! /bin/csh -f
+#
+nc -d 1 -v $argv | vid
+

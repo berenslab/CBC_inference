@@ -1,0 +1,68 @@
+#! /bin/csh -f
+#
+
+nice +20
+
+nc -s complam .1 -s timinc 1e-6  rpack1 > rpack1.aa
+nc -s complam .1 -s timinc 2e-6  rpack1 > rpack1.ab
+nc -s complam .1 -s timinc 5e-6  rpack1 > rpack1.ac
+nc -s complam .1 -s timinc 1e-5  rpack1 > rpack1.ad
+nc -s complam .1 -s timinc 2e-5  rpack1 > rpack1.ae
+nc -s complam .1 -s timinc 5e-5  rpack1 > rpack1.af
+nc -s complam .1 -s timinc 10e-5 rpack1 > rpack1.ag
+nc -s complam .1 -s timinc 20e-5 rpack1 > rpack1.ah
+
+#nc -s complam .05 -s timinc 1e-6  rpack1 > rpack1.ba
+#nc -s complam .05 -s timinc 2e-6  rpack1 > rpack1.bb
+#nc -s complam .05 -s timinc 5e-6  rpack1 > rpack1.bc
+#nc -s complam .05 -s timinc 1e-5  rpack1 > rpack1.bd
+#nc -s complam .05 -s timinc 2e-5  rpack1 > rpack1.be
+#nc -s complam .05 -s timinc 5e-5  rpack1 > rpack1.bf
+#nc -s complam .05 -s timinc 10e-5 rpack1 > rpack1.bg
+#nc -s complam .05 -s timinc 20e-5 rpack1 > rpack1.bh
+
+nc -s complam .02 -s timinc 1e-6  rpack1 > rpack1.ca
+nc -s complam .02 -s timinc 2e-6  rpack1 > rpack1.cb
+#nc -s complam .02 -s timinc 5e-6  rpack1 > rpack1.cc
+#nc -s complam .02 -s timinc 1e-5  rpack1 > rpack1.cd
+#nc -s complam .02 -s timinc 2e-5  rpack1 > rpack1.ce
+#nc -s complam .02 -s timinc 5e-5  rpack1 > rpack1.cf
+#nc -s complam .02 -s timinc 10e-5 rpack1 > rpack1.cg
+#nc -s complam .02 -s timinc 20e-5 rpack1 > rpack1.ch
+
+#nc -s complam .01 -s timinc 1e-6  rpack1 > rpack1.da
+nc -s complam .01 -s timinc 2e-6  rpack1 > rpack1.db
+nc -s complam .01 -s timinc 5e-6  rpack1 > rpack1.dc
+nc -s complam .01 -s timinc 1e-5  rpack1 > rpack1.dd
+nc -s complam .01 -s timinc 2e-5  rpack1 > rpack1.de
+nc -s complam .01 -s timinc 5e-5  rpack1 > rpack1.df
+nc -s complam .01 -s timinc 10e-5 rpack1 > rpack1.dg
+nc -s complam .01 -s timinc 20e-5 rpack1 > rpack1.dh
+
+nc -s complam .005 -s timinc 1e-6  rpack1 > rpack1.ea
+nc -s complam .005 -s timinc 2e-6  rpack1 > rpack1.eb
+nc -s complam .005 -s timinc 5e-6  rpack1 > rpack1.ec
+nc -s complam .005 -s timinc 1e-5  rpack1 > rpack1.ed
+nc -s complam .005 -s timinc 2e-5  rpack1 > rpack1.ee
+nc -s complam .005 -s timinc 5e-5  rpack1 > rpack1.ef
+nc -s complam .005 -s timinc 10e-5 rpack1 > rpack1.eg
+nc -s complam .005 -s timinc 20e-5 rpack1 > rpack1.eh
+
+nc -s complam .002 -s timinc 1e-6  rpack1 > rpack1.fa
+nc -s complam .002 -s timinc 2e-6  rpack1 > rpack1.fb
+nc -s complam .002 -s timinc 5e-6  rpack1 > rpack1.fc
+nc -s complam .002 -s timinc 1e-5  rpack1 > rpack1.fd
+nc -s complam .002 -s timinc 2e-5  rpack1 > rpack1.fe
+nc -s complam .002 -s timinc 5e-5  rpack1 > rpack1.ff
+nc -s complam .002 -s timinc 10e-5 rpack1 > rpack1.fg
+nc -s complam .002 -s timinc 20e-5 rpack1 > rpack1.fh
+
+nc -s complam .001 -s timinc 1e-6  rpack1 > rpack1.ga
+nc -s complam .001 -s timinc 2e-6  rpack1 > rpack1.gb
+nc -s complam .001 -s timinc 5e-6  rpack1 > rpack1.gc
+nc -s complam .001 -s timinc 1e-5  rpack1 > rpack1.gd
+nc -s complam .001 -s timinc 2e-5  rpack1 > rpack1.ge
+nc -s complam .001 -s timinc 5e-5  rpack1 > rpack1.gf
+nc -s complam .001 -s timinc 10e-5 rpack1 > rpack1.gg
+nc -s complam .001 -s timinc 20e-5 rpack1 > rpack1.gh
+

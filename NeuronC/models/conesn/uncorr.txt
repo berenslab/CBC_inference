@@ -1,0 +1,47 @@
+#
+#  Optical line-spread function for white light measured from 
+#  "uncorrected" average human eye from 109 subjects, for a
+#  5.7 mm pupil.  Calibrated in cy/deg.
+#
+#  From:
+#
+#  Guirao, A., Porter, J., Williams, D.R., & Cox, I. G. (2002). 
+#  Calculated impact of higher-order monochromatic aberrations on 
+#  retinal image quality in a population of human eyes. 
+#  Journal of the Optical Society of America A, 19(1), 1-9 
+#
+#
+0 1
+1 .70
+2 .45
+3 .29
+4 .17
+5 .13
+6 .1
+7 .08
+8 .065
+9 .06
+10 .05
+11 .04
+12 .03
+13 .027
+14 .025
+16 .02
+18 .017
+20 .015
+22 .012
+24 .01
+26 .0075
+28 .006
+30 .005
+32 .0046
+34 .004
+36 .0032
+38 .0028
+40 .0022
+42 .0021
+44 .002
+46 .002
+48 .002
+50 .0015
+60 .001

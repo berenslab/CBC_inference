@@ -1,0 +1,157 @@
+cbp_vsoma_fd = -1;
+cbp_synout_fd = -1;
+cbp_dsgc_loc_fd = -1;
+dsgc_v_fd = -1;
+
+//write the cbp voltages and synaptic output rates to
+//their respective data files
+proc write_cbp_data()
+{
+  local i, v, tab, n, s, numsyn, synratesum, synrateavg;
+  tab = 0;
+
+  if (cbpvdata) fprintf(cbp_vsoma_fd, "%g", time); 
+  if (cbpsyndata) fprintf(cbp_synout_fd, "%g", time); 
+
+  for (i = 0; i < ncbp; i++) {
+    if (node [cbp][i][soma] -> exist) {
+      v = V[cbp][i][soma];
+      numsyn = 0;
+      synratesum = 0;
+      synrateavg = 0;
+      //get average synaptic output rate of cbp
+      foreach synapse ?s node [cbp][i] ?n { 
+        numsyn++;
+        synratesum += FA9 s;
+        //fprintf(stderr, "#transmitter released for [cbp][%g] synapse %g: %g vesicles/s\n", i, numsyn, FA9 s);        
+      };
+      synrateavg = synratesum / numsyn;
+      
+      if (cbpvdata) fprintf(cbp_vsoma_fd, ",%g", v);
+      if (cbpsyndata) fprintf(cbp_synout_fd, ",%g", synrateavg);
+    };    
+  };
+  if (cbpvdata) fprintf(cbp_vsoma_fd, "\n");
+  if (cbpsyndata) fprintf(cbp_synout_fd, "\n");  
+};
+
+
+//write the cbp cell numbers to the data files
+proc write_cbp_header()
+{
+  local j, tab;
+  tab = 0;
+  if (cbpvdata) fprintf(cbp_vsoma_fd, "-1");
+  if (cbpsyndata) fprintf(cbp_synout_fd, "-1");
+  //print the xy locations of the cone bipolars recorded from to the data files
+  for (j = 0; j < ncbp; j++) {      
+    if (node [cbp][j][soma] -> exist) {
+      if (cbpvdata) fprintf(cbp_vsoma_fd,  ",%g", j);
+      if (cbpsyndata) fprintf(cbp_synout_fd, ",%g", j);
+    };
+  };
+  if (cbpvdata) fprintf(cbp_vsoma_fd, "\n");
+  if (cbpsyndata) fprintf(cbp_synout_fd, "\n");
+};
+
+
+//write metadata involving the cbp synapses to the dsgc:
+//the cbp cell #, the xy location of the cbp,
+//the dsgc node #, and the xy location of the dsgc
+proc write_cbp_dsgc_locations()
+{
+
+  local cbx, cby, dsx, dsy, dsgcn;
+
+  cbp_dsgc_loc_fd = fopen("cbp_dsgc_loc.data", "w");
+      
+  foreach synapse ?s node [cbp] ?cn ?cbpnodenum {         
+    if (element s -> node2a == dsgc) {
+      cbx = node [cbp][cn][cbpnodenum] -> xloc;
+      cby = node [cbp][cn][cbpnodenum] -> yloc;
+      dsgcn = element s -> node2c;      
+      dsx = node [dsgc][1][dsgcn] -> xloc;
+      dsy = node [dsgc][1][dsgcn] -> yloc;      
+
+      //write data to location file
+      fprintf(cbp_dsgc_loc_fd, "%g,%g,%g,%g,%g,%g\n", cn, cbx, cby, dsgcn, dsx, dsy);
+    };
+  };  
+};
+
+
+//write a header to the data file which is
+//a row vector of dsgc node numbers recorded from
+proc write_dsgc_v_header()
+{
+  local dsgcn;
+      
+  fprintf(dsgc_v_fd, "-1");
+  foreach synapse ?s node [cbp] ?cn ?cbpnodenum {         
+    if (element s -> node2a == dsgc) {
+      dsgcn = element s -> node2c;      
+      
+      //write an element of the header row of the dsgc vdata file      
+      fprintf(dsgc_v_fd, ",%g", dsgcn);      
+    };
+  };
+  fprintf(dsgc_v_fd, "\n");
+};
+
+
+//write a row vector of recorded potentials
+//from dsgc nodes to the data file
+proc write_dsgc_v_data()
+{
+  local dsgcn;
+
+  fprintf(dsgc_v_fd, "%g", time);      
+  foreach synapse ?s node [cbp] ?cn ?cbpnodenum {         
+    if (element s -> node2a == dsgc) {
+      dsgcn = element s -> node2c;      
+      //write an element of the header row of the dsgc vdata file      
+      fprintf(dsgc_v_fd, ",%g", V[dsgc][1][dsgcn]);      
+    };
+  };
+  fprintf(dsgc_v_fd, "\n");
+};
+
+
+proc initialize_data_files()
+{
+  local extradata;
+
+  if (recordcbps) {
+    //open files for cbp output data, write headers
+    extradata = "";
+    if (rfmap) {
+      sprintf(extradata, "rfmap_%g", expt_desc);
+    } else {
+      sprintf(extradata, "ind_%g_%g", s1locx, s1locy);
+    };
+    if (cbpvdata) {
+      sprintf(cbp_vsoma_fname, "cbp_vsoma_%s.data",extradata);
+      cbp_vsoma_fd = fopen(cbp_vsoma_fname, "w");
+    };
+    if (cbpsyndata) {
+      sprintf(cbp_synout_fname, "cbp_synout_%s.data", extradata);
+      cbp_synout_fd = fopen(cbp_synout_fname, "w");
+    };
+    write_cbp_header();     
+  };
+
+  if (cbpdsgcloc) {
+    write_cbp_dsgc_locations();
+  };
+
+  if (recorddsgc) {
+    if (rfmap) {
+      sprintf(dsgc_v_fname, "dsgc_rfmap_%g.data", expt_desc);
+    } else {
+      sprintf(dsgc_v_fname, "dsgc_ind_%g_%g.data", s1locx, s1locy);
+    };
+    dsgc_v_fd = fopen(dsgc_v_fname, "w");
+    write_dsgc_v_header();
+  };
+};
+

@@ -1,0 +1,1060 @@
+#! nc -c
+
+/* Creates ds cell with spike generator */
+
+dsversion = 1.08;
+
+/* general parameters */		
+
+timinc   = 1e-4;
+ploti    = 1e-4; 
+crit     = 1e-8; 
+tempcel  = 35;
+implicit = 0; 
+drm      = 20000;
+plsep    = 1;
+rseed    = 38214581;
+
+vcl = -0.065;
+vk  = -0.080;
+vna = +0.04;
+
+dcavoff = 0;
+calcnernst = 0;
+
+amrm = 50000;
+
+soma = 0;
+gc   = 1;
+bp   = 2;
+am   = 3;
+
+ndseg = 10;			/* number of gc/bp/am segments */
+
+	
+/* synaptic parameters */	
+
+condf 	  = 22e-12; /* unit conductance of synapes */
+nchanbpgc = 20;    /* N chan for bp -> gc. */
+nchanbpam = 20;    /* N chan for bp -> am. */
+nchanamgc = 30;    /* N chan for am -> gc */
+amu       = 10e-12;  /* bp-> amacrine unitary current */
+sfdur 	  = 2;
+srdur 	  = .5;
+dvsz      = 10;     /* default vesicle size when no noise */
+vsiz	  = 10;
+exponbp	  = 2;
+exponam	  = 4;
+thresh1   = -0.045;
+
+/* end: synaptic parameters */	
+
+/* experiment control variables */	
+
+make_gc		= 1; 	 	/* make ganglion cell */
+make_bp		= 1; 	 	/* make bipolar cell */
+make_am		= 1; 	 	/* make amacrine cell */
+make_bpam	= 1; 	 	/* make bipolar cell -> amac synapses */
+make_bpgc	= 1; 	 	/* make bipolar cell -> GC synapses */
+make_amgc	= 1; 	 	/* make amacrine cell -> GC synapses */
+light_resp	= 1;
+current_stim	= 1;
+
+postsyn_noise	= 0;
+ves_noise       = 0;
+
+expt = "surf_area";		/* calc surface area */
+expt = "istim_soma";		/* somatic current */
+expt = "epsc";			/* spot, short flash with vclamp to see epsc*/
+expt = "epsp";			/* spot, short flash with cclamp to see epsp*/
+expt = "tofro";			/* spot moving right, left, current clamp  */
+expt = "tofro_vc";		/* spot moving right, left, voltage clamp */
+
+expt = "tofro_vc";  		/* Set "expt" value on command line or here */
+				/*  to run different experiment. */
+
+v_bp_dark = -.05;		/* bp dark voltage */
+
+ds_orient = 0;			/* amac cell orientation in degrees */
+ds_odt    = 45;			/* amac cell random angle range in deg. */
+am_output_dist = 50;		/* amac output closer */
+
+velocity = 2000;		/* stimulus velocity, um/sec */
+
+gcdendn = 3;			/* which gc dendrite to use */
+
+bp_zloc = 15;			/* bp stratum */
+am_zloc = 14;			/* amacrine stratum */
+gc_zloc = 10;			/* GC dendrite arborization stratum */
+
+dd = setvar();			/* set values from command line */
+
+if (notinit(info)) info = 2;	/* level of information printout */
+
+if (notinit(anatfile)) anatfile = "ds1a";        /* gc   cell anatomy */
+if (notinit(amacfile)) amacfile = "sbac3";       /* amac cell anatomy */
+if (notinit(segfile))  segfile  = "dsseg.n";     /* make cable segments */
+
+if (notinit(gcdensfile)) gcdensfile = "gcdens.n";   /* gc cell biophysics */
+if (notinit(amdensfile)) amdensfile = "amdens.n";   /* am cell biophysics */
+
+if (!notinit(make_amac)) make_am = make_amac;
+
+
+if (!make_bp) {
+  make_bpam = 0;
+  make_bpgc = 0;
+};
+
+if (!make_am) {
+  make_bpam = 0;
+  make_amgc = 0;
+};
+
+while (ds_orient >= 360) ds_orient -= 360;
+while (ds_orient < 0) ds_orient += 360;
+
+/*-------------- set build params ---------------------------*/
+
+/* parameters to set before building model */
+
+if (expt == "istim_soma") {	/* somatic current stimulus, one step */
+
+  make_bp	= 0; 	 	/* =1 -> make bipolar cell */
+  make_am	= 0; 	 	/* =1 -> make amacrine cell */
+  make_bpgc	= 0; 	 	/* =1 -> make bipolar cell -> GC synapses */
+  make_bpam	= 0; 	 	/* =1 -> make bipolar cell -> amac synapses */
+  make_amgc	= 0; 	 	/* =1 -> make amacrine cell -> GC synapses */
+}
+else if (expt == "epsc") 	/* short light flash, one step */{
+  make_amgc	= 0; 	 	/* =1 -> make amacrine cell -> GC synapses */
+}
+else if (expt == "epsp") {	/* short light flash, one step */	
+  make_amgc	= 0; 	 	/* =1 -> make amacrine cell -> GC synapses */
+}
+else if (expt == "fro") {	/* spot moving left  */
+}
+else if (expt == "to") {	/* spot moving right */
+}
+else if (expt == "tofro") {	/* spot moving right, left */
+}
+else if (expt == "tofro_vc") {	/* spot moving right, left, voltage clamp */
+};
+ 
+/*-------------- make ---------------------------------------*/
+
+if (notinit(gcvstart)) gcvstart = -.06;   /* starting voltage on dend tree */
+if (notinit(amvstart)) amvstart = -.06;   /* starting voltage on amac dtree */
+if (notinit(amvrev))     amvrev = -.06;   /* vrev on amac dtree */
+
+if (notinit(gc_dia_factor)) gc_dia_factor = 1;  
+if (notinit(am_dia_factor)) am_dia_factor = 1;  
+if (notinit(ath_dia)) ath_dia = 0.6667;  /* default diameter of thin segment */
+
+if (notinit(gc_simple))  gc_simple  = 1;
+if (notinit(am_simple))  am_simple  = 1;
+if (notinit(gc_biophys)) gc_biophys = 0;
+if (notinit(am_biophys)) am_biophys = 0;
+
+if (gc_biophys || am_biophys) memb_biophys = 1  /* include file if biophys */
+else                          memb_biophys = 0;
+
+if (memb_biophys) {		/* reduce time step for membr. channels */
+  timinc = 1e-5;
+  ploti  = 2e-5;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  printf ("# DS GC simulation, version %g\n",dsversion);
+  printf ("#\n");
+  if (info>=1) {
+  printf ("#   script name:    %s     \n",  infile);
+  printf ("#   date:           %s     \n", ccstr(system("date")));
+  printf ("#   machine:        %s     \n", ccstr(system("hostname -s")));
+  printf ("#   nc version:     %g     \n",  version);
+ if (gc_simple)
+  printf ("#   gc cell:        %s     \n",  "simple")
+ else
+  printf ("#   gc cell:        %s     \n",  anatfile);
+ if (am_simple)
+  printf ("#   am cell:        %s     \n",  "simple")
+ else
+  printf ("#   am cell:        %s     \n",  amacfile);
+ if (memb_biophys) {
+  printf ("#   gc_biophys:     %g     \n",  gc_biophys);
+  printf ("#   am_biophys:     %g     \n",  am_biophys);
+  printf ("#   gc dens file:   %s     \n",  gcdensfile);
+  printf ("#   am dens file:   %s     \n",  amdensfile);
+ };
+  printf ("#   experiment:     %s     \n",  expt);
+  printf ("#\n");
+  };
+
+include ("dsdefs.n");
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (memb_biophys) include (segfile) /* make dendr with membrane biophysics */
+
+else { 		 /* no biophysics in dendritic membrane */
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+/* proc to make gc dendrites */
+
+   proc make_gcseg(nod1, nod2, d, region) 
+   {
+       local local_cplam;
+
+    if (nod1 > nod2) {swap=nod1; nod1=nod2; nod2=swap;}; /* make: nod2 >=nod1 */
+
+    if (region==HILLOCK || region==AXON_THIN)     /* set fine comps in axon */
+         local_cplam = .02
+    else local_cplam = complam;
+
+    if (region==DEND) {           /* allow changing diameter in dendrites */
+      d *= gc_dia_factor;
+    };
+
+    if (region == SOMA)  at [gc][nod1] sphere dia d 
+				vrest=gcvstart elabl regname[region]
+    else conn [gc][nod1] to [gc][nod2] cable dia d 
+				vrest=gcvstart elabl regname[region];
+
+   };  /* make_gcseg() */
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+   proc make_amseg(n, nod1, nod2, d, region) /* proc to make amac dendrites */
+   {
+     
+    if (region==DEND) {           /* allow changing diameter in dendrites */
+      d *= am_dia_factor;
+    };
+
+    if (region == SOMA)    
+           at [am][n][nod1] sphere dia d vrev= amvrev rm=amrm
+				vrest=amvstart elabl regname[region]
+    else if (region == VARICOS)    
+           at [am][n][nod1] sphere dia d vrev= amvrev rm=amrm
+				vrest=amvstart elabl regname[DEND]
+    else conn [am][n][nod1] to 
+	      [am][n][nod2] cable  dia d vrev= amvrev rm=amrm
+				vrest=amvstart elabl regname[region];
+
+   };  /* make_amseg() */
+
+}; /* no biophysics in dendritic membrane */
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+  func make_gcbr (x, y, z, t, dt, tlen, cbr, nbr) 
+
+  /* Function to make coarse skeleton of one gc dendrite.
+     t    = theta (orientation angle for dendrite).
+     tt   = dtheta (width of dendritic branching).
+     tlen = length remaining for branch.
+     cb   = starting node to connect to.
+     nbr  = new node number to start with. 
+   */
+
+    {
+     local xn,yn, rbr, tries;
+
+    if (tlen <= 0) return nbr;
+    xn = x + gc_seglen * cos(t); 
+    yn = y + gc_seglen * sin(t); 
+    at [gc][nbr] loc (xn, yn, z);
+    make_gcseg (cbr, nbr, brdia=0.5, gcregion=DEND);
+
+    rbr = make_gcbr(xn,yn,z,t-dt,dt/1.5,tlen-gc_seglen, nbr, nbr+1);
+    rbr = make_gcbr(xn,yn,z,t+dt,dt/1.5,tlen-gc_seglen, nbr, rbr+1);
+    return rbr; 
+  };
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+if (make_gc) {			/* make ganglion cell */
+
+  if (notinit(make_gc_dend)) make_gc_dend = 1;
+  if (notinit(make_gc_axon)) make_gc_axon = 1;
+
+  if (gc_simple) {
+
+      local br, n, nbn, first_nbn, last_axon_nbn;
+      local somadia, axdia, gcregion;
+
+
+    if (notinit(gc_nbr))          gc_nbr    = 6;
+    if (notinit(gc_seglen))       gc_seglen = 40;
+    if (notinit(gc_dend_minthresh)) gc_dend_minthresh = 3 ;/* no tiny branches */
+    if (notinit(gc_dend_maxthresh)) gc_dend_maxthresh = 30;/* no huge branches */
+
+    /* Make coarse skeleton of GC, then add space-filling dendrites. 
+       Number of dendrites is preset.  Make finer-branching 
+       space-filling dendrites by selecting random points 
+       (within presettable radius). Test each point to see if 
+       it's too close to any dendrite, or too far away from 
+       the original skeleton. Then grow new dendrite to the 
+       new point. 
+     */
+
+    /* soma */
+
+    at [gc][soma] loc (0,0,0);
+    make_gcseg(soma, soma, somadia=10, gcregion=SOMA);
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -  */
+
+    /* axon */
+
+    nbn = 1;			/* new branch node number */
+    if (notinit(make_gc_axon)) make_gc_axon = 1;
+
+    if (make_gc_axon) {
+
+      if (notinit(gc_axon_dia))       gc_axon_dia = 1;
+      if (notinit(gc_hill_dia))       gc_hill_dia = 2;
+      if (notinit(gc_axon_thin_dia))  gc_axon_thin_dia = .3;
+ 
+      at [gc][nbn]   loc (-somadia*.5+3,0,0);		/* end of hillock */
+      at [gc][nbn+1] loc (-28,0,0);			/* end of thin ax */
+      at [gc][nbn+2] loc (-100,0,0);			/* end of axon */
+ 
+      make_gcseg(soma,  nbn,   axdia=gc_hill_dia, gcregion=HILLOCK);
+      make_gcseg(nbn,   nbn+1, axdia=gc_axon_thin_dia, gcregion=AXON_THIN);
+      make_gcseg(nbn+1, nbn+2, axdia=gc_axon_dia, gcregion=AXON);
+      nbn += 3;
+    };
+    last_axon_nbn = nbn;
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -  */
+
+    /* make dendritic tree */
+
+    if (make_gc_dend) {
+      dt = 2 * PI / gc_nbr;
+      skel_radius = 3*gc_seglen;
+      gc_nbr = 1;		/* number of branches actually made */
+
+      for (d=0; d<gc_nbr; d++) {
+        t = dt * d;
+        nbn = make_gcbr(0,0,0, t, dt/2.5, skel_radius, soma, nbn);
+      };
+      first_nbn = nbn;
+
+    /* grow branches randomly */ 
+
+      grow_radius = skel_radius + 30; 
+      ntries = 5000;
+      for (tries=0; tries<ntries; tries++) {
+          local b, x, y;
+          local gbr, mindist, mindistf, dist;
+          local close_gc_el;
+ 
+         x = rrange (-grow_radius,grow_radius);
+         y = rrange (-grow_radius,grow_radius); 
+         dist = sqrt (x*x + y*y);
+
+         if (dist > grow_radius) continue;
+
+         at [gc][nbn] loc (x,y,gc_zloc);		/* make new node */
+
+         mindist = mindistf = 1e10;
+         close_gc_el = 0;
+         foreach cable ?gbr node [gc] ?b {
+           if ((dist = e2dist([gc][nbn],gbr)) < mindist) {
+             mindist = dist;			/* remember this dist */
+	     close_gc_el = gbr;			/* must not be too close */
+           };
+           if ((dist < mindistf) && (b > last_axon_nbn) && (b < first_nbn) ) {
+             mindistf = dist;			/* must be close to orig skel */
+           };
+         //print "dist",dist;
+        };
+        if ((mindist  < gc_dend_minthresh) ||
+            (mindistf > gc_dend_maxthresh)) {	/* no tiny or huge branches */
+	   erase node [gc][nbn];			/* delete new node */
+        }
+        else {					/* make new branch */
+           cdist = efrac([gc][nbn],close_gc_el);	/* find loc for new node */
+           at [gc][element close_gc_el->node1b]: 
+				close_gc_el offset cdist put [gc][nbn+1];
+           make_gcseg(nbn, nbn+1, brdia=0.5, gcregion=DEND);
+           nbn += 2;
+        };
+       };  /* for (tries;;) */
+    };    /* make_gc_dend */
+ }	/* gc_simple */ 
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+ else {     /* realistic gc morphology */
+
+   fread (anatfile, cabldata, clines, ccols);      /* read anatomy file */
+
+   if (notinit(gcdendn)) gcdendn = -1;
+ 
+   for (i=0; i<clines; i++) {              /* locate the nodes first */
+
+
+    if (!make_gc_dend)					/* skip dendr */ 
+	if ((cabldata[i][REG]==DEND) ||
+	    (cabldata[i][REG]==DEND_PROX)) continue; 
+
+    if (!make_gc_axon)					/* skip axon */ 
+	if ((cabldata[i][REG]==AXON) ||
+	    (cabldata[i][REG]==AXON_THIN) ||
+	    (cabldata[i][REG]==AXON_LONG) ||
+	    (cabldata[i][REG]==HILLOCK)) continue; 
+
+    /* If "gcdendn" is set non-negative, */
+    /*  allow constructing only a single dendrite */
+ 
+    if (ccols>DENDN) {
+      dend = cabldata[i][DENDN];
+      if ((gcdendn>=0) && (dend > 0) && (dend!=gcdendn)) continue;
+    };
+
+    n = cabldata[i][NODE];
+    at [gc][n]                        /* locate the nodes */
+            loc(cabldata[i][AX],
+                cabldata[i][AY],
+                cabldata[i][AZ]);
+ 
+    make_gcseg (n, cabldata[i][PAR],       /* make the dendritic tree and axon */
+               cabldata[i][DIA],
+               cabldata[i][REG]);
+   };
+
+  };  /* realistic gc morphology */ 
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+        /* find existing dendrites of GC */
+
+  xmax = -1e6;
+  xmin =  1e6;
+  ymax = -1e6;
+  ymin =  1e6;
+  foreach cable ?br node [gc] ?d  {  /* find existing dendritic tree */
+    //print d, element br -> elabl;
+    if ((element br -> elabl) == "dend") {
+      if (node [gc][d] -> xloc > xmax) xmax = node [gc][d] -> xloc;
+      if (node [gc][d] -> xloc < xmin) xmin = node [gc][d] -> xloc;
+      if (node [gc][d] -> yloc > ymax) ymax = node [gc][d] -> yloc;
+      if (node [gc][d] -> yloc < ymin) ymin = node [gc][d] -> yloc;
+    };
+  };
+  if (xmax < xmin) {
+     xmax = 1;
+     xmin = 0;
+  };
+  if (ymax < ymin) {
+     ymax = 1;
+     ymin = 0;
+  };
+  gcmargin = 10;
+  xmax += gcmargin;
+  ymax += gcmargin;
+  xmin -= gcmargin;
+  ymin -= gcmargin;
+
+		/* add some extra dist to margin for amacrine outputs */
+
+  margin_add = am_output_dist * 1.5;
+
+  if ((ds_orient > 315) || (ds_orient <= 45)) {
+    xmin -= margin_add;
+  }
+ 
+  else if ((ds_orient > 45) && (ds_orient <= 135)) {
+    ymin -= margin_add;
+  }
+ 
+  else if ((ds_orient > 135) && (ds_orient <= 225)) {
+    xmax += margin_add;
+  }
+ 
+  else if ((ds_orient > 225) && (ds_orient <= 315)) {
+    ymax += margin_add;
+  };
+ 
+  xsize = xmax - xmin;
+  ysize = ymax - ymin;
+  xcent = int((xmax + xmin) * .5);
+  ycent = int((ymax + ymin) * .5);
+
+  gc_area = (xmax - xmin) * (ymax - ymin);
+  if (info >= 3) {
+    print "# gc area", gc_area;
+    print "# X max, min", xmax, xmin;
+    print "# Y max, min", ymax, ymin;
+  };
+};  /* if (make_gc) */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (make_bp) {					/* make bipolar cells */
+
+   /* Make only enough bipolar cells to fill GC's dendritic field */
+ 
+   if (notinit(bp_nn))      bp_nn = 12;
+
+   n_bp = gausnn (bparr, center (xcent,ycent), size (xsize,ysize), 
+		nnd=bp_nn, reg=10, rsd=1173, ginfo=info);
+   if (info >= 2) {
+     printf ("# number of bipolar cells %g\n",n_bp);
+   };
+
+   for (i=0; i<n_bp; i++) {
+        local bpx,bpy,bpt,bpb;
+
+     /* make random amacrine array */
+
+     bpx = bparr[i][0];		/* make random offset */
+     bpy = bparr[i][1];
+     at [bp][i] loc (bpx,bpy,bp_zloc) sphere dia 5 vrev -.07 vrest -.07;
+     if (light_resp) at [bp][i] transducer (bpx,bpy);
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+if (make_am) {				/* make amacrine cells */
+
+ if (am_simple) {
+
+   if (notinit(n_amseg))        n_amseg    =  20;
+   if (notinit(am_seglen))      am_seglen  =  10;
+   if (notinit(am_dend_dia))  am_dend_dia  =  0.1;
+
+/* -     -     -     -     -     -     -     -     -    */
+
+   proc makamacs(cellnum,x,y,z,t,nbr) 
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+     local d, dbr, dt, i, r, u;
+     local amdia, amregion;
+ 
+    at [am][cellnum][soma] loc (x,y,z);
+    make_amseg(cellnum, soma, soma, amdia=7, amregion=SOMA);
+
+    dt = 2 * PI / nbr;
+
+    for (d=1; d<=n_amseg; d++) {
+
+      r = d * am_seglen;                /* extend branches one varicosity  */
+                                        /* at a time */
+
+      for (i=0; i<nbr; i++) {           /* make "nbr" branches */
+         dbr = d + i*n_amseg;
+         u = t + i*dt;
+         at [am][cellnum][dbr] loc (x+r*cos(u),y+r*sin(u),z);
+         make_amseg(cellnum, dbr, dbr, amdia=2, amregion=VARICOS);
+         if (d==1) { /* connect varicosities with thin cable */
+           make_amseg(cellnum, dbr, soma, amdia=am_dend_dia, amregion=DEND);
+         }
+         else {
+           make_amseg(cellnum, dbr, dbr-1, amdia=am_dend_dia, amregion=DEND); 
+         };
+      };
+    };
+  };    /* proc makamacs() */
+
+ }  /* am_simple */
+
+/* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+
+ else {		/* realistic amacrine morphology */
+
+   fread (amacfile, amcabldata, amlines, amcols);      /* read anatomy file */
+
+/* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+
+   if (notinit(amdendn)) amdendn = 3;	   /* this sets which amac dendrite */
+   if (notinit(amtheta)) amtheta = -40 * PI/180;  /* preset for amac = 0 deg */
+ 
+   proc makamacr(cellnum,x,y,z,t,nbr) 
+   {
+   /* Make one amacrine cell, given position and rotation. */
+
+      local i, n, r, dx, dy, dz;
+
+   at [am][cellnum][soma] loc (x, y, z) sphere dia 8;
+
+   for (i=1; i<amlines; i++) {              /* locate the nodes first */
+
+    /* If "amdendn" is set non-negative, */
+    /*  allow constructing only a single dendrite */
+ 
+    if (amcols>DENDN) {
+      dend = amcabldata[i][DENDN];
+      if ((amdendn>=0) && (dend > soma) && (dend!=amdendn)) continue;
+    };
+
+    n =  amcabldata[i][NODE];		/* node number of segment */
+    dx = amcabldata[i][AX];		/* assume soma at (0,0) */
+    dy = amcabldata[i][AY];
+    dz = amcabldata[i][AZ];
+    r = sqrt(dx*dx + dy*dy);		/* radial distance to node */
+    dt = atan(dy/dx) + amtheta;
+
+    at [am][cellnum][n]               /* locate the nodes */
+            loc(x + r * cos(t+dt),
+                y + r * sin(t+dt),
+                z);
+  					/* make the dendritic tree and axon */
+    make_amseg (cellnum, n, amcabldata[i][PAR],   
+                   amcabldata[i][DIA],
+                   amcabldata[i][REG]);
+    };
+   };
+ 
+ };  /* if !am_simple */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+   /* Make only enough amacrine cells to fill GC's dendritic field */
+
+   if (notinit(am_nn))  am_nn = 20;
+ 
+   n_am = gausnn (amarr, center (xcent,ycent), size (xsize,ysize), 
+		nnd=am_nn, reg=5, rsd=431, ginfo=info);
+   //n_am = 1;
+   if (info>=2) {
+     printf ("# number of amacrine cells %g\n",n_am);
+   };
+
+   ds_orientr = ds_orient * PI / 180;   /* convert from degrees to radians */
+   ds_odtr    = ds_odt    * PI / 180 * 0.5; 
+
+   for (i=0; i<n_am; i++) {
+        local amx,amy,amt,amb;
+
+      /* make random amacrine array */
+
+      amx = amarr[i][0];		/* make random offset */
+      amy = amarr[i][1];
+      amt = rrange(ds_orientr-ds_odtr, ds_orientr+ds_odtr);  /* make random theta */
+      //amb = rrange(5,8);
+
+      amb = 1;				/* make 1 branch */
+      if (am_simple) makamacs(i+1,amx,amy,am_zloc,amt,amb)
+      else           makamacr(i+1,amx,amy,am_zloc,amt,amb);
+
+   };
+};    /* make_am */
+
+if (info>=1) {
+  printf ("# Done making neurons.\n");
+  printf ("#\n");
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  /* limit the elements to within bounds */
+
+  /* limit bipolar cells */
+
+elimit X max xmax min xmin Y max ymax min ymin;
+foreach element ?c node [-1][-1][-1]  {
+  elimit element c;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+dim bpgcsyns[n_bp+1];		/* array to hold synapse numbers */
+dim bpamsyns[n_bp+1][n_am+1];
+dim amgcsyns[n_am+1][n_amseg+1];
+
+/* Make synapses */
+
+if (make_bpgc) {			/* make synapses from bipolar to gc */
+      local mindist, dist, close_gc;
+
+    if (notinit(bpsyn_dist_thresh)) bpsyn_dist_thresh = 7;
+
+    nbpgc_syn = 0;
+    foreach node [bp] ?b {
+      mindist = 1e10;
+      close_gc = 0;
+      foreach cable ?br node [gc] ?d {
+       if ((element br ->elabl) == "dend") { 
+         if ((dist=n2dist([bp][b],[gc][d])) < mindist) {
+           mindist = dist;			/* remember this dist */
+	   close_gc = d;			/* save gc node */
+         };
+       };
+       //print dist;
+      };
+      if (mindist < bpsyn_dist_thresh) {
+        conn [bp][b] to [gc][close_gc]
+        synapse open expon=exponbp maxcond=nchanbpgc*condf
+        thresh=thresh1 vrev=0 
+        vgain=1
+	nfilt1 1 timec1 1
+        nfilt3 2 timec3=srdur
+        vesnoise=ves_noise vsize=vsiz nfilt2 1 timec2 sfdur
+        chnoise= postsyn_noise unit=condf
+        ename bpgcsyns[nbpgc_syn];
+       nbpgc_syn++;
+      };
+    };
+    if (info>=2) printf ("# number of bpgc synapses %g\n",nbpgc_syn);
+};
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+  if (make_bpam) {			/* synapse from bipolar to amacrine */
+      local mindist, dist, close_am;
+
+    if (notinit(bpam_dist_thresh)) bpam_dist_thresh = 10;
+/*  if (notinit(am_input_dist)) am_input_dist = 30;    /* am input */
+
+    nbpam_syn = 0;
+    foreach node [bp] ?b {
+      mindist = 1e10;
+      close_am_n = 0;
+      close_am_d = 0;
+      foreach node [am] ?n ?d {
+
+		/* don't connect inputs to peripheral amac dendrites */
+    /* if (n2dist([am][n][soma],[am][n][d]) > am_input_dist) continue; */
+
+       if ((dist=n2dist([bp][b],[am][n][d])) < mindist) {
+           mindist = dist;			/* remember this dist */
+	   close_am_n = n;			/* save am number */
+	   close_am_d = d;			/* save am node */
+       };
+       //print dist;
+      };
+      if (mindist < bpam_dist_thresh) {
+        conn [bp][b] to [am][close_am_n][close_am_d]
+        synapse open expon=exponbp maxcond=nchanbpam*condf
+        thresh=thresh1  vrev=0 
+        vgain=1
+	nfilt1 1 timec1 1
+        nfilt3 2 timec3=srdur
+        vesnoise=ves_noise vsize=vsiz nfilt2 1 timec2 sfdur
+        chnoise= postsyn_noise unit=condf
+        ename bpamsyns[b][close_am_n];
+       nbpam_syn++;
+      };
+    };
+    if (info>=2) printf ("# number of bpam synapses %g\n",nbpam_syn);
+  };
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+ if (make_amgc) {			/* synapse from amacrine to gc */
+      local a, ad, an, adn, s;
+      local g, gd;
+      local mindist, dist;
+      local close_gc_n, close_gc_d;
+      local too_close;
+
+    if (notinit(amgc_dist_thresh)) amgc_dist_thresh = 10;
+    if (notinit(am_refr_dist))   am_refr_dist = 5;   /* synaptic spacing */
+
+    namgc_syn = 0;
+    foreach node [am] ?a ?ad {
+
+	/* Check to make sure new synapse will be spaced farther
+           than "am_refr_dist" from all other synapses on same cell. */
+
+      too_close = 0;
+      foreach synapse ?s node [am] [a] ?adn {
+        if (ad==adn) continue;
+        if ((n2dist([am][a][ad],[am][a][adn])  < am_refr_dist) || 
+	    (n2dist([am][a][ad],[am][a][soma]) < am_output_dist))
+			too_close = 1; 
+      };
+      if (too_close) continue;
+      mindist = 1e10;
+      close_am_n = 0;
+      close_am_d = 0;
+      foreach node [gc] ?g ?gd {
+
+      if ((dist=n2dist([am][a][ad],[gc][g][gd])) < mindist) {
+           mindist = dist;			/* remember this dist */
+	   close_gc_n = g;			/* save gc number */
+	   close_gc_d = gd;			/* save gc node */
+      };
+     //print dist;
+     };
+     if (mindist < amgc_dist_thresh) {
+	conn [am][a][ad] to [gc][close_gc_n][close_gc_d] 
+	synapse open expon=exponam maxcond=nchanamgc*amu
+	thresh=thresh1 vrev=0 
+	vgain=1
+	nfilt1 1 timec1 1
+	nfilt3 2 timec3=srdur
+	vesnoise=ves_noise vsize=vsiz nfilt2 1 timec2 sfdur
+	chnoise= postsyn_noise unit=amu
+	ename amgcsyns[a][ad];
+       namgc_syn++;
+     };
+   };
+   if (info>=2) printf ("# number of amgc synapses %g\n",namgc_syn);
+ };
+
+if (info>=1) {
+   if (make_bpgc || make_bpam || make_amgc) 
+     printf ("# Done making synapses.\n")
+   else
+     printf ("# No synapses made.\n");
+   printf ("#\n");
+};
+
+/*-------------- display ------------------------------------*/
+
+if (disp) {
+ display size 450;
+ display center (0,0,10);
+ display calibline 20;
+ if (notinit(dxrot)) dxrot = 0;
+ display xrot dxrot;
+
+/* display matching [gc][0][-1] except cable;			/* */
+/* display sphere matching [bp][-1];				/* */
+// display synapse matching [bp][-1] color 4;			/* */
+
+if (1) { 			/* display gc */ 
+  display sphere matching [gc][-1][-1] color 1;			/* */
+  display cable  matching [gc][-1][-1] color 1 dscale 1;	/* */
+  display node   matching [gc][-1][-1] color 5 dscale 1;	/* */
+  display comps  matching [gc][-1][-1] color 4;			/* */
+ };
+if (1) { 			/* display bipolar */ 
+  display sphere matching [bp][-1] color 4;			/* */
+  display cable  matching [bp][-1] dscale 1 color 4;		/* */
+  display node   matching [bp][-1] color 5 dscale 1;		/* */
+  display comps  matching [bp][-1] color 4;			/* */
+ };
+if (1) { 			/* display amacrine */ 
+  display sphere matching [am][-1][-1] color 5 dscale 1;	/* */
+  display cable  matching [am][-1][-1] color 2 dscale 1;	/* */
+  display node   matching [am][-1][-1] color 5 dscale 1;	/* */
+  display comps  matching [am][-1][-1] color 4 dscale 1;	/* */
+ };
+if (1) { 			/* display bp->gc synapses */ 
+  display synapse matching [gc][-1]     color 5 dscale 2;     /* */
+  display synapse matching [am][-1][-1] color 5 dscale 2;     /* */
+ };
+
+ exit;		/* exit when done display */
+
+};
+
+
+/*------------ plot -----------------------------------------*/
+
+proc disp_bp_rate()
+{
+   local plg, offtr, offb;
+
+  plg   = 500;		/* gain of trace */
+  offtr = .0;		/* position of trace within graph */
+  offb  = 0;		/* trace offset base */
+
+  if (make_bpgc) plot FA9 bpgcsyns[15] max (1-offtr)*plg+offb 
+				      min (0-offtr)*plg+offb 
+					  pen 5 plname "BpGc" plnum 6 plsize .3;
+
+  if (make_bpgc) plot FA9 bpgcsyns[11] max (1-offtr)*plg+offb 
+				       min (0-offtr)*plg+offb 
+					  pen 5 plnum 6 plsize .3;
+
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc disp_am_vplot()
+{
+   local plg, offtr, offb;
+
+  if (make_am) plot V[am][1][1] min -0.08 max 0.01 
+					  pen 12 plname "Vam" plnum 5; 
+  if (make_am) plot V[am][1][7] min -0.08 max 0.01 
+					  pen 12 plnum 5; 
+  if (make_am) plot V[am][1][12] min -0.08 max 0.01 
+					  pen 12 plnum 5; 
+
+  plg = 200;		/* gain of trace */
+  offtr = .0;		/* position of trace within graph */
+  offb  = 0;		/* trace offset base */
+
+  if (make_amgc) plot FA9 amgcsyns[1][8] max (1-offtr)*plg+offb 
+				         min (0-offtr)*plg+offb 
+					  pen 6 plname "AmGc" 
+					  plsize .5 plnum 4; /* */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc disp_gc_vplot()
+{
+   local plg, offtr, offb;
+
+  plg = .1;		/* gain of trace */
+  offtr = .3;		/* position of trace within graph */
+  offb  = -.05;		/* trace offset base */
+
+  plot V[gc][soma] max (1-offtr)*plg+offb 
+		   min (0-offtr)*plg+offb 
+			pen 2 plname "Vgc" plnum 3;
+
+  //plot V[gc][2] min -0.08 max 0.01 plname "Vdend"; /*dendr syn input */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc disp_gc_caplot()
+{
+   local plg, offtr, offb;
+
+  plg = 2e-6;		/* gain of trace */
+  offtr = 0;		/* position of trace within graph */
+  offb  = 0;		/* trace offset base */
+
+  plot Ca(1) [gc][soma] max (1-offtr)*plg+offb 
+	  	        min (0-offtr)*plg+offb 
+			pen 4 plname "Cai" plnum 2 plsize .2;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc disp_gc_iplot()
+{
+   local plg, offtr, offb;
+
+  plg   =  300e-12;			/* gain of trace */
+  offb  =  0e-12;			/* trace offset base */
+  offtr = .8;				/* position of trace within graph */
+
+  plot I[gc][soma] max (1-offtr)*plg+offb 
+		     min (0-offtr)*plg+offb 
+			pen 2 plname "Igc" plnum 1;
+};
+
+
+/* =========== expt =========================================*/
+
+stim center (0,0);
+
+if (notinit(velocity)) velocity = 1000;		/* set above */
+
+proc run_tofro() 
+
+{
+/* run bar to and fro across the neural circuit */
+
+         local x, t, mid_wait, sblur;
+	 local xstep, stimstep;
+         local xnear, xfar;
+
+
+    stim backgr v_bp_dark start 0;
+
+    sblur = 10;
+    sinten = .010;
+
+    xstep = 10;		/* move stimulus in increments of 10 um */
+    stimstep = xstep / velocity;
+    mid_wait = .1;
+
+    xnear = xmin - 20;
+    xfar  = xmax + 20;
+
+    for (t=time,x=xnear; x<=xfar; x+= xstep, t+=stimstep) {
+        stim bar 10 loc(x) blur=sblur inten=sinten start=t dur=stimstep; 
+    }; 
+    t += mid_wait;
+    for (x=xfar; x >= xnear; x-= xstep, t+=stimstep) {
+        stim bar 10 loc(x) blur=sblur inten=sinten start=t dur=stimstep; 
+    }; 
+    endexp= 2 * ((xfar-xnear)/xstep + 1) * stimstep + mid_wait;
+    endexp= t;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+ 
+if (expt == "gc_surf_area") {	/* calculate surface area */
+ totsa 	= 0;
+ foreach cable ?d node [gc][-1] {
+		totsa += PI*element d->dia*element d->length;};
+ printf ("# Surface area of dendrites   = %g um2\n",totsa);
+ foreach sphere ?d node [gc][-1] {local r;  r = element d->dia/2;
+ 		totsa += 4*PI*r*r; };
+ printf ("# Surface area including soma = %g um2\n",totsa);
+ printf ("# Rin estimated from surface area = %-8.3g\n",drm/totsa*1e8);
+}
+else if (expt == "istim_soma") {	/* soma current stimulus */
+
+	if (notinit(istim)) istim = 10e-12;
+	if (notinit(stimdur)) stimdur = .2;
+    	endexp=stimdur*1.2;
+	stim node [gc][soma] cclamp istim start .02 dur stimdur; 
+  	disp_gc_vplot();
+  	if (gc_biophys) disp_gc_caplot();
+	run;
+}
+else if (expt == "epsc") {        /* spot, short flash with vclamp to see epsc*/
+
+	if (notinit(stimdur)) stimdur = .06;
+	stim backgr v_bp_dark start 0;
+	stimtime  = .1;
+	stimdur   = .01;
+	stim spot 1000 loc (0,0) inten .005 start=stimtime dur=stimdur;
+	endexp = .4;
+	stim node [gc][soma] vclamp gcvstart start time dur endexp;
+        disp_bp_rate();
+	disp_gc_iplot();
+	run;
+}
+else if (expt == "epsp") {        /* spot, short flash with cclamp to see epsp*/
+
+	if (notinit(stimdur)) stimdur = .06;
+	stim backgr v_bp_dark start 0;
+	stimtime  = .1;
+	stimdur   = .01;
+	stim spot 1000 loc (0,0) inten .005 start=stimtime dur=stimdur;
+	endexp = .4;
+        disp_bp_rate();
+	disp_gc_vplot();
+	run;
+}
+else if (expt == "tofro") {
+         local x, t, vc, mid_wait;
+
+        disp_bp_rate();
+	disp_am_vplot();
+	disp_gc_vplot();
+
+        stim file "ds_tofro.t";
+        time = 0;
+        run_tofro();
+        step endexp;
+}
+else if (expt == "tofro_vc") {
+         local x, t, vc, mid_wait;
+
+        disp_bp_rate();
+	disp_am_vplot();
+	disp_gc_iplot();
+
+        stim file "ds_tofro_vc.t";
+	if (notinit(vc_start)) vc_start = -0.09;
+	if (notinit(vs_stop))  vc_stop  =  0.03;
+	if (notinit(vs_step))  vc_step  =  0.02;
+	for (vc=vc_start; vc<=vc_stop; vc+=vc_step) {
+          time = 0;
+	  run_tofro();
+          stim node [gc][soma] vclamp vc start=time dur=endexp-.001;
+          step endexp;
+        };
+};
+

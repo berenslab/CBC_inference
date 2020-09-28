@@ -1,0 +1,24 @@
+#! /usr/mont/bin/nci -c  
+#
+# Make a template file
+#
+z = setvar();
+
+info = 0;
+if (notinit(ninfo)) ninfo = 0;
+
+if (notinit(ntraces))   ntraces = 0;		// number of traces (voltage clamp steps), 0 -> auto)
+if (notinit(sttrace))   sttrace = 0;		// starting trace (voltage clamp steps), 0=first)
+if (notinit(tracelen)) tracelen = 0;		// number of rows (length) in each trace, 0 -> auto
+if (notinit(plotn))       plotn = 5;		// the plot (column) number to split (0=time column)
+if (notinit(plotd))       plotd = -1;		// the plot (column) number to subtract before split
+
+zero = 0;
+
+for (x=0; x<tracelen; x++) {
+  for (y=sttrace; y<ntraces; y++) {
+    printf ("%.18g\t",zero);
+  };
+  printf ("\n");
+};
+

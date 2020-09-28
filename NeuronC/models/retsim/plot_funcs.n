@@ -1,0 +1,313 @@
+/* module plot_funcs.n */
+
+include "spike_plot.n";
+
+/*------------------------ plot -----------------------------*/
+
+func na_inact_plot(chan_elem, xtime)
+{
+  return (G(7) chan_elem + G(8) chan_elem + G(9) chan_elem); 
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_v_nod(ct,cn,n,vmin,vmax,pcolor,label,plotnum,psize)
+
+{
+    local name, c;
+
+  if (!node [ct][cn][n] -> exist) return;
+
+  if (script==0) {
+    if (plotnum<0) {
+      if(ct==dsgc || ct==gc || ct==gcoff) /* set where to put the plot */
+        plotnum = 20
+      else if(ct==cbp || ct==rbp || ct==hbp)
+        plotnum = 40 
+      else if (ct==xcone || ct ==xrod)
+        plotnum = 60
+      else plotnum = 10;
+    };
+    
+    if (pcolor==-1)	/* if user doesn't specify a color */
+      c=plotnum	  	/* use graph num to set color */
+    else
+      c=pcolor;
+
+    if (label=="") {
+      if (n==soma) nstr = "soma"
+      else sprintf(nstr,"%g",n);
+      sprintf(name,"V%s_%g_%s",cname[ct],cn,nstr);
+    }
+    else name = label;
+
+    if (psize < 0) {
+      plot V[ct][cn][n] min vmin max vmax
+				pen c plname name plnum plotnum;
+    } else {
+      plot V[ct][cn][n] min vmin max vmax
+			pen c plname name plnum plotnum plsize psize;
+    };
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_ca_nod(ct,cn,n,maxca,pcolor,label,plotnum,psize)
+{
+  if (!node [ct][cn][n] -> exist) return;
+  if (node [ct][cn][n]->cacomp) {
+
+    if (plotnum<0) {
+      if(ct==dsgc || ct==gc || ct==gcoff) /* set where to put the plot */
+        plotnum = 22
+      else if(ct==cbp || ct==rbp || ct==hbp)
+        plotnum = 42 
+      else if (ct==xcone || ct ==xrod)
+        plotnum = 62
+      else plotnum = 12;
+    };
+    
+    if (pcolor==-1)	/* if user doesn't specify a color */
+      c=plotnum	  	/* use graph num to set color */
+    else
+      c=pcolor;
+
+    if (label=="") {
+      if (n==soma) nstr = "soma"
+      else sprintf(nstr,"%g",n);
+      sprintf(name,"Ca_%s_%g_%s",cname[ct],cn,nstr);
+    }
+    else name = label;
+
+    if (psize < 0) {
+      plot Ca(1) [ct][cn][n] max=maxca min 0 plnum plotnum pen c plname name;
+    } else {
+      plot Ca(1) [ct][cn][n] max=maxca min 0 plnum plotnum pen c plsize psize plname name;
+    };
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_spike_rate(ct, cn, n, pcolor, label, plotnum, psize)
+{
+  if (!node [ct][cn][n] -> exist) return;
+  
+   if (plotnum < 0) {
+     if (ct==dsgc || ct==gc || ct==gcoff) { plotnum = 15; }
+     else if(ct==cbp || ct==rbp || ct==hbp) { plotnum = 45; }
+     else if (ct==xcone || ct ==xrod) { plotnum = 65; }
+     else { plotnum = 15; };
+   };
+    
+   if (pcolor==-1) { c=plotnum; }
+   else { c=pcolor; };
+
+   if (label=="") {
+
+     if (n == soma) { nstr = "soma"; }
+     else { sprintf(nstr,"%g",n); };
+     
+     sprintf(name,"Fi[%s_%g_%s]",cname[ct],cn,nstr);
+   }
+   else { name = label; }; 
+
+   plot spike_plot plval n max 500 min 0 Char 'o' plnum plotnum pen c size .007 
+				plsize psize plname name; 
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_na_inact(ct, cn, n, pcolor, label, plotnum, psize)
+{
+   if (!node [ct][cn][n] -> exist) return;
+  
+   if (plotnum < 0) {
+     if (ct==dsgc || ct==gc || ct==gcoff) { plotnum = 15; }
+     else if(ct==cbp || ct==rbp || ct==hbp) { plotnum = 45; }
+     else if (ct==xcone || ct ==xrod) { plotnum = 65; }
+     else { plotnum = 15; };
+   };
+    
+   if (pcolor==-1) { c=plotnum; }
+   else { c=pcolor; };
+
+   if (label=="") {
+
+     if (n == soma) { nstr = "soma"; }
+     else { sprintf(nstr,"%g",n); };
+     
+     sprintf(name,"Na[%s_%g_%s]",cname[ct],cn,nstr);
+   }
+   else { name = label; }; 
+   
+   at [dsgc][1][n] chan Na type 2 chset ename chan_elem;
+   plot na_inact_plot plval chan_elem max 1 min 0 plnum plotnum pen c plsize psize plname name; 
+}; 
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_synrate_out(ct,cn,rmin,rmax,pcolor)
+
+/* Display synaptic output rate for a cell */
+
+{
+    local name, vesnam, condnam, c1,c2,n,s,sc,t;
+
+  if (script==0) {
+    if(ct==dsgc || ct==gc || ct==gcoff)      /* plotnum sets where to put the plot */
+      plotnum = 10
+    else if(ct==cbp || ct==rbp || ct==hbp)
+      plotnum = 30
+    else if (ct==xcone || ct ==xrod)
+      plotnum = 50
+    else plotnum = 10;
+
+    if (pcolor==-1)	/* if user doesn't specify a color */
+      c2=plotnum	  	/* use graph num to set color */
+    else
+      c2=pcolor;
+    c1 = magenta;
+
+    n = s = t = 0;
+    foreach synapse ?s node [ct][cn] ?n { 
+       if (element s->node1a==ct && element s->node1b==cn) {
+            t = s;
+            break;
+       };
+    };
+    //print element s->node1a, element s->node1b, element s->node1c, 
+    //      element s->node2a, element s->node2b, element s->node2c;
+
+    /* look for cGMP channel on postsynaptic side */
+
+    tc = sc = 0;
+    foreach chan ?sc node [element s->node2a][element s->node2b] ?n { // look for cGMP chan
+	if (chan sc->type=="cgmp") {
+            tc = sc;
+            break;
+        };
+    };
+    //print element s->node1a, element s->node1b, element s->node1c, 
+
+    if (!t) return;
+    sprintf(name,"rate %s_%g",cname[ct],cn);
+    sprintf(vesnam,"ves  %s_%g",cname[ct],cn);
+    sprintf(condnam,"cond %s_%g",cname[ct],cn);
+     plot FA9 s min rmin max rmax pen c1 plname name plnum plotnum;
+     plot FC0 s min 0 max 2 pen green plname vesnam plnum plotnum;
+
+//     if (!tc) plot G s  min 0 max 1e-9 pen blue plname condnam plnum plotnum    // norm synapse
+//     else     plot G sc min 0 max 1e-9 pen blue plname condnam plnum plotnum;   // cGMP
+      
+//     plot FC0 s min rmin max 2 pen 2 plname name plnum plotnum;
+//     plot FC2 s min rmin max 2 pen 4 plname name plnum plotnum;
+//     plot FC9 s min rmin max 2 pen 6 plname name plnum plotnum;
+//     plot G   s min rmin max 3e-10 pen 6 plname condnam plnum plotnum;
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_i_soma(ct,cn) {
+    local plg, offtr, offb;
+
+  if (script==0) {
+    plg   =  200e-12;		/* gain of trace */
+    offb  = .0;			/* trace offset base */
+    offtr = .8;			/* position of trace within graph */
+
+    plot I[ct][cn][soma]   max (1-offtr)*plg+offb
+			min (0-offtr)*plg+offb
+			pen 2 plname "Igc" plnum 2;
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_i_nod(ct,cn,n,vmin,vmax,pcolor,label,plotnum,psize)
+
+{
+    local name, c;
+
+  if (!node [ct][cn][n] -> exist) return;
+
+  if (script==0) {
+    if (plotnum<0) {
+      if(ct==dsgc || ct==gc || ct==gcoff) /* set where to put the plot */
+        plotnum = 21
+      else if(ct==cbp || ct==rbp || ct==hbp)
+        plotnum = 41 
+      else if (ct==xcone || ct ==xrod)
+        plotnum = 61
+      else plotnum = 11;
+    };
+    
+    if (pcolor==-1)	/* if user doesn't specify a color */
+      c=plotnum	  	/* use graph num to set color */
+    else
+      c=pcolor;
+
+    if (label=="") {
+      if (n==soma) nstr = "soma"
+      else sprintf(nstr,"%g",n);
+      sprintf(name,"I%s_%g_%s",cname[ct],cn,nstr);
+    }
+    else name = label;
+
+    if (psize < 0) {
+      plot I[ct][cn][n] min vmin max vmax
+				pen c plname name plnum plotnum;
+    } else {
+      plot I[ct][cn][n] min vmin max vmax
+			pen c plname name plnum plotnum plsize psize;
+    };
+  };
+};
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc plot_currents(ct,plgain) {
+    local plg, offtr, offb, pmax, pmin;
+
+  if (script==0) {
+    plg = plgain;
+    offtr = 0.5;
+    offb  = 0;
+    pmax = (1-offtr)*plg+offb;
+    pmin = (0-offtr)*plg+offb;
+    if (!notinit(chanelem[ct][NA]) && celdens[ct][NA][SOMA]>0)   
+		plot G(I) chanelem[ct][NA]  pen 1  max pmax  min pmin plnum 3 plname "Ina";
+    if (!notinit(chanelem[ct][NA5]) && celdens[ct][NA5][SOMA]>0)   
+		plot G(I) chanelem[ct][NA5]  pen 1  max pmax  min pmin plnum 3 plname "Ina5";
+    if (!notinit(chanelem[ct][NA6]) && celdens[ct][NA6][SOMA]>0)   
+		plot G(I) chanelem[ct][NA6]  pen 1  max pmax  min pmin plnum 3 plname "Ina6";
+    if (!notinit(chanelem[ct][NA8]) && celdens[ct][NA8][SOMA]>0)   
+		plot G(I) chanelem[ct][NA8]  pen 1  max pmax  min pmin plnum 3 plname "Ina8";
+    //plot G(I) chanelem[ct][NA]  pen 1  max pmax*10  min pmin*100 plnum 3 plname "Ina2";
+
+    if (!notinit(chanelem[ct][KDR]) && celdens[ct][KDR][SOMA]>0)   
+		plot G(I) chanelem[ct][KDR]   pen 2  max pmax  min pmin plnum 3 plname "Ikdr";
+    /* if (!notinit(chanelem[ct][KDR]))  
+		plot G(I) chanelem[ct][KDR] pen 5 max pmax  min pmin plnum 3 plname "Ikslo";*/
+    if (!notinit(chanelem[ct][KA]) && celdens[ct][KA][SOMA]>0)   
+		plot G(I) chanelem[ct][KA]  pen 14 max pmax  min pmin plnum 3 plname "Ika";
+    if (!notinit(chanelem[ct][KH]) && celdens[ct][KH][SOMA]>0)   
+		plot G(I) chanelem[ct][KH]   pen 4  max pmax  min pmin plnum 3 plname "Ih";
+    if (!notinit(chanelem[ct][CA]) && celdens[ct][CA][SOMA]>0)   
+		plot G(I) chanelem[ct][CA]   pen 3  max pmax  min pmin plnum 3 plname "Ica";
+    if (!notinit(chanelem[ct][CA5]) && celdens[ct][CA5][SOMA]>0)   
+		plot G(I) chanelem[ct][CA5]   pen 3  max pmax  min pmin plnum 3 plname "Ica";
+    if (!notinit(chanelem[ct][SKCA1]) && celdens[ct][SKCA1][SOMA]>0)   
+		plot G(I) chanelem[ct][SKCA1] pen 5 max pmax min pmin plnum 3 plname "ISk1";
+    if (!notinit(chanelem[ct][SKCA2]) && celdens[ct][SKCA2][SOMA]>0)   
+		plot G(I) chanelem[ct][SKCA2] pen 8 max pmax min pmin plnum 3 plname "ISk2";
+    if (!notinit(chanelem[ct][BKCA]) && celdens[ct][BKCA][SOMA]>0)   
+		plot G(I) chanelem[ct][BKCA] pen 7 max pmax min pmin plnum 3 plname "IBk";
+    plot I[ct][1][soma] pen 12  max pmax min pmin plnum 3 plname "Iinj";
+  };
+};
+

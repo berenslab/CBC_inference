@@ -1,0 +1,92 @@
+
+/* cadf_7.n, calculation of GHK current equation for a channel */
+/* see cadfxx.n for series of transitions */
+/* see tcomp/cadf2.n for explanation */
+
+FR = 11604.5;
+T = 300;
+frt = FR/T;
+
+dcai = 100e-9;
+
+naca=dnao/dcao;
+kca=dko/dcao;
+
+mo = dcao*4;
+//mo = dnao;
+//mo = dko;
+//mo = dclo;
+
+naratio = dnai/dnao;
+kratio  = dki/dko;
+caratio = dcai/dcao;
+clratio = dcli/dclo;
+
+print caratio;
+
+naperm = 0;
+kperm  = 0.0002;
+cperm  = 1;
+clperm = 0;
+
+z=2;
+main_ion = dcao*z*z;
+//main_ion = dnao;
+//main_ion = dko;
+//main_ion = dclo;
+
+
+vstart = -0.2;
+vstop  = 0.2;
+vstep  = 0.001;
+
+func calc_cvfi (v, iono, ioni, ionm, z, perm)
+
+{
+    local vf,cfvi;
+
+    vf = exp(-z*v*frt);
+    cvfi = perm/iono * z*z * (ioni-iono*vf)/(1-vf) * iono/ionm;
+    return cvfi;
+};
+
+func calc_chgfrac (v,iono,ioni,ionm,z,perm)
+{
+    local vf,vfi,gfrac;
+
+    vf = exp(-z*v*frt);
+    vfi = 1 / (1 - vf);
+    gfrac = perm/iono*frt*v*z*z*z * (ioni-iono)*vf*vfi*vfi*iono/ionm;
+    return gfrac;
+};
+
+for (v = vstart; v < vstop; v += vstep) {
+
+    dv = 1e-6;
+    if (abs(v) < 1e-6) continue;
+
+    cavfi = calc_cvfi(v,dcao,dcai,main_ion,2,cperm);
+    navfi = calc_cvfi(v,dnao,dnai,main_ion,1,naperm);
+    kvfi  = calc_cvfi(v,dko,dki,main_ion,1,kperm);
+    clvfi = calc_cvfi(v,dclo,dcli,main_ion,-1,clperm);
+
+    cvfi = ( cavfi +
+             navfi +
+             kvfi  +
+             clvfi);
+
+    i = v * cvfi;
+
+    chgfrac = cvfi - (calc_chgfrac(v,dcao,dcai,main_ion,2,cperm) + 
+                     calc_chgfrac(v,dnao,dnai,main_ion,1,naperm) + 
+                     calc_chgfrac(v,dko,dki,main_ion,1,kperm) + 
+                     calc_chgfrac(v,dclo,dcli,main_ion,-1,clperm));
+
+    chgvrev = v - i/chgfrac; 
+ 
+
+    print v, i, chgvrev;
+
+};
+  
+

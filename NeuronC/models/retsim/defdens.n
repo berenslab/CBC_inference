@@ -1,0 +1,24 @@
+# Default membrane properties (density) file
+#
+#dend   dend_prox  dend_dist soma  hillock thin   axon   axon_long node
+#
+100e-3  0e-3  80e-3 100e-3  80e-3     0e-3   90e-3   0e-3   0e-3  # Na
+0e-3    0e-3    0e-3 0e-3    0e-3     0e-3   0e-3    0e-3   0e-3  # Na5
+0e-3    0e-3    0e-3 0e-3    0e-3     0e-3   0e-3    0e-3   0e-3  # Na6
+0e-3    0e-3    0e-3 0e-3    0e-3     0e-3   0e-3    0e-3   0e-3  # Na8
+0e-3    0e-3    0e-3 0e-3   10e-3     0e-3   10e-3   0e-3   0e-3  # Kdr
+0e-3    0e-3    0e-3 2e-3    2e-3     0e-3   0e-3    0e-3   0e-3  # KA
+0e-3    0e-3    0e-3 2e-3    2e-3     0e-3   0e-3    0e-3   0e-3  # KH
+0e-3    0e-3    0e-3 0e-3    0e-3     0e-3   0e-3    0e-3   0e-3  # KHz
+0.03e-3 0e-3    0e-3 0.03e-3 0e-3     0e-3   0e-3    0e-3   0e-3  # sKCa1
+0.02e-3 0e-3    0e-3 0.02e-3 0e-3     0e-3   0e-3    0e-3   0e-3  # sKCa2
+0.7e-3  0e-6    0e-3 0.7e-3  0e-6     0e-6   0e-6    0e-6   0e-3  # bKCa
+0.05e-3 0e-3    0e-3 0.05e-3 0e-3     0e-3   0e-3    0e-3   0e-3  # Ca
+0e-3    0e-3    0e-3 0e-3    0e-3     0e-3   0e-3    0e-3   0e-3  # Ca5
+1e-2    0e-3    0e-3 1e-2    1e-2     1e-2   0e-3    0e-3   0e-3  # CAPUMP
+0e-2    0e-3    0e-3 0e-2    0e-2     0e-2   0e-3    0e-3   0e-3  # Caexch
+-.05   -0.05   -0.05 -0.05   -0.05   -0.05   -0.05   -0.05 -0.05  # vstart
+vcl     vcl     vcl  vcl     vcl     vcl     vcl     vcl    vcl   # vrev
+drm     drm     drm  drm     drm     drm     drm     drm    drm   # Rm
+dcm     dcm     dcm  dcm     dcm     dcm     dcm     dcm    dcm   # Cm
+#

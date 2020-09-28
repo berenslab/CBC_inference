@@ -1,0 +1,16 @@
+#!/bin/sh
+
+make
+
+EXPT="dsgc_calib"
+
+SIM_PARAMS="--ninfo 3 --tempcel 35 --timinc 5e-6"
+CHAN_PARAMS="--dsgcdensfile runconf/dens_dsgc_passive.n --vk -0.100 --vna 0.065"
+MORPH_PARAMS="--dsgcfile runconf/morph_DS060825"
+#MORPH_PARAMS="--dsgcfile runconf/morph_ds_test2"
+DISP_PARAMS="--make_movie 0 --space_time 1 --show_inputs 0 --show_actual_release 0"
+STIM_PARAMS="--starttime .200 --stimdur 1 --stimamp .010e-9"
+
+
+DESC="_calib"
+retsim --expt $EXPT --expt_desc $DESC $SIM_PARAMS $MORPH_PARAMS $CHAN_PARAMS $DISP_PARAMS $STIM_PARAMS -v | vid
