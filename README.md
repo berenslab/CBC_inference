@@ -23,7 +23,7 @@ The experiments are ordered as follows:
 
 The NeuronC [[1]](#1) version (6.3.14) used [here](NeuronC) was downloaded from http://retina.anatomy.upenn.edu/~rob/neuronc.html and used with minor modifications.
 
-After running the experiments or downloading the data, you can generate the [figures](_figures) and the animations [animations](_animations).
+After running the experiments or downloading the data, you can generate the [figures](_create_figures) and the animations [animations](_animations).
 
 ### Electrical stimulation
 
