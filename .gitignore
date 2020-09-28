@@ -10,6 +10,7 @@
 *.core
 *.pkl
 *.mph*
+!*_cleared.mph # Accepted cleared files.
 *.mat
 *.h5
 *.dat
