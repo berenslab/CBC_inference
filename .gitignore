@@ -37,6 +37,7 @@ V_ames/
 _all_neurons.csv
 stim_files/
 comp_files/
+/experimental_data/
 
 # C++
 # Prerequisites
