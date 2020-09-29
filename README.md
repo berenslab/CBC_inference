@@ -23,9 +23,12 @@ The experiments are ordered as follows:
 - [Estimate the thresholds of the CBC relative to the GC thresholds estimates.](step3b_thresholds)
 - [Estimate stimulus waveforms for selective stimulating of the OFF- or ON-CBC.](step4_optimize_stimulus)
 
-The NeuronC [[1]](#1) version (6.3.14) used [here](NeuronC) was downloaded from http://retina.anatomy.upenn.edu/~rob/neuronc.html and used with minor modifications.
-
 After running the experiments or downloading the data, you can generate the [figures](create_figures) and the animations [animations](create_animations).
+
+### NeuronC
+
+The NeuronC [[1]](#1) version (6.3.14) used [here](neuronc) was downloaded from http://retina.anatomy.upenn.edu/~rob/neuronc.html and used with minor modifications.
+To use it you have to run the makefile in [neuronc](neuronc) and in [retsim](neuronc/models/retsim).
 
 ### Electrical stimulation
 
