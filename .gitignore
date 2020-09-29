@@ -38,6 +38,7 @@ _all_neurons.csv
 stim_files/
 comp_files/
 /experimental_data/data_*
+optim_data/
 
 # C++
 # Prerequisites
