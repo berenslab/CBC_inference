@@ -35,8 +35,6 @@ COMSOL_output/
 V_ames/
 *_ready_*
 _all_neurons.csv
-/comp_CBC*
-
 stim_files/
 comp_files/
 
