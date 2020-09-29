@@ -98,6 +98,9 @@ class Cell():
     self.merge_cones = True
     
     self.set_retsim_path(retsim_path)
+    
+    os.path.join(self.retsim_path, 'comp_files')
+    os.path.join(self.retsim_path, 'stim_files')
 
   ############################################################################
   def set_retsim_path(self, retsim_path):
@@ -302,6 +305,7 @@ class Cell():
   def create_retsim_stim_file_name(self, stim_idx=None):
     ''' Create a file name for a retsim stimulus.
     '''
+    
     if stim_idx is None: suffix = '.csv'
     else:                suffix = '_' + str(stim_idx) + '.csv'
     return os.path.join(self.retsim_path, 'stim_files', self.retsim_stim_file + suffix)

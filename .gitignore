@@ -34,6 +34,11 @@ COMSOL_input/
 COMSOL_output/
 V_ames/
 *_ready_*
+_all_neurons.csv
+/comp_CBC*
+
+retsim/stim_files
+retsim/comp_files
 
 # C++
 # Prerequisites
