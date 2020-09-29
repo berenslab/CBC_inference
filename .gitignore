@@ -29,6 +29,10 @@ _create_figures/_figures
 data_preprocessed
 step4_optimize_stimulus/Neurons
 source_data
+COMSOL_input
+COMSOL_output
+V_ames
+_ready*
 
 # C++
 # Prerequisites
