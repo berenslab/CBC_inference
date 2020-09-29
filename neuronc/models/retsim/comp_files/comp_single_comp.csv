@@ -1,4 +1,0 @@
-comp 1 nodes 1 nodes_to_comp [(0,1,0);] xloc 0     yloc 0     zloc 20    dia 5.46  Cm 9.37e-13 Rm 2.48e-11
-comp 2 nodes 1 nodes_to_comp [] xloc 0     yloc 0     zloc 12.5  dia 2.5   Cm 1.96e-13 Rm 5.17e-12
-comp 3 nodes 1 nodes_to_comp [(0,1,1);] xloc 0     yloc 0     zloc 5     dia 6.3   Cm 1.25e-12 Rm 3.3e-11
-comp 4 nodes 2 nodes_to_comp [(6,1,0);(6,1,1);] xloc 0     yloc 0     zloc -6    dia 4.87  Cm 7.46e-13 Rm 3.73e-11
