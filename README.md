@@ -19,7 +19,7 @@ The experiments are ordered as follows:
 - [Remove single ion channels from the optimized cone to test effect of active ion channels.](step1b_analyse_optimized_cones)
 - [Parameter inference for the CBC cells.](step2a_optimize_cbc)
 - [Remove single ion channels from the optimized CBCs to test effect of active ion channels.](step2b_analyse_optimized_cbcs)
-- [Parameter inference of the electrical parameters of the retina.](step3_optimize_electrical_params)
+- [Parameter inference of the electrical parameters of the retina.](step3a_optimize_electrical_params)
 - [Estimate the thresholds of the CBC relative to the GC thresholds estimates.](step3b_thresholds)
 - [Estimate stimulus waveforms for selective stimulating of the OFF- or ON-CBC.](step4_optimize_stimulus)
 
