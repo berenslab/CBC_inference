@@ -37,8 +37,8 @@ V_ames/
 _all_neurons.csv
 /comp_CBC*
 
-retsim/stim_files
-retsim/comp_files
+stim_files/
+comp_files/
 
 # C++
 # Prerequisites
