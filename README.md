@@ -13,6 +13,8 @@ The code is structured similar to the paper. Since most experiments depend on th
 ### Experiments
 The experiments are ordered as follows:
 
+- [Download the data.](step0a_download_data)
+- [Proprocess cell iGluSnFR target data and the stimuli.](step0b_preprocess_iGluSnFR_data)
 - [Parameter inference for the cone cell.](step1a_optimize_cones)
 - [Remove single ion channels from the optimized cone to test effect of active ion channels.](step1b_analyse_optimized_cones)
 - [Parameter inference for the CBC cells.](step2a_optimize_cbc)
