@@ -28,6 +28,10 @@ class Cell():
       retsim_path='/gpfs01/berens/user/joesterle/berens/neuronc-master/nc/models/retsim/'
     ):
     
+    self.set_retsim_path(retsim_path)
+    data_utils.make_dir(os.path.join(self.retsim_path, 'comp_files'))
+    data_utils.make_dir(os.path.join(self.retsim_path, 'stim_files'))
+    
     # Input file names.
     self.expt_file_list = None
    
@@ -96,11 +100,6 @@ class Cell():
     self.set_n_cones = 0
     self.make_cones = False
     self.merge_cones = True
-    
-    self.set_retsim_path(retsim_path)
-    
-    os.path.join(self.retsim_path, 'comp_files')
-    os.path.join(self.retsim_path, 'stim_files')
 
   ############################################################################
   def set_retsim_path(self, retsim_path):
