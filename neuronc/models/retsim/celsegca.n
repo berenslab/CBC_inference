@@ -1,0 +1,61 @@
+/* biophysical properties for Ca-channel properties */
+
+/* Ca-channel parameters */
+
+ALPHA=1;
+BETA=2;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+func camfunc(v, f)
+{ local val,x,y;
+  
+  if (f==ALPHA) {				      /* alpha c */
+    y = -.09 * (v - 63 );	  //fits catyp 3,5 to Sather etal(1993) data
+    x = exp (y) - 1;
+    if (abs(x) > 1e-5)                        /* singularity at v = -15 mv */
+       val =  y / x
+    else
+       val = 1.0;                                                
+    val *= 3714.;		
+  }
+  else if (f==BETA) {                              /* beta c */
+    val = (exp ((v - 28 ) / -25.)); //fits catyp 3,5 to Sather etal(1993) data
+    val *= 2;
+  };	
+  return (val*5);	
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+func cahfunc(v, f)
+/* Calculate alphach, betach as a function of mV for  */
+/* channel types 2 or 3 (HH or Markov T-type). */
+
+{
+   local val,x,y;
+
+  if (f==ALPHA) {				      /* alpha h */
+    val = (exp ((v - -20) / -9.));	//fits catyp 5 to Sather etal(1993) data
+    val *= .36;
+  }
+  else if (f==BETA) {                             /* beta h */
+    y = 0.05 * (v - -20);		//fits catyp 5 to Sather etal(1993) data
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                        /* singularity */
+       val = y / x
+    else
+       val = 1.0; 
+    val *= 52/60;
+    //val *= 1 - 1 / (1 + ( exp ((v- -50) / -25.)));  //prevent val from rising
+						      // too high (limit inact)
+  };
+  return (val);
+};
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+func calcca5m = camfunc;	//use camfunc to encode any channel type function
+func calcca5h = cahfunc;
+
+/*--------------------------------------------------------*/

@@ -1,0 +1,7 @@
+#! /bin/csh -f
+#
+# picture-ps
+#
+foreach i ($argv)
+  mpict -s $i | vid -c > $i:r.ps
+end

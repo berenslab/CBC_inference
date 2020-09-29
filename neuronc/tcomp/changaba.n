@@ -1,0 +1,48 @@
+
+/* test of noise in GABA synapse */
+
+timinc = 1e-5;
+ploti  = 1e-5;
+endexp = 0.02;
+rseed = 106;
+tempcel = 37;
+plsep = 1;
+
+at 1 sphere dia 10 vrest -.07;
+
+at 2 sphere dia 10 rm 2000;
+
+conn 1 to 2 synapse open maxcond 1e-9 trconc=10e-3
+		resp gaba type 1 taum=1 taud=1
+		expon 3
+		trconc 10e-3
+		chnoise=1 N=100
+		timec2 1 tfall2 = 1
+                ename xxx;
+
+stimtime1 = 0.005;
+stimdur  = 0.002;
+
+stim node 1 vclamp -.03 start stimtime1 dur stimdur;
+stim node 1 vclamp -.07 start stimtime1+stimdur dur 1;
+
+stimtime2 = 0.15;
+
+stim node 1 vclamp -.03 start stimtime2 dur stimdur;
+stim node 1 vclamp -.07 start stimtime2+stimdur dur 1;
+
+//plot V[2] max -.02 min -.07;
+
+//plot FB1 xxx max 10 min 0;
+
+plot G xxx max 1e-9 min 0 plnum 1;
+plot G(1) xxx max 2 min 0 plnum 2;
+plot G(2) xxx max 2 min 0 plnum 2;
+plot G(3) xxx max 2 min 0 plnum 2;
+plot G(4) xxx max 2 min 0 plnum 2;
+plot G(5) xxx max 2 min 0 plnum 2;
+plot G(6) xxx max 2 min 0 plnum 2;
+plot G(7) xxx max 2 min 0 plnum 2;
+plot V[1] max -.02 min -.07 plnum 3 plsize .2;
+
+run;

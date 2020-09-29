@@ -1,5 +1,0 @@
-awk "BEGIN { size=0; }
-           { size += \$$1}
-       END { print \"Total\", size; }
-    " 
-

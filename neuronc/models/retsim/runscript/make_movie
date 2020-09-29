@@ -1,0 +1,8 @@
+#! /bin/tcsh -f
+#
+ps2ppm100 $argv*.ps
+movconvert -f "$argv"_ -n 900
+cp xxx_paramfile "$argv"_paramfile 
+replace xxx "$argv" "$argv"_paramfile
+mpeg_encode "$argv"_paramfile 
+rm "$argv"*.ppm

@@ -1,0 +1,2 @@
+nc -d 1 --expt 3 --mxrot 180 -R gcrf.n > gc.pov
+povray -h1000 -w1000 +dx -Igc.pov

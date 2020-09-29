@@ -14,11 +14,11 @@
 *.h5
 *.dat
 
-# Figures, Not that some png will be commited.
+# Figures, Note that some png will be commited.
 *.pdf
 *.mp4
 
-# Added cleared comsol files.
+# Add cleared comsol files.
 !*cleared.mph
 
 # Folders:
@@ -26,7 +26,7 @@ __pycache__/
 __pypackages__/
 .ipynb_checkpoints
 _create_figures/_figures
-PreprocessedData
+data_preprocessed
 step4_optimize_stimulus/Neurons
 source_data
 

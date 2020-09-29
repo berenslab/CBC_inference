@@ -1,0 +1,33 @@
+/* tcomp19:  test of voltage clamp current recording
+   from a rod with simultaneous voltage recording */
+
+/* calibrate at inten 1e3 for 1e-3 dur to give
+   8e-12 A peak response */
+
+timinc = 1e-4;
+ploti = endexp / 200;
+endexp = 1.0;
+
+dmaxrod=35e-12;
+
+rodrm=3000;
+at 1 sphere dia 10 rm rodrm;			/* rod anatomy */
+at 1 rod (0,0); 
+
+at 2 sphere dia 10 rm rodrm;			/* rod anatomy */
+at 2 rod (0,0); 
+					/* synapse from rod to horiz */
+
+flash=1e3;
+
+stim rod 1 inten=flash start .009 dur .001;
+stim rod 2 inten=flash start .009 dur .001;
+
+stim node 1 vclamp -.06 start 0 dur 1.5;
+
+plot I[1] max 0 min -40e-12;
+plot V[2] max -.04 min -.06;
+//plot V[2] max -.020 min -.050; 
+
+run;
+

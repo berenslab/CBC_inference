@@ -1,0 +1,24 @@
+/* test of vbuf control */
+
+timinc = 1e-4;
+complam = .1;
+implicit=1;
+ploti = timinc;
+pre = 100;
+drm = 1000;
+
+setvar();
+at pre sphere dia 2;
+at 1 sphere dia 2;
+at 2 sphere dia 2;
+conn pre to 1 vbuf; 
+conn pre to 2 vbuf delay 1; 
+stim node pre vclamp -.03 start 0 dur .001;
+stim node pre vclamp -.07 start 0.001 dur .01;
+
+plot V [pre];
+plot V [1];
+plot V [2];
+endexp = .005;
+run;
+

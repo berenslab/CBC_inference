@@ -1,0 +1,45 @@
+
+ R = 8.3144621;                 /* Gas constant J/mol/degK */
+ F = 96485.3399;                /* Faraday's constant Coul/mol    */
+ 
+ktemp = 273 + 35;
+
+RT = R * ktemp;
+
+// p = 2.3e-6;    // for Cl-
+
+//ioni = 0.009;
+//iono = 0.120;
+
+// p = 1.96e-6;   // for K+
+// iono = 0.005;
+// ioni = 0.140;
+
+p = 1.92e-6;      // for Na+
+iono = 0.143;
+ioni = 0.0125;
+
+func ghki (v, z)
+
+/* compute GHK current equation, z = valence of ion, for Cl, z = -1 */
+
+{
+    local df;
+
+   // if (abs(v) < 1e-6) v = 1e-6;
+   df = exp (-z * F * v / RT);
+   i = p * z * z * v * F*F/RT * (ioni - iono * df) / (1 - df);
+   return i;
+};
+
+vstart = -0.4;
+vend   =  0.4;
+vstep  =  0.001;
+cond = 1e-9;
+
+for (v=vstart; v<vend; v+= vstep) {
+
+print v, ghki(v,1)*cond, v*cond;
+
+};
+

@@ -1,0 +1,24 @@
+/* tcomp32:  Hodgkin-Huxley channel in cable membrane */
+
+
+crit = 1e-10;
+endexp = .02;
+ploti= 1e-4;
+timinc = 5e-5;
+
+drm=10000;
+
+tempcel=15;
+
+conn 1 to 2 cable dia .8 length 100 vrev -.06 
+	 Na type 0 vrev .04 density 1e-1		/* */
+	 K type 0 vrev -.08 density 3e-2;	/* */
+
+
+stim node 2 cclamp 1e-10 start .005 dur .02;
+
+plot V[1] max .04 min -.08;   /* */
+plot V[2] max .04 min -.08;   /* */
+
+run;
+

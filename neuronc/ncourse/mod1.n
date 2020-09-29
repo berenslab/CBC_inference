@@ -1,0 +1,27 @@
+
+ploti=1e-4;
+                                        /* this is a comment: do not enter */ 
+
+pre = 100;                              /* convenience definition */
+at pre loc (0,10) sphere dia 5;
+
+conn pre to 1 loc (0,0) synapse expon 5 thresh -.05 maxcond 5e-9;
+                                         /* thresh 50 mv, max cond 5e-9 S */
+
+conn 1 to 2 loc (120,0) cable length 120 dia 1 rm 5000;
+                                        /* length and dia are in microns */
+
+stim node pre vclamp -.045 start .005 dur .01;       /* voltage clamp */
+
+plot V[1] max 0 min -.07;               /* plot the voltage at node 1 */
+plot V[pre] max 0 min -.07;
+
+if (disp) {
+  display center (0,0,0);
+  display size (200);
+  display matching [-1][-1][-1];
+  exit;
+};
+
+endexp = .05;                           /* x axis length on output plot */
+step .05;                               /* length of simulation in sec. */

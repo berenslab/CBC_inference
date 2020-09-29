@@ -1,0 +1,476 @@
+/* Test of spike generator */ 
+/* single compartement */
+/* duplicates Fohlmeister Miller params. */
+
+timinc = 1e-5;
+ploti=1e-5;
+tempcel = 22; 
+implicit=0;
+crit=1e-10; 
+// plsep = 1;
+
+dpcana=0;
+dpnaca=0;
+
+dpcak=0;
+dpkca=0;
+
+dpnak=0;
+dpkna=0;
+dcavoff=0;
+calcnernst=0;
+
+dbasetc=22;
+
+dqm=3;
+dqh=3;
+dqn=3;
+dqca=3;
+dqd=3;
+dqkca=3;
+
+dqc=1.4;
+
+vna =  0.035; 
+vk  = -0.075; 
+vcl = -.065;
+
+grest = -.063;
+dcai = 50e-9; // calcium concentration inside at t0
+drm=50000;
+
+na_mult =    1;   // Na
+ca_mult =    1;   // L-type Ca
+k0_mult =    1;   // Kdr
+k3_mult =    1;   // KA
+skca1_mult = 1;   // sKCa, apamin-sensitive
+skca2_mult = 0;   // sKCa, apamin-insensitive
+bkca_mult =  1;   // bKCa
+ifactor =   .10;
+ifactor =   0;
+
+plot_freq = 1;
+channoise = 1;
+channoise = 0;
+
+expt = "spike";		/* look at spike shape */
+expt = "isi";		/* look at inter-spike interval */
+expt = "f/i";		/* look at F/I, adaptation */
+expt = "spike";
+
+x = setvar();
+
+if (channoise) {	/* turn on all channel noise */
+  nanois  = 1;
+  canois  = 1;
+  kdrnois = 1;
+  kanois  = 1;
+  sk1nois = 1;
+  sk2nois = 1;
+  bknois  = 1;
+}
+else {
+  nanois  = 0;
+  canois  = 0;
+  kdrnois = 0;
+  kanois  = 0;
+  sk1nois = 0;
+  sk2nois = 0;
+  bknois  = 0;
+};
+
+/*---------------------------------------------*/
+
+/* The functions "calcna1m" and "calcna1h" below redefine
+   the simulator's default built-in functions for channel
+   kinetics.
+ */
+
+/*---------------------------------------------*/
+
+MSSEC = 1000;
+
+func calcna1m (v, func)
+
+/* Calculate Na m rate functions given voltage in mv.
+   All rates are calculated exactly as in HH (1952) paper.
+   Original rates were 1/msec, we multiply by 1000 here (MSSEC)
+   to convert to 1/sec.
+
+   The "func" parameter defines:
+
+    1   alpha m
+    2   beta  m */
+{
+     local val,x,y;
+
+  if (func==1) {                                /* alpha m */
+
+    y = -0.1 * (v+30.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                          /* singularity when x==0 */
+       val = 6.0 * y / x
+    else
+       val = 6.0;
+  }
+  else if (func==2) {                           /* beta m */
+    val =  20 * exp ((v+55) / -18.);
+  };
+  return val*MSSEC;
+};
+
+/*---------------------------------------------*/
+
+func calcna1h (v, func)
+
+/* Calculate Na h rate function given voltage in mv.
+   All rates are calculated exactly as in HH (1952) paper.
+   The "func" parameter defines:
+
+    1   alpha h
+    2   beta  h
+*/
+
+{
+   local val,y;
+
+  if (func == 1) {                              /* alpha h */
+    val =  0.4 * exp ((v+50) / -20.);
+  }
+  else if (func == 2) {                         /* beta h */
+    y = -0.1 * (v+20);
+    val = 6.0 / (exp (y) + 1.0);
+  };
+  return val*MSSEC;
+};
+
+/*---------------------------------------------*/
+
+func calck1n (v,func)
+
+/* Calculate K rate functions given voltage in mv.
+   All rates are calculated exactly as in HH (1952) paper.
+   The "func" parameter defines:
+
+    1   alpha n
+    2   beta  n
+*/
+
+{
+   local val,x,y;
+
+  if (func==1) {                                  /* alpha n */
+    y = -0.1 * (v+40.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                        /* singularity at when x==0 */
+       val = 0.2 * y / x
+    else
+       val = 0.2;
+  }
+  else if (func==2) {                           /* beta n */
+    val = 0.4 * exp ((v+50) / -80.);
+  };
+  return val*MSSEC;
+};
+
+/*---------------------------------------------*/
+
+func calck3n (v, func)
+
+/* Calculate K3 rate functions given voltage in mv.
+
+   Original was in terms of per msec.
+   Calc in terms of sec.
+
+   The "func" parameter defines:
+
+    1   alpha n
+    2   beta  m
+*/
+
+{
+   local val,x,y;
+
+  if (func==1) {                                /* alpha n type KA chan */
+    y = -0.1 * (v+90.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                          /* singularity at v = -90 mv */
+       val = 0.06 * y / x                     /* taken from F&M 1998 */
+    else
+       val = 0.06;
+  }
+  else if (func==2) {
+    val =  0.1 * exp ((v+30) / -10.);        /* type KA chan */
+  };
+  return val*MSSEC;
+};
+
+/*---------------------------------------------*/
+
+
+func calck3d (v, func)
+
+/* Calculate K3 inactivation rate functions given voltage in mv.
+
+   Original was in terms of per msec.
+   Calc in terms of sec.
+
+   The "func" parameter defines:
+
+    1   alpha d
+    2   beta  d
+*/
+
+{
+   local val,y;
+
+  if (func==1) {                                /* alpha d (K inact) */
+    val = 0.04 * exp ((v+70)/-20);
+  }
+  else if (func==2) {                           /* beta d */
+    y = -0.1 * (v+40.);
+    val = 0.6 / (exp (y) + 1.0);
+  };
+  return val*MSSEC;
+};
+
+
+/*---------------------------------------------*/
+
+func calcca1m (v, func)
+
+/* Calculate Na m rate functions given voltage in mv.
+   All rates are calculated exactly as in HH (1952) paper.
+   Original rates were 1/msec, we multiply by 1000 here (MSSEC)
+   to convert to 1/sec.
+
+   The "func" parameter defines:
+
+    1   alpha m
+    2   beta  m */
+{
+     local val,x,y;
+
+  if (func==1) {                                /* alpha m */
+
+    y = -0.1 * (v+13.);
+    x = exp (y) - 1.;
+    if (abs(x) > 1e-5)                          /* singularity when x==0 */
+       val = 3.0 * y / x
+    else
+       val = 3.0;
+  }
+  else if (func==2) {                           /* beta m */
+    val =  10 * exp ((v+38) / -18.);
+  };
+  return val*MSSEC;
+};
+
+
+/*---------------------------------------------*/
+
+soma = 1;
+at soma sphere dia 25 vrest grest vrev -.06;
+/* area=2000 um^2 =20*10^-6 cm ^2
+/* note: density in -S-/cm2 */
+
+
+at soma chan 
+   Na type 1 density (1-ifactor)*50e-3*na_mult 
+	chnoise=nanois 
+       ename naxx;
+
+at soma chan 
+   Na type 1 density ifactor*50e-3*na_mult 
+	tauc=30 taud=30
+	chnoise=nanois 
+	;
+
+catau = 50e-3;
+ddca = 1e-12;
+
+at soma chan 
+       Ca type 1 density ca_mult*2.2e-3
+	chnoise=canois 
+        capump vmax=5e-9/catau km=5e-6
+	cshell 1
+        ename ca1;
+
+at soma chan 
+       K type 1 
+	density k0_mult* 12e-3
+	chnoise=kdrnois
+	ename kdr;  
+
+at soma chan 
+       KCa type 1 
+	density skca1_mult*.05e-3 
+	k1=1e-7
+	k2=1e-7
+	chnoise=sk1nois 
+	ename skca1;
+
+at soma chan 
+       KCa type 5 
+	density skca2_mult*.1e-3 
+	chnoise=sk2nois 
+	ename skca2;
+
+at soma chan 
+       KCa type 3 offset=.01
+	density bkca_mult*5e-3
+	k1=1e-6
+	k2=1e-6
+	d1=1
+	d2=1
+	chnoise=bknois 
+	ename bkca;
+
+at soma chan /* K_A channel */
+       K type 3 
+	density k3_mult*36e-3 
+	chnoise=kanois
+	ename ka; 
+
+totcur = 0;
+
+func calc_totcur () {
+ return (G(I)naxx + G(I)kdr + G(I)ka + G(I)ca1);
+};
+
+include "onplot.m";		/* functions to calculate spike frequency */
+if (expt=="spike") {			/* look at spike shape */ 
+  stim node soma cclamp 250e-12 start 0 dur .0005;
+  stim node soma cclamp 150e-12  start .0005 dur .0015;
+
+  endexp = .006;
+
+  plgain = 5e-9;
+
+  naoff = 0;
+  nagain = plgain;
+  caoff = 0;
+  cagain = plgain;
+  kdroff = 0;
+  kdrgain = plgain;
+  kaoff = 0;
+  kagain = plgain;
+  skoff = 0;
+  skgain = plgain;
+  bkoff = 0;
+  bkgain = plgain;
+
+  plot G(I) naxx  pen 1  max (naoff+1) * nagain   min (naoff-1) * nagain;
+  plot G(I) kdr   pen 2  max (kdroff+1)* kdrgain  min (kdroff-1)* kdrgain;
+  plot G(I) ka    pen 14 max (kaoff+1) * kagain   min (kaoff-1) * kagain;
+  plot G(I) ca1   pen 3  max (caoff+1) * cagain   min (caoff-1) * cagain;
+
+if (!notinit(skca1))
+    plot G(I) skca1 pen 5 max (skoff+1)*skgain   min (skoff-1) * skgain;
+if (!notinit(skca2))
+    plot G(I) skca2 pen 8 max (skoff+1)*skgain   min (skoff-1) * skgain;
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max (bkoff+1)*bkgain   min (bkoff-1) * bkgain;
+
+  plot V[soma]    pen 4  max .16 min -.08;
+  plot S totcur pen 12 max plgain min -plgain;	 /* total current from onplot() */ 
+}
+else if (expt=="isi") {		/* look at inter-spike interval */
+
+  waittime = 0.0004; 
+  stimdur  = 1;
+  afterstim = 0.10;
+  stimampl = 45e-12;
+
+  stim node soma cclamp 200e-12 start 0 dur waittime;
+  stim node soma cclamp stimampl start waittime dur stimdur;
+
+  endexp = 0.025;
+   endexp = 0.5;
+  // endexp = 2.5;
+
+  plgain = 2e-10;
+
+  naoff = 0;
+  nagain = plgain;
+  caoff = 0;
+  cagain = plgain;
+  kdroff = 0;
+  kdrgain = plgain;
+  kaoff = 0;
+  kagain = plgain;
+  kacgain = plgain*10;
+  skoff = 0;
+  skgain = plgain;
+  bkoff = 0;
+  bkgain = plgain;
+  moff = 1;
+  mgain = plgain;
+
+  plot G(I) naxx  pen 1  max (naoff+1) * nagain   min (naoff-1) * nagain;
+  plot G(I) kdr   pen 2  max (kdroff+1)* kdrgain  min (kdroff-1)* kdrgain;
+  plot G(I) ka    pen 14 max (kaoff+1) * kagain   min (kaoff-1) * kagain;
+//plot G(0) ka    pen 2 max (kaoff+1) * kacgain   min (kaoff-1) * kacgain;
+  plot G(I) ca1   pen 3  max (caoff+1) * cagain   min (caoff-1) * cagain;
+
+if (!notinit(skca1))
+    plot G(I) skca1 pen 5 max (skoff+1)*skgain   min (skoff-1) * skgain;
+if (!notinit(skca2))
+    plot G(I) skca2 pen 8 max (skoff+1)*skgain   min (skoff-1) * skgain;
+if (!notinit(bkca))
+  plot G(I) bkca    pen 7 max (bkoff+1)*bkgain   min (bkoff-1) * bkgain;
+
+  plot V [soma]    pen 4  max .16 min -.08;
+  plot Im[soma]    pen 12  max (moff+1)*mgain min (moff-1) * mgain;
+  plot Ca(1)[soma] pen 6 max 20e-6 min 0;      /* [Ca]i */
+
+}
+else if (expt=="f/i") {
+
+  /* current clamp, then record spike train and [Ca] */
+
+  waittime = 0.1; // Let the system relax before stimulus.
+  stimdur  = 0.2;
+  afterstim = 0.10;
+  nstim=4;
+  ndstim=0;
+  endexp=waittime+nstim*(stimdur+afterstim)+ndstim*stimdur;
+  stimampl = 20e-12;
+  
+  //stimback = 5e-12;
+  //stim node soma cclamp stimback start 0 dur 2;
+
+  for (i=1; i<=nstim; i++) {
+    stim node soma cclamp i*stimampl start waittime+(i-1.0)*(stimdur+afterstim) 
+		dur stimdur; 
+  };
+
+
+ plot V[soma] pen 4 max .04 min -.08;
+//  plot G(I) ka pen 5 max 0 min -1e-10;
+//  plot I[soma] pen 5 max 1e-9 min -1e-9;
+//  plot G(I) naxx ; /*I_na*/
+//  plot G(I) kdr; /* I_k_dr */
+//  plot G kca max 10e-9 min 0; /* I Kca */
+//  plot Ca(I) [soma]; /* ica*/
+//  plot Ca(1) [soma] max 3e-6 min 0; /*[ca]*/
+  plot Ca(1)  [soma] max 3e-6 min 0 pen 2; /*[ca]*/
+//  plot Ca(IP)  [soma] max 1e-12 min 0 pen 3; /*[ca]*/
+//  plot Ca(10) [soma] max 1e-6 min 0 pen 2; /*[ca]*/
+//  plot cabuf(1) [soma] max 30e-6 min 0 pen 6; /*[ca]*/
+//  plot G(I) ka max 1e-9 min -1e-9; /* IKA*/
+// plot V[hillock] pen 3;
+// plot G kdr pen 5 max 100e-9 min 0;
+// plot G ka pen 2 max 1e-9 min 0;
+// plot Ca(vrev) [soma] max .1 min 0; 
+// plot Ca(5)  [soma] pen 5 max 3e-6 min 0;
+//  plot Ca(99) [soma] pen 5 max 3e-6 min 0;
+// plot  G kca pen 6 max 200e-12 min 0;
+
+
+};
+
+if (plot_freq) plot S spikrate max 500 min 0 Char 'o' size 0.01 vpen freq_color;
+
+run;
+

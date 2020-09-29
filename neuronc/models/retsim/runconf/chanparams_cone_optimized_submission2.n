@@ -1,0 +1,9 @@
+columns:       cone    
+
+#CA0           cone    
+CA0.offm:      -0.00085093 
+CA0.taua:      1.0543  
+
+#K0           cone    
+K0.offm:      0.0043493 
+K0.taua:      0.81783  

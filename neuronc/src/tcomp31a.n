@@ -1,0 +1,62 @@
+/* tcomp31a: Test of KB (slowly inactivating K current) */
+
+timinc = 1e-4;
+crit   = 1e-8;
+endexp = .02;
+ploti  = 1e-4;
+
+tempcel= 10;
+
+drm=1e6;
+
+nchan = 5;
+
+at 1 sphere dia 1 vrev -.07;
+at 1 chan Na type 0 vrev .04 maxcond 1e-9;	/* */
+
+at 2 sphere dia 1 vrev -.07;
+at 2 chan Na type 0 vrev .04 maxcond 1e-9;	/* */
+
+at 3 sphere dia 1 vrev -.07;
+at 3 chan K type 0 vrev -.08 maxcond 1e-9;	/* */
+
+at 4 sphere dia 1 vrev -.07;
+at 4 chan K type 1 vrev -.08 maxcond 1e-9;	/* */
+
+at 5 sphere dia 1 vrev -.07;
+//at 5 chan K  type 3 			/* KA, fast-desensitizing */
+//		tauh = 20 vrev -.08 maxcond 1e-9; 	
+
+at 6 sphere dia 1 vrev -.07;
+//at 6 chan K  type 3  
+//		tauh = 20 thresh = -.02 vrev -.08 maxcond 1e-9; /* */
+
+plot I[1] max 1e-11 min -1e-11;
+//plot I[2] max 1e-11 min -1e-11;
+plot I[3] max 1e-10 min -1e-10;
+//plot I[4] max 1e-10 min -1e-10;
+//plot I[5] max 1e-10 min -1e-10;
+//plot I[6] max 1e-10 min -1e-10;
+
+prevolt = -.08;
+vpulse = -.07;
+prestimdur1 = .005;
+stimdur = .02;
+poststimdur = .05;
+
+for (i=0; i<10; i++) {
+  time = 0;
+  for (n=1; n<=nchan; n++) 
+     stim node n vclamp=prevolt start=time dur=prestimdur1;
+  step prestimdur1; 
+  for (n=1; n<=nchan; n++)
+     stim node n vclamp=vpulse start=time dur=stimdur;
+  step stimdur; 
+  for (n=1; n<=nchan; n++)
+     stim node n vclamp=prevolt start=time dur=poststimdur;
+  step poststimdur; 
+  vpulse  += .01;
+};
+
+run;
+

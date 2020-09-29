@@ -1,0 +1,170 @@
+/* test of single cone  -  tcomp58 */
+/* connected to a horizontal cell */
+/* inhibitory feedback from hz cells to cones */
+
+timinc = 1e-4;
+crit = 1e-10;
+endexp = 1.0;
+ploti = endexp/1000;
+ploti = .005;
+relax = .001;
+drm = 10000;
+
+
+scal = 6;
+//scatter = 1;
+drg = 2.5e6;
+gjsize = .075;
+hgsize = 1;
+hbrm = 20000;
+bprm = 10000;
+conerm = 10000;
+conrest = -.04;
+hzrev = -0.06;
+bprev = -0.06;
+hrest = -.025;
+bprest = -.030;
+
+nn = 10;			/* number of release sites at synapse */
+nc = 0;				/* number of channels at synapse */
+VSIZ = 50;			/* synaptic vesicle size */
+fhzdur = 2;			/* time constant for vesicle */
+fhzcdur = 10;			/* time constant for AP-4 2nd messenger */
+
+gjcond = 1e-10;
+congj = 0;
+
+pnoise = 0;
+
+n = setvar();
+
+cnod1 = 1;
+cnod2 = 2;
+tip  = 10;
+soma = 20;
+axon = 30;
+hz   = 40;
+bipol = 50;
+
+
+/* cone function */
+
+func mcone (xpos,ypos,n) { 
+
+/* conerm = 3000; */
+at   [n] cone (xpos,ypos) attf 1.5 photnoise=pnoise darknoise=0.0
+
+timec1 = 0.2 maxcond = 3e-10;  
+
+/*at   [n] loc (xpos,ypos,10) sphere dia  16           rm 500000
+vrest conrest;  */
+
+/*conn [n] to [n+1] cable  dia  .1 length .2 rm conerm;  /* connecting cilium */
+at   [n]            sphere dia   3           rm conerm vrest conrest;
+conn [n] to [n][1]  cable  dia   1 length 50 rm conerm vrest conrest;
+at   [n][1] loc (xpos,ypos,0)  sphere dia 5  rm conerm vrest conrest;
+
+return (1);     /* return minor node num for cone pedicle */
+};
+
+ x = 0;
+ i = j = 0; 
+ ped = mcone(-scal/2,j*scal, ++x); 
+ ped = mcone( scal/2,j*scal, ++x); 
+
+if (congj) {
+ conn [cnod1][ped] to [cnod2][ped] gj gjcond*drm;
+};
+
+/* Construct the horizontal cell */
+
+conn [cnod1][ped] to [hz][tip][cnod1]
+    synapse  open expon 2 maxcond 10e-11 thresh -.05 vrev -.01
+    vesnoise=1 N=nn vsize=VSIZ nfilt2=1 timec2=fhzdur
+    chnoise=1 N=nc timec2=0.001 ename conhsyn1; /* */
+
+conn [hz][tip][cnod1] to [cnod1][ped]
+  synapse open expon 8 maxcond 5e-11 thresh -.050 vrev -.07 timec1 1.0;
+/* */
+
+conn [hz][tip][cnod1] loc (-scal/2,0,-0.5) to [hz][soma] cable dia 0.1 rm hbrm;
+
+/* second cone */
+
+ conn [cnod2][ped] to [hz][tip][cnod2]
+    synapse  open expon 2 maxcond 10e-11 thresh -.05 vrev -.01
+    vesnoise=1 N=nn vsize=VSIZ nfilt2=1 timec2=fhzdur
+    chnoise=1 N=nc timec2=.001 ename conhsyn2; /* */
+
+ conn [hz][tip][cnod2] to [cnod2][ped]
+  synapse open expon 8 maxcond 5e-11 thresh -.050 vrev -.07 timec1 1.0;
+/* */
+
+ conn [hz][tip][cnod2] loc (-scal/2,0,-0.5) to [hz][soma] cable dia 0.1 rm hbrm;
+/* */
+
+at [hz][soma] loc (0,5,-10) sphere dia 10 rm hbrm vrev hzrev vrest hrest;
+
+
+/* Construct the bipolar cell */
+
+conn [cnod1][ped] to [bipol][tip][cnod1]
+  synapse  close dyad conhsyn1 maxcond 2e-10 vrev -.01
+   cgain = 1
+    vesnoise=1 N=nn vsize=VSIZ nfilt2=2 timec2=fhzdur
+    chnoise=1 N=nc timec2=.001
+    nfilt3 1 timec3=fhzcdur ename conbsyn1; /* */
+
+
+conn [bipol][tip][cnod1] loc (-scal/2,0,-0.5) to [bipol][soma]
+	cable dia 0.2 vrev = bprev;
+
+at [bipol][soma] loc (0,0,-10) sphere dia 5 rm=bprm vrev=bprev vrev=bprev;
+
+conn [bipol][soma] to [bipol][axon] loc (0,0,-30) 
+	cable dia .5 rm bprm vrev=bprev vrest=bprest;
+
+/* connect horizontal cell to bipolar cell surround */
+
+ conn [hz][tip][cnod1] to [bipol][tip][cnod1]
+  synapse open expon 8 maxcond 20e-11 thresh -.045 vrev -.01 timec1 0.5; /* */
+
+
+display size (50);
+display calibline 10;
+display center (0,0);
+display xrot=90;
+display matching [bipol][-1];
+display matching [hz][-1];
+
+if (!disp) {
+
+stim backgr 100 start 0;
+
+stim cone [cnod1] inten 1.5e5 wavel 560 start 0.2 dur .5; /* */
+
+/* stim node [hz][tip][cnod1] vclamp -.03 start 0 dur 1; /* */
+
+/*stim cone [cnod2] inten .5e5 wavel 560 start 0.0 dur .5; /* */
+
+
+plmax = -.01;
+plmin = -.06;
+
+plot V[cnod1];
+plot V[cnod1][ped];
+plot V[cnod2][ped];
+plot V[hz][tip][cnod1];
+plot V[hz][soma];
+plot V[bipol][soma];
+
+plot FA9 conhsyn1 max 5000 min 0;
+
+plot FA9 conbsyn1 max 5000 min 0; /* */
+plot FC0 conbsyn1 max 5 min 0;
+plot FC1 conbsyn1 max 5 min 0;
+/* */
+
+run;
+};
+

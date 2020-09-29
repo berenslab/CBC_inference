@@ -1,0 +1,38 @@
+
+r  = 1;
+
+xk1 = 1;
+xk2 = 1;
+xd1 = 1;
+xd2 = 1;
+xd1 = .6;
+xd2 = .6;
+
+vstart = -.05;
+vend   = .12;
+
+graph X max vstart min vend;
+graph Y max 2 min 0;
+graph Y max 2 min 0;
+graph Y max 2 min 0;
+graph Y max .1 min 0;
+graph init;
+
+for (v=vstart; v<vend; v+= .001) {
+
+   vm = 1000 * v; 
+   //xalpha =  r / (1.0 + xk1 * exp (xd1* -vm/10.));
+   //xbeta  =  r / (1.0 + 1 / (xk2 * exp (xd2* -vm/10.)));
+
+   y =  xd1*-vm/10.;
+   x = exp (y) - 1;
+   if (abs(x) > 1e-5) xalpha =  r * y/x 
+   else                 xalpha =  r;
+   xalpha *= 7;
+
+   xbeta  =  r * exp (xd2* -vm/10.);
+   xbeta *= 1152;
+
+   graph (v, xalpha, xbeta, xalpha / (xalpha + xbeta), 1 / (xalpha + xbeta));
+};
+

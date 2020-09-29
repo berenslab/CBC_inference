@@ -1,0 +1,31 @@
+/* test of synapse tau control */
+
+timinc = 1e-4;
+complam = .1;
+implicit=1;
+ploti = timinc;
+pre = 100;
+drm = 1000;
+
+setvar();
+at pre sphere dia 2;
+conn pre to 1 synapse thresh -.04 nfilt2 1 timec2 5 maxcond 1e-9 ename syn1;
+conn 1 to 2 cable length 25 dia .1 ename nam2; /* */
+/*stim node pre vclamp -.03 start 0 dur .002;
+stim node pre vclamp -.07 start .002 dur .002;
+*/
+stim node 1 vclamp -.03 start 0 dur .001;
+
+plot V [pre];
+plot V [1];
+plot V @ cable nam2 : .2;
+plot V [2];
+plot FB1 syn1 max 5 min 0;
+endexp = .005;
+
+synaptau = .00012;
+step .0026;
+synaptau = .1;
+step .002;
+step .002;
+

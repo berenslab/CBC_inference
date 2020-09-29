@@ -1,0 +1,40 @@
+
+/* tcomp34: plot of diffusion of molecule in rod */
+
+timinc = 1e-2;
+ploti = timinc;
+endexp =.1;
+implicit = 1;
+crit=1e-8;
+relax = .3;
+
+plmax=1;
+plmin=0;
+
+drm = 1e30;
+vcl = 0;
+molconv = 1e3;
+
+/* D = 2e-5; */			/* cm2/sec */
+D = 2e-5;			/* cm2/sec for concentration of mol/cm3 */
+dri = molconv / D;		/* conversion to moles / liter */
+
+segdia = 10;			/* um */
+at 1 sphere dia segdia;
+plot 1;
+curr=1e-10;
+stimdur = endexp;
+stim node 1 cclamp curr start 0 dur stimdur;
+
+run;
+
+x=time*curr/V[1];
+rsquare= 1e8 * x / (4*PI*dcap);
+rad=pow(rsquare, 1/2);
+diam=2*rad;
+printf("\nrsquare = %g", rsquare);
+printf("\nexpected rsquare = %g", pow(segdia/2, 2));
+printf("\nrsquare/expected value = %g", rsquare/pow(segdia/2, 2));
+printf("\n\ndiameter = %g", diam);
+printf("\nexpected diameter = %g", segdia);
+printf("\ndiameter/expected value = %g\n", diam/segdia);

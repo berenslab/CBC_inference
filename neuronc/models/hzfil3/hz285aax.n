@@ -1,0 +1,37 @@
+
+proc rpmove(dr,t)	{ grmove(dr*cos(t), dr*sin(t)); };
+proc rpdraw(dr,t)	{ grdraw(dr*cos(t), dr*sin(t)); };
+
+proc circ(rad) {
+
+ rpmove (-rad,PI/2);
+ if (rad > .05) chord = .02
+ else chord = .1;
+ for (theta=0.0; theta < PI*2; theta += chord)
+   rpdraw (rad*chord,theta);
+ rpmove (rad,PI/2);
+};
+
+/*-------------------------------*/
+
+scale = 1;
+offx = 0;
+offy = 0;
+
+proc drcirc (locx,locy,rad) { 
+ gmove (locx/scale+offx,locy/scale+offy);
+ circ (rad);
+};
+
+arrsiz = 60;
+scal= 1 / arrsiz * .8;
+xmarg = .1;
+ymarg = .1;
+
+for (y=0; y<arrsiz; y++) {
+ for (x=0; x<arrsiz; x++) {
+  drcirc(x*scal+xmarg, y*scal+ymarg, .001);
+ };
+};
+
+

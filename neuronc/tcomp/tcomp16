@@ -1,0 +1,24 @@
+/* tcomp16: test of current recording from voltage clamp */
+
+plmax =  .02;
+plmin = -.02;
+endexp = .02;
+ploti = endexp / 200;
+
+vcl = 0;
+
+at 1 load 1e6;
+at 1 gndcap  1e-9; 
+
+
+stim node 1 cclamp 1e-8 start .002 dur .002;
+stim node 1 cclamp 2e-8 start .004 dur .004; 
+
+stim node 1 vclamp .01 start .001 dur .005;
+
+
+plot V[1];
+plot I[1] max 1e-7 min -1e-7;
+
+run;
+

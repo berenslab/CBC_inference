@@ -1,0 +1,1080 @@
+#! nc -c
+#
+
+/* file rb2.n */
+
+/* Simulation of rod and rod bipolar circuit */
+
+timinc = 1e-4;
+ploti  = 1e-3;
+crit   = 1e-8; 
+implicit=0;
+
+//rseed = system ("date +%m%d%H%M%S");		/* random seed */
+                               /* Note, can set rseed= -1 for similar effect. */
+                               /* Search manual for "date" or "rseed". */
+//rseed = 47362196;
+rseed = 15;
+
+xrod = 1;		/* Identity numbers for neurons */
+rbp  = 2;
+soma    = 1000;		/* node numbers for parts of the cell */
+axon    = 1001;		/* axon of rb */
+axontip = 1002;
+
+rodarrsiz = 5;		/* width of rod array */
+rodarrsiz = 1;		/* width of rod array */
+rodarrsiz = 5;		/* width of rod array */
+
+roddens   = 450000;	/* number of cells / mm2 */
+maxrod    = 500;	/* maximum number of rods */
+
+rbpzpos   = -8;         /* z location of rod bipolar soma */
+disp_phot = 1;		/* display photons in flash during exp */
+
+makerods = 1;		/* = 1 -> make rods */
+makerbp	 = 1;		/* = 1 -> make rod bipolar cells */
+
+rodvrev	= -.1056;		/* battery for rod Rm */
+rodrest	= -.040;	/* rod initial rest   */
+rbvrev	= -.050;	/* battery for RB Rm  */
+rbrest	= -.05;		/* RB initial rest    */
+rodrm   = 5000;
+rodtimec= .7;		
+
+			/* Synaptic parameters */
+
+cexpon  = 0.73;//9;		/* gain of rod -> RB synapse: mv/efold change */
+sthresh = -0.0434;	/* -0.0434 */
+scov	  = 1;		/* Coeff of variation of vesicle timing =1 -> Poisson */
+svsiz	  = 300;	/* vesicle size */
+svgain	  = 2;		/* linear gain factor for vesicle release rate */
+skd	  = 1;		/* Kd for Glut binding at synapse */
+//scgain    = 1.5;	/* gain for cGMP cascade */
+scgain    = 1.2;	/* gain for cGMP cascade */
+condrb    = 650e-12;	/* forward conductance  rod -> rb */
+scaperm   = .05;	/* Ca partial permeability through cGMP chan */
+scakd     = 100e-9;	/* Kd for Ca binding to cGMP channel */
+staua     = 1;
+staub     = 1;
+stauc     = 1;
+staud     = 1;
+
+bapta     = 0;
+bapta_kd  = 1e-6;
+outt      = 0;
+scai      = 10e-9;
+
+rbprm  = 10000; 	/* RB Rm */
+rbtipdia  = .3;		/* diameter of rod bipolar dendritic tips */
+
+mxrot    = 120;		/* X rotation */
+
+only_report=0;
+
+recmode    = "cclamp";	/* recording mode from RB */
+recmode    = "vclamp";
+
+info = 0;		/* don't print anything except run */
+//info = 1;		/* print just a little, stop */
+//info = 3;		/* print info about rods connecting to rb */
+//info = 1;
+
+ca_mod = 0;
+ca_mod = 1;		/* =1 -> Ca through cGMP chan in RB dendrite */
+			/*  also activates Ca plot */
+
+//expt = "disp_model";	/* display model */
+//expt = "disp_flash";	/* display flash photons in rods */
+//expt = "flash_ir";	/* flash intensity - response run */
+//expt = "step_ir";	/* step intensity - response run */
+//expt = "flash_recov";	/* recovery, 2-flash */
+expt = "flash_8";	/* 8 flashes at different frequencies */
+
+plsep = 1;		/* =1 -> separate plots */
+
+x = setvar();		/* set variables from command line */
+
+if (notinit(nonoise)) nonoise = 1;	/* =1 -> turn all noise off */
+if (notinit(no_pnoise)) no_pnoise = 0;	/* =1 -> turn photon noise off */
+
+if (nonoise) {
+ if (notinit(dnoise)) dnoise = 0;	/* dark continuous noise in rod */
+ if (notinit(pnoise)) pnoise = 0;	/* photon noise */
+ if (notinit(vnoise)) vnoise = 0;	/* vesicle noise */
+ if (notinit(cnoise)) cnoise = 0;	/* postsyn channel noise */
+}
+else {
+ if (notinit(dnoise)) dnoise = 0.2;	/* dark continuous noise in rod */
+ if (notinit(pnoise)) pnoise = 1;	/* photon noise */
+ if (notinit(vnoise)) vnoise = 1;	/* vesicle noise */
+ if (notinit(cnoise)) cnoise = 0;	/* postsyn channel noise */
+};
+
+if (notinit(srange)) srange=1;
+
+/* synaptic parms for different dynamic ranges */
+
+/* To calibrate, set big plot on GluRbnd and set resting
+   level to .9, and peak to .1 by varying cexpon, sthresh. */
+
+if (rodtimec>=0.9) {
+
+  if (srange==.5) {		/* 0.5 photon dynamic range */
+     cexpon  = 0.44;		/* harder saturation */
+     sthresh = -0.0418; 
+  }
+  else if (srange==1) {		/* 1 photon dynamic range */
+     cexpon  = 0.59;		/* hard saturation */
+     sthresh = -0.0424; 
+  }
+  else if (srange==1.5) {		/* 1.5 photon dynamic range */
+     cexpon  = 0.84;
+     sthresh = -0.0434; 
+  }
+  else if (srange==2) {		/* 2 photon dynamic range */
+     cexpon  = 1.12;
+     sthresh = -0.0446;
+  }
+  else if (srange==3) {		/* 3 photon dynamic range */
+     cexpon  = 1.68;
+     sthresh = -0.0468;
+  }
+  else if (srange==4) {		/* 4 photon dynamic range */
+     cexpon  = 2.2;
+     sthresh = -0.0490;
+  };
+}
+else if (rodtimec>=0.8){
+
+  if (srange==.5) {		/* 0.5 photon dynamic range */
+     cexpon  = 0.42;		/* harder saturation */
+     sthresh = -0.0423; 
+  }
+  else if (srange==1) {		/* 1 photon dynamic range */	
+     cexpon  = 0.52;		/* hard saturation */
+     sthresh = -0.0427; 
+  }
+  else if (srange==1.5) {		/* 1.5 photon dynamic range */
+     cexpon  = 0.80;
+     sthresh = -0.0438; 
+  }
+  else if (srange==2) {		/* 2 photon dynamic range */
+     cexpon  = 1.12;
+     sthresh = -0.0451;
+  };
+}
+else if (rodtimec>=0.6){
+
+  if (srange==.5) {		/* 0.5 photon dynamic range */
+     cexpon  = 0.42;		/* harder saturation */
+     sthresh = -0.0423; 
+  }
+  else if (srange==1) {		/* 1 photon dynamic range */	
+     cexpon  = 0.55;		/* hard saturation */
+     sthresh = -0.04365; 
+  }
+  else if (srange==1.5) {		/* 1.5 photon dynamic range */
+     cexpon  = 0.83;
+     sthresh = -0.0448;
+  }
+  else if (srange==2) {		/* 2 photon dynamic range */
+     cexpon  = 1.12;
+     sthresh = -0.0460;
+  };
+};
+
+/* for single rod -> rb sim */
+
+  sthresh = -0.0439; 
+   
+if (notinit(ca_mod)) ca_mod = 0;  /* allow user to override default */
+if(info>0) printf("# vsize= %g , dnoise= %g  CoV= %g \n", svsiz, dnoise, scov);
+
+if (only_report==1) exit;
+
+/*--------------------------------------------*/
+
+if (no_pnoise)
+  	pnoise = 0
+else
+	pnoise = 1;
+
+/*--------------------------------------------*/
+
+func mid(siz)
+
+/* function to return center element of array */
+
+{
+  if (int(siz/2)*2==siz) m = (siz+1) * siz / 2
+  else                   m = (siz*siz-1) / 2;
+  return m;
+};
+
+dim rsyn[maxrod];		/* array to hold enames for rod->rb synapse */
+dim rchan[maxrod];		/* array to hold enames for rb channels */
+dim cabf[maxrod];		/* array to hold enames for cacomps */
+
+/*--------------------------------------------*/
+
+proc makrod (xpos,ypos,n) 
+
+ /* procedure to make simple rod: one compartment */
+
+{
+   at   [xrod][n] loc (xpos,ypos,0) sphere dia=8 
+			rm=rodrm 
+			vrev=rodvrev
+			vrest=rodrest;
+
+   at   [xrod][n] rod (xpos,ypos,0) 
+			maxcond=35e-12
+			timec1= .9*rodtimec
+			photnoise=pnoise 
+			darknoise=dnoise 
+			;
+};
+
+/*-----------------------------------------*/
+
+proc makrbp (nrod, xpos, ypos) 
+
+/* Make rod bipolar and connect rods to it. */
+
+{
+    local r;
+
+  /* first, make rb skeleton */
+
+  at [rbp][soma] loc (xpos,ypos,rbpzpos) 
+			sphere dia=5 rm=rbprm vrest=rbrest vrev=rbvrev;
+
+  conn [rbp][soma] to [rbp][axon] loc (xpos,ypos,rbpzpos-8) /* axon */
+			cable dia .8 rm=rbprm vrest=rbrest;
+
+  conn [rbp][axon] to [rbp][axontip] loc (xpos,ypos,rbpzpos-16) /* axon term */
+			cable dia 1.2 rm=rbprm vrest=rbrest vrev=rbvrev;
+
+  /* next, connect rods */
+
+  for (r=0; r<nrod; r++) {
+				/* make rb dendrite */
+
+  conn [rbp][r] loc (node [xrod][r]->xloc, 
+	             node [xrod][r]->yloc,
+	             node [xrod][r]->zloc)
+
+		to [rbp][soma] cable dia=rbtipdia cplam =.05
+			rm=rbprm vrest=rbrest vrev rbvrev;
+
+   //at [rbp][r] sphere dia 1 vrest=rbrest vrev=rbvrev;  /* add some volume */
+
+   catau = 200e-3;			/* sets vmax for capump */
+   dtcai = scai;			/* [Ca]i threshold */
+
+   if (ca_mod) {
+        if (bapta)      at [rbp][r] 
+			cacomp cshell 3 cai=scai
+			capump km=10e-6 vmax=2e-6/catau
+			cabuf vmax 1e8 kd bapta_kd btot 1e4 btoti 1e4
+			//caexch kex .5e-9
+			ename cabf[r]
+			
+        else            at [rbp][r] 
+			cacomp cshell 3 cai=scai
+			capump km=10e-6 vmax=2e-6/catau
+			//cabuf vmax 1e8 kd 10e-6 btot 1e-6 btoti 1e-6
+			//caexch kex .5e-9
+			ename cabf[r]
+			;
+   };
+
+				/* connect rod to rb with synapse */	
+
+           conn [xrod][r] to [rbp][r]		/* node at tip of spine */
+	    synapse close maxcond=0
+			expon=cexpon thresh=sthresh 
+			vgain = svgain
+			vesnoise=vnoise vsize=svsiz  CoV=scov 
+			nfilt2=2 timec2=4 
+			kd=skd hcof=2 
+			nfilt3=2 timec3=20 
+			cgain=scgain 
+			trconc=8e-6 	/* additional ves size factor */
+			// resp cGMP type 11 maxcond=condrb  // alternate way to set secmesg, no sep chan def
+			mesgout cGMP 
+			ename rsyn[r];
+
+	at [rbp][r] chan cGMP type 11 
+			maxcond=condrb vrev=0
+			caperm=scaperm 
+			taua=staua taub=staub
+			tauc=stauc taud=staud
+			chnoise=cnoise unit=20e-12
+			ename rchan[r];
+
+
+        if (info>=3) printf ("#  conn %2g %2g %3g to %2g %2g\n",
+				rbp,n,dtip,rbp,n); /* */
+
+ }; /* for (r=0; r<nrod; ) */
+
+if (info>=2) {
+   print "#";
+   print "# makrbp:",nrod,"rod connections";
+ };
+}; /* makrbp */
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+proc phot_dr (type, pigm, color, dscale, dia, foreshortening, hide) 
+
+/* Procedure to draw rods with color */
+/*  See "phot_dr" in manual */
+
+{
+      local num;
+
+    num = color;
+    gpen (color);
+    gcirc (dia*.4,1);
+    if (expt == "disp_flash") {
+      gframe("rodphot");
+      grot(-45);
+      gpen (0);
+      gmove (-.12,-.12);
+      gcwidth (.4);
+      gtext ("%g",num);
+      gframe("..");
+    };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+func phtot (plnum,xtime)
+
+/* Count all the photons captured in the rod array. */
+
+{
+     local i, ptot;
+
+   for (ptot=i=0; i<rodnum; i++) {
+      ptot += L[xrod][i]*stiminc;
+   };
+   return ptot;
+};
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+CCMAPSIZ=100;
+dim ccmap[CCMAPSIZ];	/* linear color map */
+
+proc init_phot(x, y, siz)
+
+/* procedure to initialize photon display */
+
+{
+      local i,s;
+
+  gframe ("phot");
+  gorigin (x,y);
+  gsize (siz);
+
+  display center (0,0,rbpzpos+2);
+  display size (rodarrsiz*rodspac*2.5,rodarrsiz*rodspac*2.5);
+  display xrot=0 yrot 0;
+  for (i=0; i<CCMAPSIZ; i++) ccmap[i] = i;
+  display cmap ccmap;
+  gpen (1);
+  s=.5;
+  gmove  (.2,.21);
+  grdraw (0,s);
+  grdraw (s,0);
+  grdraw (0,-s);
+  grdraw (-s,0);
+  gframe ("..");
+};
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+proc print_phot (flashn, photn)
+
+{
+  if (photn==1)
+  gtext("Flash %g, %3.3g photon.",flashn,photn)
+  else
+  gtext("Flash %g, %3.3g photons.",flashn,photn);
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+proc run_phot(i)
+
+/* procedure to run photon display */
+
+/* Note that several special colors allow spatial displays: */
+
+/*  vcolor = voltage
+    lcolor = light
+    cacolor = [Ca]i
+*/
+
+{
+    local x,y,ph;
+
+  if (!outt) {
+   if (i==0) oldph=0;
+   gframe ("phot");
+   display rod matching [xrod][-1] dscale=.5 color=lcolor max CCMAPSIZ min 0 cmap 10;
+   gframe ("..");
+   gcwidth(.02);
+   x = .05;
+   y = .96;
+   gmove (x,y);
+   gpen (0);
+   print_phot(i,oldph);
+   gmove (x,y);
+   ph = phtot(0,0);
+   gpen (i+1);
+   print_phot(i+1,ph);
+   oldph = ph;
+   gpurge();
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+proc stimrods (sinten, sstart, sdur) 
+
+/* stimulate rods with single-photon responses, without photon noise */
+
+{
+    local i, x, eff, nphot; 
+    local phot_given;		/* number of photons given in stimulus so far */
+    local dim stimrod[rodnum];
+
+   eff = .8889;			/* rod area * sens * filt * qeff */
+				/* 2.2      * .67  * .9   * .67  */ 
+
+   nphot = int(sinten*sdur*rodarrsiz*rodarrsiz*eff);
+   for (i=0; i<rodnum; i++) {
+       stimrod[i]=0;
+   };
+   for (x=phot_given=0; phot_given < nphot; x) {
+     for (i=0; i<rodnum; i++) {
+       stimrod[i] ++;			/* Make array that contains number */
+       if (++phot_given>=nphot) break;  /* of photons each rod should receive */
+     };
+   };
+   for (i=0; i<rodnum; i++) {
+       stim rod [xrod][i] inten=stimrod[i]/(eff*sdur) start=sstart dur=sdur;
+   };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - */
+
+proc disp_plots ()
+
+{
+   local j;
+   local plg;			/* gain of trace */
+   local offb;			/* zero for trace */
+   local offtr;			/* position of trace within graph */
+
+   if (disp_phot) disp = 33;	/* set display mode to save elems */
+
+  
+
+  drod = 0;
+
+  if (recmode=="vclamp") {	 /* plot current from RB voltage clamp */
+   plg   =  30e-12;
+   offb  = -30e-12;
+   offtr = -0.1;
+   plg *= rodnum / (1+ca_mod);
+   offb *= rodnum / (1+ca_mod);
+   plot I[rbp][soma] max (1-offtr)*plg+offb 
+                     min (0-offtr)*plg+offb 
+	//		filt [1.8e-4, 1.2e-4] 
+				pen 2 plname "Irb" plnum 1 plsize 1.2;
+
+  } else {			/* plot voltage in current clamp mode */
+   plg   =  .03;
+   offb  = -.06;
+   offtr = 0;
+   plot V[rbp][soma] max (1-offtr)*plg+offb 
+                     min (0-offtr)*plg+offb 
+			filt [1.8e-4, 1.2e-4] 
+				pen 2 plname "Vrb" plnum 2 plsize .8;
+  };
+ 
+  if (ca_mod) {				/* Ca postsyn to center rod */
+    if(1) {	
+    plg = 10e-6;
+    offb  = 0;
+    offtr = 0;
+    plot Ca(1) [rbp][drod] max (0-offtr)*plg+offb 
+			     min (1-offtr)*plg+offb 
+				pen 5 plname "CaRB" plnum 3 plsize .5;
+    };  
+  };
+
+ Gchan=1; 
+
+ if (Gchan) {
+
+  plg = 1;
+  offtr = 0;
+  offb = 0;
+
+
+    nstates = chan rchan[drod]->nstate;
+    for (j=0; j< nstates; j++) {
+
+      sprintf (chanstr,"Gchan%g",j);
+
+      plot G(j+1) rchan[drod] max (1-offtr)*plg+offb
+	 		    min (0-offtr)*plg+offb pen j+1  plnum 5 
+				  plname chanstr plsize 1;
+    };  /* for (j;;) */
+  };
+
+  /* Plot cGMP concentration */
+  if(0) {
+  plg = 2;
+  offtr = 0;
+  offb = 0;
+/* plot FC9 rsyn[drod] max (1-offtr)*plg+offb 
+		        min (0-offtr)*plg+offb pen 9 plnum 6 plname "cGMP";  */
+  plg *= 20e-6;
+ plot cGMP [rbp][drod] max (1-offtr)*plg+offb /* cGMP in center RB dend */ 
+		        min (0-offtr)*plg+offb pen 13 plnum 6 plname "cGMP"; 
+  };
+
+/* plot rod->rb vesicle release rate, ves/s  */
+  if (0) {
+    for(j=0;j<(rodarrsiz*rodarrsiz-1);j++) {
+	plg = 200;
+	offtr = 0;
+	offb = 0;
+	plot FA9 rsyn[j] max (1-offtr)*plg+offb
+		min (0-offtr)*plg+offb
+		pen (j+1) plname "VesRate" plnum 8 plsize .8;
+
+    };
+  };  /* if (0) */
+
+	glur_siz = 0.5;
+
+	plg = 1;
+	offtr = 0;
+	offb = 0;
+	plot FC0 rsyn[drod] max (1-offtr)*plg+offb 
+			min (0-offtr)*plg+offb 
+			pen 4 plname "GluRbnd" plnum 7 plsize=glur_siz;
+
+	plg = 1;
+	offtr = 0;
+	offb = 0;
+	plot FC2 rsyn[drod] max (1-offtr)*plg+offb 
+			min (0-offtr)*plg+offb 
+			pen 2 plname "GbndFilt" plnum 7 plsize=glur_siz;
+
+
+	// plg = 20e-6;
+	plg = 1.0;
+	offtr = 0;
+	offb = 0;
+	plot cGMP [rbp][drod] max (1-offtr)*plg+offb 
+			min (0-offtr)*plg+offb 
+			pen 1 plname "CycG" plnum 7 plsize=glur_siz;
+
+  if (0) {
+
+  ft = .05;				/* filter time const */
+  plg   = .04;
+  offtr = .5;
+  offb  = 0;
+  plot phtot max (1-offtr)*plg+offb     /* total photons */ 
+		       min (0-offtr)*plg+offb 
+		       pen 1 plname "PhTot" plnum 9 plsize 1 
+			filt [ft,ft,ft,ft,ft]; 
+  };
+
+  if (0) {
+  plg = .005;
+  offtr = .6;
+  offb = -.04;
+  for(j=0;j<24;j++) {
+
+//  plot V[xrod][midrod] max (1-offtr)*plg+offb	/* voltage in center rod */ 
+//		       min (0-offtr)*plg+offb 
+//		       pen 6 plname "RodV" plnum 10; 
+  plot V[xrod][j] max (1-offtr)*plg+offb 	/* voltage in first rod */ 
+		       min (0-offtr)*plg+offb 
+		       pen (j+1) plname "RodV" plnum 10;
+  };
+  }; /* if (0) */
+
+  //plot S time pen 0 plnum 15; /* dummy plot to allow space for photon disp */
+
+}; /* end proc disp_plots() */
+
+/*-----------------------------------------*/
+
+/* START MAIN */
+
+proc runmod()
+
+/* Model of rod bipolar cell with rods converging */
+
+{
+
+//erase model;
+
+/* Make array of rods */
+
+if (makerods) {
+
+  rodspac   = 1 / sqrt (roddens* 1e-6);         /* rod spacing */
+  if (notinit(rodarrsiz)) rodarrsiz=1;
+
+  if (info>=2) {
+    printf ("# rod array size: %g\n",rodarrsiz);
+  };
+  rodnum = 0;
+  rwid = rodarrsiz / 2;
+    for (j= -rwid; j<rwid; j++) 
+    for (i= -rwid; i<rwid; i++) {
+      makrod (i*rodspac, j*rodspac, rodnum++);
+    };
+  if (info>=2)
+    print "# Number of rods:", rodnum;
+  midrod = mid(rodarrsiz);
+  if (info>=2) print "# midrod=", midrod;
+
+}  /* make rods */
+
+else {
+  midrod = 0;
+};
+
+/*-------------------------------------------------*/
+
+   /* Make array of rod bipolars */
+
+if (makerbp) {
+  if (makerods) {
+    makrbp (rodnum, rbxloc=0, rbyloc=0);
+  };  /* if makerods */
+  if (info>=2) print "# rod bipolar cell done";
+}; /* if makerbp */
+
+/*-------------------------------------------------*/
+
+/* Display */
+
+if (expt == "disp_model") {
+
+  disp=1;					/* allow display of anatomy */
+  display center (0,0,rbpzpos-2);
+  display size (rodarrsiz*rodspac*2,rodarrsiz*rodspac*2);
+  display size (30,30);
+  display calibline 5;
+  display xrot=mxrot yrot -5;
+  display sphere matching [xrod][-1] dscale .15 color 4; /* */
+
+  if (makerbp) {
+      display sphere  matching [rbp][-1] color=2;
+      display cable   matching [rbp][-1] color 2;
+      display synapse matching [rbp][-1] color 2;
+  }; 
+  exit;
+};
+
+/*-------------------------------------------------*/
+
+/* Experiments	*/
+
+   dim inten_list[] = {{2,6,18,82,230,606,1900,4410,10000}};
+   dim idims[1];
+   idims = dims(inten_list);
+   NFLASH = idims[0];
+
+if (expt=="flash_ir") {			/* flash intensity-response, overlaid */
+
+  if (recmode=="vclamp") {
+     stim node [rbp][soma] vclamp rbrest start 0 dur 100;
+  };
+
+  disp_plots();				/* make plots */
+
+   if (notinit(spotdia))      spotdia     = 100;
+   if (notinit(nflash))       nflash      = NFLASH;
+   if (notinit(flash_inten))  flash_inten = 1e3;
+   if (notinit(fbase))        fbase       = 2;		/* flash step factor */
+   if (notinit(flashdur))     flashdur    = .001;
+   if (notinit(stimstart))    stimstart   = 0.1; 	/* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 2; 		/* ISI */
+   if (notinit(stimrecover))  stimrecover = .01; 	/* recovery time */
+   if (notinit(use_inten_list)) use_inten_list = 1;	/* use inten_list[] */
+   if (notinit(inten_scale))  inten_scale = 20;	/* scale for inten_list*/
+   runlen = stimstart+stimint;
+   endexp = runlen;				/* end of expt */
+
+   if (notinit(disp_phot)) disp_phot=0;
+
+   if (disp_phot) init_phot(.78,.8,.25);	/* initialize photon display */
+
+   if (notinit(predur))	      predur	  = .5; 	/* equilibrium time */
+   time = 0 - predur;
+   setxmin = 0;
+   step predur;
+   for (i=0; i<nflash; i++){
+          local fl_inten;
+
+      	time = 0;
+	if (use_inten_list) fl_inten = inten_list[i]*inten_scale
+	else                fl_inten = flash_inten * fbase^i;
+	fprintf (stderr,"expt %s: Flash %g: inten %7.3g\n",expt, i+1, fl_inten*flashdur);
+
+      	if (!pnoise) stimrods(fl_inten, stimstart, flashdur)
+     	else stim spot spotdia inten=fl_inten start=stimstart dur=flashdur;
+
+     	step stimstart+flashdur;
+     	if (disp_phot) run_phot(i);   /* display photons in flash during expt */
+
+	step stimint-stimrecover;
+
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=1000 taub=.001 tauc=1000 taud .001
+          cacomp cai=scai;
+     };
+     step stimrecover;
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=staua taub=staub tauc=stauc taud=staud;
+     };
+     if (outt) printf ("\n");
+   };
+
+ }  /* expt==flash_ir */
+
+else
+
+/*-------------------------------------------------*/
+
+if (expt=="step_ir") {			/* step intensity-response, overlaid */
+
+  if (recmode=="vclamp") {
+     stim node [rbp][soma] vclamp rbrest start 0 dur 100;
+  };
+
+  disp_plots();				/* make plots */
+
+   if (notinit(spotdia))      spotdia     = 100;
+   if (notinit(nflash))       nflash      = NFLASH;
+   if (notinit(flash_inten))  flash_inten = 5;
+   if (notinit(fbase))        fbase       = 2;		/* flash step factor */
+   if (notinit(flashdur))     flashdur    = 1500e-3;
+   if (notinit(stimstart))    stimstart   = 0.2; 	/* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 3000e-3; 	/* ISI */
+   if (notinit(stimrecover))  stimrecover = .05; 	/* recovery time */
+   if (notinit(use_inten_list)) use_inten_list = 1;	/* use inten_list[] */
+   if (notinit(inten_scale))  inten_scale = 0.2;		/* scale for inten_list*/
+
+   //endexp = nflash*stimint+stimstart;		/* end of expt */
+
+   runlen = stimstart+stimint;
+   endexp = runlen;
+
+   disp_phot = 0;
+   if (notinit(disp_phot)) disp_phot=0;
+   if (disp_phot) init_phot(.78,.8,.25);	/* initialize photon display */
+
+   if (notinit(predur))	      predur	  = .5; 	/* equilibrium time */
+   time = 0 - predur;
+   setxmin = 0;
+   step predur;
+   for (i=0; i<nflash; i++){
+          local fl_inten;
+
+     time = 0;
+     if (use_inten_list) fl_inten = inten_list[i]*inten_scale
+     else                fl_inten = flash_inten * fbase^i;
+     fprintf (stderr,"expt %s: Flash %g: inten %5.3g\n",expt, i+1, fl_inten);
+
+     if (!pnoise) stimrods(fl_inten, stimstart, flashdur)
+     else stim spot spotdia inten=fl_inten start=stimstart dur=flashdur;
+
+     step stimstart+0.0002;
+     if (disp_phot) run_phot(i);    /* display photons in flash during expt */
+     step stimint-stimrecover;
+
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=1000 taub=.001 tauc=1000 taud .001
+          cacomp cai=scai;
+     };
+     step stimrecover;
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=staua taub=staub tauc=stauc taud=staud;
+     };
+     if (outt) printf ("\n");
+   };
+
+ }  /* expt==step_ir */
+
+else
+
+/*-------------------------------------------------*/
+
+if (expt=="flash_recov") {			/* recovery, 2-flash */
+
+  if (recmode=="vclamp") {
+     stim node [rbp][soma] vclamp rbrest start 0 dur 100;
+  };
+
+  disp_plots();				/* make plots */
+
+   if (notinit(spotdia))      spotdia     = 100;
+   if (notinit(nrepeat))      nrepeat     = 6;
+   if (notinit(flash_inten))  flash_inten = 4e4;
+   if (notinit(fbase))        fbase       = 1;	 /* flash step factor */
+   if (notinit(flashdur))     flashdur    = .0001;
+   if (notinit(stimstart))    stimstart   = .1;  /* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 2;   /* repeat interval */
+   if (notinit(ifbase))       ifbase      = 1.5; /* inter-flash int step factor */
+   if (notinit(ifstart))      ifstart     = .2;  /* inter-flash start factor */
+   if (notinit(stimrecover))  stimrecover = .01; /* recovery time */
+ 
+   runlen = stimstart+stimint;
+   endexp = runlen;				/* end of expt */
+
+   if (notinit(disp_phot)) disp_phot=0;
+
+   if (disp_phot) init_phot(.78,.8,.25);	/* initialize photon display */
+
+   if (notinit(predur))	      predur	  = .5; 	/* equilibrium time */
+   time = 0 - predur;
+   setxmin = 0;
+   step predur;
+   for (i=0; i<nrepeat; i++){
+        time = 0;
+
+	fprintf (stderr,"expt %s: Flash %g: interval %5.3g\n",
+				expt, i+1, ifstart*(i+1));
+
+        /* first flash */
+
+      	if (!pnoise) stimrods(flash_inten * fbase^i, 
+				stimstart, 
+				flashdur)
+      	else stim spot spotdia inten = flash_inten * fbase^i 
+		        start = stimstart 
+		        dur   = flashdur; 
+        step stimstart+flashdur;
+     	if (disp_phot) run_phot(i*2);  /* disp photons in flash during expt */
+
+
+        /* second flash */
+
+        stimstart2 = stimstart + ifstart * (i+1);
+
+      	if (!pnoise) stimrods(flash_inten * fbase^i, 
+				stimstart2, 
+				flashdur)
+      	else stim spot spotdia inten = flash_inten * fbase^i 
+		        start = stimstart2 
+		        dur   = flashdur; 	/* */
+
+     	stimint2 = stimstart2-stimstart;
+     	step stimint2;
+     	if (disp_phot) run_phot(i*2+1); /* disp photons in flash during expt */
+
+	step stimint-stimstart-stimint2-stimrecover;
+
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=1000 taub=.001 tauc=1000 taud .001
+          cacomp cai=scai;
+     };
+     step stimrecover;
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=staua taub=staub tauc=stauc taud=staud;
+     };
+     if (outt) printf ("\n");
+   };
+
+}  /* expt==recov */
+
+else
+
+/*-------------------------------------------------*/
+
+if (expt=="flash_8") {			/*8-flash sequence */
+
+  if (recmode=="vclamp") {
+     stim node [rbp][soma] vclamp rbrest start 0 dur 100;
+  };
+
+  disp_plots();				/* make plots */
+
+   NREPEAT = 6;
+
+   if (notinit(spotdia))      spotdia     = 100;
+   if (notinit(nrepeat))      nrepeat     = NREPEAT;
+   if (notinit(nflash))       nflash      = 8;
+   if (notinit(flash_inten))  flash_inten = 4e4;
+   if (notinit(fbase))        fbase       = 1;	 /* flash step factor */
+   if (notinit(flashdur))     flashdur    = .0001;
+   if (notinit(stimstart))    stimstart   = .2;  /* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 3;   /* repeat interval */
+   if (notinit(ifbase))       ifbase      = 1.5; /* inter-flash int step factor */
+   if (notinit(ifstart))      ifstart     = .2;  /* inter-flash start factor */
+   if (notinit(stimrecover))  stimrecover = .01; /* recovery time */
+
+   frame_period = 0.01333333;
+   dim flashintervals[NREPEAT] = {{25,20,10,5,2,1}};
+
+   flashintervals= flashintervals* frame_period;
+
+   runlen = stimstart+stimint;
+   endexp = runlen;				/* end of expt */
+
+   if (notinit(disp_phot)) disp_phot=0;
+
+   if (disp_phot) init_phot(.78,.8,.25);	/* initialize photon display */
+
+   if (notinit(predur))	predur = .5; 		/* equilibrium time */
+   time = 0 - predur;
+   setxmin = 0;
+   step predur;
+   for (i=0; i<nrepeat; i++){
+        time = 0;
+	fprintf (stderr,"expt %s: Flash %g: interval %5.3g\n",
+				expt,i+1, flashintervals[i]);
+	step stimstart;
+
+        /* 8 flashes */
+	for(j=0;j<nflash;j++) {
+        	flashstart = time;
+ 		//  fprintf(stderr,"%g %g\n", time,flashstart);
+
+	      	if (!pnoise) stimrods(flash_inten * fbase^i, 
+					flashstart, 
+					flashdur)
+      		else stim spot spotdia inten = flash_inten * fbase^i 
+			        start = flashstart
+			        dur   = flashdur; 
+		step flashdur;
+    	        if (disp_phot) run_phot(j);   /* display photons in flash */
+		step flashintervals[i]-flashdur;
+ 
+	}; /* flash sequence */
+
+
+	step stimint-stimstart-8*flashintervals[i]-stimrecover;
+
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=1000 taub=.001 tauc=1000 taud .001
+          cacomp cai=scai;
+     };
+     step stimrecover;
+     for (r=0; r<rodnum; r++) {		/* modify chans for fast recovery */
+        modify rchan[r] chan cGMP taua=staua taub=staub tauc=stauc taud=staud;
+     };
+     if (outt) printf ("\n");
+   };
+
+}  /* expt== flash_8 */
+
+else
+
+/*-------------------------------------------------*/
+
+if (expt=="disp_flash") {		/* display flash */
+
+   timinc = 5e-5;
+   disp=33;				/* set display mode to save elems */
+
+   if (notinit(spotdia))      spotdia     = 100;
+   if (notinit(nflash))       nflash      = 10;
+   if (notinit(flash_inten))  flash_inten = 1e3;
+   if (notinit(fbase))        fbase       = 1.5;	/* flash step factor */
+   if (notinit(flashdur))     flashdur    = .001;
+   if (notinit(stimstart))    stimstart   = 0.001; 	/* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 0.01; 		/* ISI */
+   if (notinit(stimrecover))  stimrecover = .01;        /* recovery time */
+   if (notinit(use_inten_list)) use_inten_list = 0;	/* use inten_list[] */
+   if (notinit(inten_scale))  inten_scale = 1;		/* scale for inten_list*/
+
+   //endexp = nflash*stimint+stimstart;		/* end of expt */
+
+   runlen = stimstart+stimint;
+
+   if (disp_phot) init_phot(0,0,.9);
+
+   for (i=0; i<nflash; i++){
+          local fl_inten;
+
+     time = 0;
+     if (use_inten_list) fl_inten = inten_list[i]*inten_scale
+     else                fl_inten = flash_inten * fbase^i;
+     fprintf (stderr,"expt %s: Flash %g: inten %5.3g\n",expt, i+1, fl_inten);
+
+     step stimstart;
+     if (!pnoise) stimrods(fl_inten, time, flashdur)
+     else stim spot spotdia inten = fl_inten start=time dur=flashdur; 
+
+     step flashdur;
+     if (disp_phot) run_phot(i);	/* display photons */
+     step stimint-stimrecover;
+     simwait (2.0);
+ 
+   };
+ 
+}  /* expt==disp_flash */
+
+else
+
+/*-------------------------------------------------*/
+
+if (expt=="single_ph_trace") {	/* single photon in rod and RBC */
+
+   disp=33;				/* set display mode to save elems */
+
+   if (recmode=="vclamp") {
+      stim node [rbp][soma] vclamp rbrest start 0 dur 100;
+   };
+
+   if (notinit(spotdia))      spotdia     = 3;
+   if (notinit(nflash))       nflash      = 1;
+   if (notinit(flash_inten))  flash_inten = 1e3;
+   if (notinit(fbase))        fbase       = 1.5;	/* flash step factor */
+   if (notinit(flashdur))     flashdur    = .001;
+   if (notinit(stimstart))   stimstart    = .75; 	/* pre-stimulus int */
+   if (notinit(stimint))      stimint     = 1.5; 		/* ISI */
+   if (notinit(stimrecover))  stimrecover = .01;        /* recovery time */
+
+   flash_inten = 1e3;
+
+   endexp = 3;		/* end of expt */
+
+   disp_plots();				/* make plots */
+
+   for (i=0; i<nflash; i++){
+
+     step stimstart;
+     stim rod [xrod][0] inten=flash_inten*.7 start=time dur=flashdur;
+     step stimstart;
+     stim rod [xrod][0] inten=flash_inten*1.5 start=time dur=flashdur;
+
+     step flashdur;
+     step stimint-stimrecover;
+   };
+ 
+ };  /* expt==single_ph_trace */
+};  /* end of runmod() */
+
+
+runmod();
+

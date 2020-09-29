@@ -1,7 +1,0 @@
-#! /bin/csh -f
-#
-#onintr labxx
-#rtbias mont mpict $argv | vid -i
-#labxx:
-# nullcmd 
-mpict $argv | vid -B 0

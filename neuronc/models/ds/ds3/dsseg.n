@@ -1,0 +1,445 @@
+/* dsseg.n */
+
+/* Creates ganglion cell cable segments and membrane channels. */
+
+if (notinit(ttx))                   ttx = 0;
+if (notinit(Chnoise))           Chnoise = 0;
+
+if (notinit(gcdensfile)) {
+   gcdensfile = "gcdens.n";
+   printf ("#\n");
+   printf ("#   dsseg.n: using channel densities for gc from '%s'.\n",
+			gcdensfile);
+ };
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+include (gcdensfile);		/* define channel densities */
+
+ratio_k=1; 
+
+dpnak = 0;
+dpkna = 0;
+
+if (ratio_k==1) {   /* use ratios for Ka and Kdr where not already specified */
+
+    if (notinit(ratio_kdr)) ratio_kdr = 0.25;
+    if (notinit(ratio_ka))  ratio_ka  = 0.4;
+    if (notinit(ratio_sk1)) ratio_sk1 = 0.001;
+    if (notinit(ratio_sk2)) ratio_sk2 = 0.002;
+    if (notinit(ratio_bk))  ratio_bk  = 0.005;
+
+    if (notinit(ttx)) ttx = 0;
+
+    for (region=0; region<nregions; region ++){
+		
+		// switch off all channels
+		// gcdens[NA] [region] =0;
+		
+      if (gcdens[KDR][region]==0)
+          gcdens[KDR][region] = ratio_kdr * gcdens[NA] [region];
+      if (gcdens[KA][region]==0)
+          gcdens[KA][region]  = ratio_ka  * gcdens[NA][region];
+      if ((region != AXON) && (region != AXON_LONG)) {
+         if (gcdens[SKCA1][region]==0)
+            gcdens[SKCA1][region]  = ratio_sk1  * gcdens[NA][region];
+         if (gcdens[SKCA2][region]==0)
+            gcdens[SKCA2][region]  = ratio_sk2  * gcdens[NA][region];
+      };
+      gcdens[NA][region] *= (1 - ttx);
+  };
+};    
+
+    /* When densities in sub-regions are zero, fill them in using
+       from densities of neighboring regions.  This allows user
+       to override densities for special cases.  
+       Extra sub-regions are not "extra parameters" since by default 
+       they are a function of neighboring regions. */
+ 
+for (ch=0; ch<nchans; ch++) {
+   if (gcdens[ch][DEND_PROX]==0)
+     gcdens[ch][DEND_PROX] = (gcdens[ch][DEND] + gcdens[ch][SOMA]) * .5;
+   if (gcdens[ch][AXON_LONG]==0)
+     gcdens[ch][AXON_LONG] =  gcdens[ch][AXON];
+};
+
+gcdens[KA][AXON]      = 0.0;	/* never KA in axon */
+gcdens[KA][AXON_LONG] = 0.0;	
+
+if (!disp && memb_biophys) prden = 1
+else                       prden = 0;
+
+if (prden) {
+    printf ("#\n");
+    printf ("#   Unitary channel conductances:\n"); 
+    printf ("#\n");
+    qc = exp(log(dqc)*(tempcel-dbasetc)/10)  * 1e12;
+    printf ("#   %-5.3g pS   %s\n",dnau  * qc,chname[NA]);
+    printf ("#   %-5.3g pS   %s\n",dcalu * qc,chname[CA]);
+    printf ("#   %-5.3g pS   %s\n",dku   * qc,chname[KDR]);
+    printf ("#   %-5.3g pS   %s\n",dkcasu* qc,chname[SKCA1]);
+    printf ("#   %-5.3g pS   %s\n",dkcasu* qc,chname[SKCA2]);
+    printf ("#   %-5.3g pS   %s\n",dkcabu* qc,chname[BKCA]);
+    printf ("#   %-5.3g pS   %s\n",dkau  * qc,chname[KA]);
+    printf ("#\n#\n");
+    if (ratio_k) {
+      printf ("#   Setting K chans by ratio from Na density\n");
+      printf ("# \n");
+      printf ("#   ratio_kdr = %g\n", ratio_kdr);
+      printf ("#   ratio_ka  = %g\n", ratio_ka);
+      printf ("#   ratio_sk1 = %g\n", ratio_sk1);
+      printf ("#   ratio_sk2 = %g\n", ratio_sk2);
+      printf ("#   ratio_bk  = %g\n", ratio_bk);
+    }; 
+    printdens("mS/cm2",1000);
+};
+
+/*---------------------------------------------*/
+
+func qcond (cond) {
+
+/* convert from "density" S/cm2 to "ndensity" N/um2 at 22 deg C. */
+/*  Unitary conductances are defined at 22 deg C. */
+
+  return (1e8 * cond);
+};
+
+  for (region=0; region<nregions; region++){
+      gcdens[NA][region]  = gcdens[NA][region]  / qcond(dnau);
+      gcdens[CA][region]  = gcdens[CA][region]  / qcond(dcalu);
+      gcdens[KDR][region] = gcdens[KDR][region] / qcond(dku);
+      gcdens[SKCA1][region] = gcdens[SKCA1][region] / qcond(dkcasu);
+      gcdens[SKCA2][region] = gcdens[SKCA2][region] / qcond(dkcasu);
+      gcdens[BKCA][region] = gcdens[BKCA][region] / qcond(dkcabu);
+      gcdens[KA][region]   = gcdens[KA][region]  / qcond(dkau);
+ };
+
+/*---------------------------------------------*/
+
+dfact=1;
+gcdens[KDR][AXON_THIN]    = dfact * gcdens[KDR][AXON_THIN];
+gcdens[KA] [AXON_THIN]    = dfact * gcdens[KA] [AXON_THIN];
+
+gcdens[KDR][HILLOCK] = dfact * gcdens[KDR][HILLOCK];
+gcdens[KA] [HILLOCK] = dfact * gcdens[KA] [HILLOCK];
+
+if (prden) printdens("N/um2",1);
+
+if (Chnoise==0){
+   na_type    = 2;
+   kdr_type   = 0;
+   skca1_type = 4;
+   skca2_type = 5;
+   bkca_type  = 6;
+   ka_type    = 2;
+   ca_type    = 0;
+}else{ 
+   na_type   =  2;
+   kdr_type   = 1;
+   skca1_type = 4;
+   skca2_type = 5;
+   bkca_type  = 6;
+   ka_type   =  3;
+   ca_type   =  1;
+};
+
+/*---------------------------------------------*/
+
+/* Diameter of AXON_THIN region is set to "ath_dia" in anatfile.
+   Then when read in, the value of ath_dia determines the
+   diameter used.  the advantage of this is that we can test
+   the effect of different diameters easily. */
+
+taunk= 3.0; 
+
+capump_factor = 0.1 * qcond(dcalu);
+if (notinit(nshell)) nshell = 1;
+//ddca = 1e-12;
+ddca = 2e-6;
+
+if (notinit(mvr_offsetm))  mvr_offsetm  = 0.010; //0.01;
+if (notinit(mvr_offseth))  mvr_offseth  = 0.012; // 0.015;
+if (notinit(mvr_offsetkn)) mvr_offsetkn = 0.024;
+mvr_offsetka_n =0.005;
+mvr_offsetka_h =0.005;
+
+if (notinit(na_ifactor)) na_ifactor = 0.0;
+if (notinit(nanois))  nanois = 0;
+if (notinit(sk1nois)) sk1nois = 0;
+if (notinit(sk2nois)) sk2nois = 0;
+if (notinit(bknois))  bknois  = 0;
+if (notinit(kanois))  kanois  = 0;
+if (notinit(kdrnois)) kdrnois = 0;
+if (notinit(canois))  canois  = 0;
+
+/*---------------------------------------------*/
+
+proc make_gcseg(nod1, nod2, d, region) /* proc to make dendrites */
+{
+    local x, y, z, dist, local_cplam;
+    if (nod1 > nod2) {swap=nod1; nod1=nod2; nod2=swap;}; /* now: nod2 >=nod1 */
+
+/* 
+    if (region==SOMA)      printf("Soma       %g %g\n", nod1,nod2);
+    if (region==HILLOCK)   printf("Hillock    %g %g\n", nod1,nod2);
+    if (region==AXON_THIN) printf("Axon_thin: %g %g\n", nod1,nod2);
+    if (region==AXON)      printf("Axon       %g %g\n", nod1,nod2);
+*/
+
+/* 
+    x = node [gc][nod1]->xloc - node [gc][nod2]->xloc;
+    y = node [gc][nod1]->yloc - node [gc][nod2]->yloc;
+    z = node [gc][nod1]->zloc - node [gc][nod2]->zloc; 
+    
+    dist = sqrt (x*x + y*y);
+*/
+/*   printf("r:%g\n",dist /sqrt (x*x + y*y ) );  /* */
+
+  if (region==HILLOCK || region==AXON_THIN) 	/* set fine comps in axon */
+       local_cplam = .02
+  else local_cplam = complam;
+
+  if (region==DEND) { 		/* allow changing diameter in dendrites */
+     d *= gc_dia_factor;
+  };
+
+   /* Reduce K offset in axon.  Problem is that with a large offset 
+      and without extra K chans, the axon tends to be too excitable. 
+      Check this with expt="spike_zone". */
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+  if (!gc_biophys){  			/* no channels, passive membrane */
+
+     if (region == SOMA) at [gc][nod1] sphere dia=d 
+				vrest=gcvstart elabl regname[region]
+     else conn [gc][nod1] to [gc][nod2] cable dia=d 
+				vrest=gcvstart elabl regname[region];
+  } 
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+ else {
+
+     if ((region == AXON) || (region==AXON_LONG)){
+        xoffsetkn = mvr_offsetkn - .007;		
+     }
+     else xoffsetkn = mvr_offsetkn;
+
+     if (region == SOMA){
+  //	printf("Sphere nod1 %g \n",nod1); 
+
+          at [gc][nod1] sphere dia d vrest=gcvstart elabl regname[region];
+
+	  at [gc][nod1] chan Na type na_type chnoise=nanois 
+		ndensity=gcdens[NA][region] * (1-na_ifactor) 
+		   offsetm=mvr_offsetm 
+		   offseth=mvr_offseth
+		   ename nahh;
+
+          at [gc][nod1] 
+	   chan Na type na_type chnoise=nanois 
+		ndensity=gcdens[NA][region] * na_ifactor
+		   offsetm=mvr_offsetm 
+		   offseth=mvr_offseth
+		   tauc=30*.5 taud=30
+		   ename naslo;
+
+          at [gc][nod1] 
+	   chan K type kdr_type chnoise=kdrnois
+		ndensity=gcdens[KDR][region] 
+		   offset=mvr_offsetkn 
+		   taun=taunk
+		   ename kdr;
+
+          at [gc][nod1] 
+	   chan KCa type skca1_type chnoise=sk1nois
+		ndensity=gcdens[SKCA1][region]   
+		ename skca1;
+
+          at [gc][nod1] 
+	   chan KCa type skca2_type chnoise=sk2nois
+		ndensity=gcdens[SKCA2][region]   
+		ename skca2;
+
+          at [gc][nod1] 
+	   chan KCa type bkca_type chnoise=bknois
+		ndensity=gcdens[BKCA][region]   
+		offset = -.01
+		ename bkca;
+
+       at [gc][nod1] 
+           chan K type ka_type chnoise=kanois
+	       	ndensity=gcdens[KA][region] 
+		 	offsetm=mvr_offsetka_n
+			offseth=mvr_offsetka_h
+		ename ka;
+
+	   at [gc][nod1] 	
+	     chan Ca type ca_type chnoise=canois
+	       ndensity gcdens[CA][region]  
+		offset = -.005
+	       capump vmax=capump_factor*gcdens[CA][region] km=5e-6
+	       cshell=nshell
+           	ename ca1;
+       }
+      else {
+       conn [gc][nod1] to [gc][nod2] 
+	cable dia d cplam=local_cplam vrest=gcvstart elabl regname[region]
+	 chan Na type na_type chnoise=nanois
+	    ndensity=gcdens[NA][region] * (1-na_ifactor)
+       	    offsetm=mvr_offsetm 
+	    offseth=mvr_offseth
+	 chan Na type na_type chnoise=nanois
+	    ndensity=gcdens[NA][region] * na_ifactor
+       	    offsetm=mvr_offsetm 
+	    offseth=mvr_offseth
+	    tauc=30*.5 taud=30
+	 chan Ca type ca_type chnoise=canois
+	    ndensity=gcdens[CA][region] 
+	    capump vmax=capump_factor*gcdens[CA][region] km=5e-6
+	    cshell=nshell
+
+	 chan K type kdr_type chnoise=kdrnois
+	    ndensity=gcdens[KDR][region]
+	    offset=xoffsetkn  
+	    taun=taunk
+
+	 chan KCa type skca1_type chnoise=sk1nois
+            ndensity=gcdens[SKCA1][region] 
+
+	 chan KCa type skca2_type chnoise=sk2nois
+            ndensity=gcdens[SKCA2][region] 
+
+	 chan KCa type bkca_type chnoise=bknois
+            ndensity=gcdens[BKCA][region] 
+
+	 chan K type ka_type chnoise=kanois
+            ndensity=gcdens[KA][region]
+			offsetm=mvr_offsetka_n
+			offseth=mvr_offsetka_h 
+	 ;
+   };
+  };
+ };
+
+/*--------------------------------------------------------*/
+
+
+if (notinit(am_dia_factor)) am_dia_factor = 1.0; 
+
+if (notinit(amdensfile)) {
+   amdensfile = "amdens.n";
+   printf ("#   dsseg.n: using channel densities for am from '%s'.\n",
+					amdensfile);
+   printf ("#\n");
+ };
+
+include (amdensfile);		/* define channel densities */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc make_amseg(n, nod1, nod2, d, region) /* proc to make dendrites */
+{
+    local x, y, z, dist, local_cplam;
+    if (nod1 > nod2) {swap=nod1; nod1=nod2; nod2=swap;}; /* now: nod2 >=nod1 */
+
+/* 
+    if (region==SOMA)      printf("Soma       %g %g\n", nod1,nod2);
+    if (region==HILLOCK)   printf("Hillock    %g %g\n", nod1,nod2);
+    if (region==AXON_THIN) printf("Axon_thin: %g %g\n", nod1,nod2);
+    if (region==AXON)      printf("Axon       %g %g\n", nod1,nod2);
+*/
+ 
+    x = node [am][n][nod1]->xloc - node [am][n][nod2]->xloc;
+    y = node [am][n][nod1]->yloc - node [am][n][nod2]->yloc;
+    z = node [am][n][nod1]->zloc - node [am][n][nod2]->zloc; 
+    
+    dist = sqrt (x*x + y*y);
+/*   printf("r:%g\n",dist /sqrt (x*x + y*y ) );  /* */
+
+  if (region==DEND) { 		/* allow changing diameter in dendrites */
+     d *= am_dia_factor;
+  };
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+  if (!am_biophys) {
+       if (region == SOMA)
+           at [am][n][nod1] sphere dia d vrev= amvrev rm=amrm
+                                vrest=amvstart elabl regname[region]
+       else if (region == VARICOS)
+           at [am][n][nod1] sphere dia d vrev= amvrev rm=amrm
+                                vrest=amvstart elabl regname[DEND]
+       else conn [am][n][nod1] to
+              [am][n][nod2] cable  dia d vrev= amvrev rm=amrm
+                                vrest=amvstart elabl regname[region];
+  }
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+  else {     /* am_biophys */
+
+  offsetkn = mvr_offsetkn;
+
+  if (region == SOMA) {
+
+        at [am][n][nod1] sphere dia d vrest=amvstart vrev=amvrev rm=amrm
+	   elabl regname[region]
+	   chan Na type na_type chnoise=nanois
+		ndensity=amdens[NA][region] * (1-na_ifactor)
+			offsetm=mvr_offsetm 
+			offseth=mvr_offseth
+			ename nahh;
+
+	  at [am][n][nod1] 	
+	   chan K type kdr_type chnoise=kdrnois
+		ndensity=amdens[KDR][region] 
+			offset=offsetkn 
+			taun=taunk
+			ename kdr;
+
+	  at [am][n][nod1] 	
+	   chan K type ka_type chnoise=kanois
+			ndensity=amdens[KA][region]
+			offsetm=mvr_offsetka_n
+			offseth=mvr_offsetka_h
+			ename ka;
+      }
+      else if (regon == VARICOS) {
+	at [am][n][nod1] 
+	 cable dia d cplam=local_cplam vrest=amvstart vrev=amvrev rm=amrm
+	   elabl regname[DEND]
+	   chan Na type na_type chnoise=nanois
+		ndensity=amdens[NA][region] * (1-na_ifactor)
+			offsetm=am_offsetm 
+			offseth=am_offseth
+	   chan K type kdr_type chnoise=kdrnois
+		ndensity=amdens[KDR][region] 
+			offset=am_offsetkn 
+			taun=taunk
+	   chan K type ka_type chnoise=kanois
+		offsetm=am_offsetka_n
+		offseth=am_offsetka_h
+		ndensity=amdens[KA][region];  
+    }
+      else {
+	conn [am][n][nod1] to [am][n][nod2] 
+	 cable dia d cplam=local_cplam vrest=amvstart vrev=amvrev rm=amrm
+	   elabl regname[region]
+	   chan Na type na_type chnoise=nanois
+		ndensity=amdens[NA][region] * (1-na_ifactor)
+			offsetm=am_offsetm 
+			offseth=am_offseth
+	   chan K type kdr_type chnoise=kdrnois
+		ndensity=amdens[KDR][region] 
+			offset=am_offsetkn 
+			taun=taunk
+	   chan K type ka_type chnoise=kanois
+		offsetm=am_offsetka_n
+		offseth=am_offsetka_h
+		ndensity=amdens[KA][region];  
+    };
+  };
+ };
+
+/*---------------------------------------------*/

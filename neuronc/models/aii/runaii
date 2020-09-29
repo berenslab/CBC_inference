@@ -1,0 +1,44 @@
+#! /bin/csh -f
+#
+#
+nice +20
+
+#nc -f -n -v                       aii.1.n > aii.1.v
+#nc -f -n -v -s nonak 1            aii.1.n > aii.2.v
+#nc -f -n -v -s nogj 1             aii.1.n > aii.3.v
+#nc -f -n -v -s nonak 1 -s nogj 1  aii.1.n > aii.4.v
+#nc -f -n -v -s stim1 1            aii.1.n > aii.5.v
+
+#nc -s gjcond 4e-10 -f -n -v                       aii.1.n > aii.1x.v
+#nc -s gjcond 4e-10 -f -n -v -s nonak 1            aii.1.n > aii.2x.v
+#nc -s gjcond 4e-10 -f -n -v -s nogj 1             aii.1.n > aii.3x.v
+#nc -s gjcond 4e-10 -f -n -v -s nonak 1 -s nogj 1  aii.1.n > aii.4x.v
+#nc -s gjcond 4e-10 -f -n -v -s stim1 1            aii.1.n > aii.5x.v
+
+#nc -s gjcond 1e-9 -f -n -v                       aii.1.n > aii.1y.v
+#nc -s gjcond 1e-9 -f -n -v -s nonak 1            aii.1.n > aii.2y.v
+#nc -s gjcond 1e-9 -f -n -v -s nogj 1             aii.1.n > aii.3y.v
+#nc -s gjcond 1e-9 -f -n -v -s nonak 1 -s nogj 1  aii.1.n > aii.4y.v
+#nc -s gjcond 1e-9 -f -n -v -s stim1 1            aii.1.n > aii.5y.v
+
+# no noise
+
+#nc -f -n -v -s nonak 1            -s nfv 0 aii.1.n > aii.2y.v
+#nc -f -n -v -s nonak 1 -s stim1 1 -s nfv 0 aii.1.n > aii.5y.v
+
+#nc -s gjcond 4e-10 -f -n -v -s nonak 1            -s nfv 0 aii.1.n > aii.2w.v
+#nc -s gjcond 4e-10 -f -n -v -s nonak 1 -s stim1 1 -s nfv 0 aii.1.n > aii.5w.v
+
+#nc -f -n -t -s nonak 1            aii.1.n > aii.2.r
+nc -f -n -t -s nonak 1 -s nogj 1  aii.1.n > aii.4.r
+#nc -s gjcond 4e-10 -f -n -t -s nonak 1            aii.1.n > aii.2x.r
+nc -s gjcond 4e-10 -f -n -t -s nonak 1 -s nogj 1  aii.1.n > aii.4x.r
+#nc -s gjcond 1e-9 -f -n -t -s nonak 1             aii.1.n > aii.2y.r
+nc -s gjcond 1e-9 -f -n -t -s nonak 1 -s nogj 1  aii.1.n > aii.4y.r
+
+#column 9 aii.2.r > aii.2n
+column 9 aii.4.r > aii.4n
+#column 9 aii.2x.r > aii.2xn
+column 9 aii.4x.r > aii.4xn
+#column 9 aii.2y.r > aii.2yn
+column 9 aii.4y.r > aii.4yn

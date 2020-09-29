@@ -1,2 +1,0 @@
-nc --expt dsgc_cbp_bar -d 1 retsim1.n | & less
-

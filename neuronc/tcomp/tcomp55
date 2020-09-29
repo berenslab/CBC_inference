@@ -1,0 +1,47 @@
+/* test of calcium and calcium-sensitive potassium channels */
+
+timinc = 1e-4;
+ploti=1e-4;
+tempcel = 6.3;
+implicit=1;
+
+drm=40000;
+
+at 1 sphere dia  40;
+
+at 1 Na density 4e-2 ename naxx;
+
+at 1 K type 0 density 1.2e-2 ename kxx;
+at 1 KCa type 0 density 8e-3 k1 5e-7 ename kca;
+
+
+at 1 chan Ca cao .005 cai 50e-9 tauc .001 /* thresh -.045 */
+	   density 1e-3 capump vmax 1e-9 cbound 1 ename xxx;   /* */ 
+
+
+plmax = .04;
+plmin = -.08;
+
+plot V[1];
+
+//plot G xxx max 2e-7 min 0;
+
+plot Ca(1) [1] max 5e-6 min 0;
+plot Ca(2) [1] max 5e-6 min 0;
+plot Ca(5) [1] max 5e-6 min 0;
+plot Ca(10)[1] max 5e-6 min 0;
+plot Ca(99)[1] max 5e-6 min 0;
+
+imin = -20e-9;
+plot Ca(I) [1] max 0 min imin;
+plot G(I) naxx max 0 min imin; /* */
+
+plot G kca max 2e-8 min 0; /* */
+
+
+/* plot G7 xxx max .2 min 0; /* */
+
+stim node 1 cclamp 1e-9 start .005 dur .001; /* */
+
+endexp=.035;
+run;

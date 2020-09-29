@@ -1,0 +1,668 @@
+/* model conesn.n */
+
+/* Computes amount of decrement in cone array coupled by gap junctions */
+/*  Array is triangular matrix. */
+
+timinc = 1e-5;
+ 
+rin    = 0.5e9;  	/* ohms */
+gjcond = 320e-12;	/* S */
+gjrand = 0;		/* range for random gjcond, 0 -> off */
+complam = .001;
+rseed = 2754814;
+
+rowlen = 33;
+nrows  = 33;
+
+info=0;
+
+microns_degree = 300;
+
+expt = "Rin";		/* find Rin */
+expt = "static";	/* just plot amplitude in neighbors */
+expt = "flash";		/* plot response to flash in 3 adjacent cones */
+expt = "flash_repeat";	/* plot response to repeated flash in row of cones */
+expt = "noise_adj";	/* plot noise amplitude in 3 adjacent cones */
+expt = "noise";		/* plot noise amplitude in 1 cone */
+expt = "noisy_stim";	/* plot signal amplitude in array of cones */
+expt = "signal";	/* plot signal amplitude in 1 cone */
+expt = "fscan";		/* plot signal amplitude in 1 cone vs. sfreq */
+
+species = "primate";
+
+/* calculation of optical blur */
+
+blur1 = 4.43;	/* um dia primary Gaussian blur to match Campbell&Gubisch */
+blur2 = 1.5;	/*  cone aperture */
+blur3 = sqrt(blur1*blur1 + blur2*blur2);  /* = 4.677 um dia blur */
+
+sa = .0427;     /* scatter Gaussian, from Geisler (1984) fit */
+sd = 20.35; 	/* to Campbell & Gubisch (1966), 2 mm pupil. */
+sp = 0; 
+
+x = setvar();
+
+
+if (expt=="noise"     || expt=="noisy_stim" || 
+    expt=="noise_adj" || expt=="flash_repeat") {
+   if (notinit(pnoise)) pnoise = 1;
+};
+
+if (notinit(pnoise)) pnoise = 0;
+
+if (expt=="noisy_stim") {
+  rowlen = 121;
+  nrows = 9;
+};
+
+/* set dimensions of cone array */
+
+if (species=="primate") {
+  if (notinit(cone_spac)) cone_spac = 2.5;
+  if (notinit(cone_dia))  cone_dia = 2.5;
+  if (notinit(packing))   packing = 6; 
+} else 
+if (species=="gp") {
+  if (notinit(cone_spac)) cone_spac = 6.32;
+  if (notinit(cone_dia))  cone_dia = 2.5;
+  if (notinit(packing))   packing = 4;
+};
+
+ncones = nrows * rowlen;
+midcone = int (nrows * .5) * rowlen + int(rowlen * .5 + 1);
+if (info>1) print "species ", species;
+if (info>1) print "midcone ", midcone;
+
+if (notinit(lpfilt))     lpfilt = .0005;
+//if (notinit(sbackgr))     sbackgr = 5e4;
+if (notinit(sbackgr))     sbackgr = 7885;
+
+if (notinit(scontrast)) scontrast = .05;
+
+/* Make triangular matrix of cones. */
+/*  They are numbered sequentially. */
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+func rrange (L, H)
+
+/* return a number between L and H */
+
+{
+    local t__;
+
+  if (H < L) {
+      t__ = L;
+      L = H;
+      H = t__;
+   };
+
+  return ( L + rand() * (H - L) );
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+proc conngj(x,y)
+
+{
+   local gjcondt, var;
+
+  if (gjrand) {  /* using S.H DeVries' coupling data from "conegj": */
+
+        gjcondt = gjcond * (gasdev()*gjrand*.7 + gjrand);
+        if (gjcondt < 0) gjcondt = rrange (gjcond*.3, gjcond*.7);
+        conn x to y gj gjcondt gnv 1;
+        //print x,y,gjcondt;
+  }
+  else  conn x to y gj gjcond gnv 1;
+  if (info>1) print "conn ",x," to ",y;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+proc makcone (n,colloc,rowloc)
+
+/* make cone */
+/*  set cone conductance = 30pA / .04 V */
+/*  set sphere rm to make 2 nS total conductance when in dim light */
+
+{
+ if (expt=="noise_adj" && n!=midcone)
+  at n cone (colloc,rowloc) pigm=8 dia=cone_dia photnoise=0 maxcond=750e-12 
+ else 
+  at n cone (colloc,rowloc) pigm=8 dia=cone_dia photnoise=pnoise maxcond=750e-12;
+#  at n loc  (colloc,rowloc) sphere dia 10 rm 1800 vrev -.05 vrest -.046; 
+   at n loc  (colloc,rowloc) sphere dia 18 rm 5800 vrev -.05 vrest -.046; 
+#   conn n to [n][1] cable dia 1.6 length 400 cplam 2;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+func connrow(col,row,rowlen,ncones)
+
+/* make row of cones and connect them */
+
+{
+    local i,st,stp, even;
+    local colloc, rowloc;
+
+  if (info>2) print col,row,rowlen,ncones;
+
+  st = ncones+1;
+  stp = st + rowlen - 1; 
+  even = ((int(row * .5) * 2) == row);
+  if (packing==6) {
+    colloc = col * cone_spac + even * cone_spac/2;
+    rowloc = row * cone_spac * sqrt(3)/2;
+  }
+  else {
+    colloc = col * cone_spac;
+    rowloc = row * cone_spac; 
+  };
+
+  for (i=st; i<=stp; i++) {
+     makcone(i,colloc,rowloc);
+     colloc += cone_spac;
+  };
+  for (i=st; i<stp; i++) {
+     conngj(i,i+1);
+  };
+
+  return stp;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+proc crossrow(st,stp)
+
+{
+  local i, nx;
+
+  nx = stp+1;
+  for (i=st; i<=stp; i) {
+    conngj(i++,nx++);
+  };
+
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+proc oddrow(st,stp)
+
+{
+  local i, nx;
+
+  nx = stp+1;
+  for (i=st; i<=stp; i) {
+    conngj(i++,nx);
+    if (i<=stp) conngj(i,nx++);
+  };
+
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+proc evenrow(st,stp)
+
+{
+  local i, nx;
+
+  nx = stp+1;
+  for (i=st; i<=stp; i) {
+    conngj(i,nx++);
+    if (i<stp) conngj(i,nx);
+    i++;
+  };
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+ncones = 0;
+st = 1;
+stp = st+rowlen-1;
+
+if (packing==6) {
+
+  for (stp=0,row=1; row<nrows; row) {
+
+    if (info>1) print "\nrow  ",row;
+    st  = stp+1;
+    stp = st+rowlen-1;
+    ncones= connrow(1,row,rowlen,ncones);
+    oddrow(st,stp);
+    row++;
+
+    if (row<nrows) {
+      if (info>1) print "\nrow  ",row;
+      st  = stp+1;
+      stp = st+rowlen-1;
+      ncones= connrow(1,row,rowlen,ncones);
+      evenrow(st,stp);
+      row++;
+    };
+
+  };
+
+  if (info>1) print "\nrow  ",row;
+  ncones= connrow(1,row,rowlen,ncones);	 /* connect last row */
+
+}   /* packing==6 */
+
+else if (packing==4) {
+
+  ncones= connrow(1,0,rowlen,ncones);
+  for (stp=0,row=1; row<nrows; row) {
+    st  = stp+1;
+    stp = st+rowlen-1;
+    ncones= connrow(1,row,rowlen,ncones);
+    crossrow(st,stp);
+    row++;
+  };
+  if (info>1) print "\nrow  ",row;
+
+};
+
+if (info>0) {
+   print "   Cones in row", rowlen; 
+   print " Number of rows", nrows;
+   print "Number of cones", ncones;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+if (disp) { 
+
+ display size rowlen*cone_spac*1.1;
+ display center ((rowlen+1)*.5*cone_spac,nrows*.5*cone_spac);
+ display sphere matching [-1] dscale 3;
+ display gj matching [-1];
+ display node matching [-1] dscale 1.1 color 5;
+ if (!(disp&16)) exit;   	/* don't exit if "display stim"  = -d 16 */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - */
+
+endexp = .2;
+implicit=1;
+
+/* find center of cone array */
+  
+xcent = (rowlen+1)*.5*cone_spac;
+ycent = nrows*.5*cone_spac* sqrt(3)*.5;
+
+if (expt=="Rin") {
+
+  stimdur = .01;
+  stimdia = 100;
+  v1 = -.01;
+  v2 = -.06;
+  stim spot stimdia loc (xcent,ycent) inten=sbackgr start=time dur=1e9;
+  stim node midcone vclamp v1 start 0 dur stimdur;
+  stim node midcone vclamp v2 start stimdur dur stimdur;
+  step stimdur-.0001;
+  i1 = I[midcone];
+  step stimdur;
+  i2 = I[midcone];
+  print i1,i2,i1-i2,(i1-i2)/(v1-v2);
+}
+else if (expt=="static") {
+
+  endexp = .05;
+  ploti=1e-3;
+  stimstart = .025;
+  stim node midcone vclamp .1 start stimstart dur endexp;
+  //stim node midcone cclamp 100e-12 start 0 dur endexp;
+
+ //plot V[midcone+1];
+ //plot I[midcone];
+
+ step stimstart-.0001;
+ vorig = V[midcone];
+ 
+ step endexp-stimstart;
+
+ y = V[midcone] - vorig;
+ print y/y;
+ y1  = (V[midcone+1]-vorig)/y;
+ print (V[midcone+1]-vorig)/y;
+ y2  = (V[midcone+2]-vorig)/y;
+ print (V[midcone+2]-vorig)/y;
+ print (V[midcone+3]-vorig)/y;
+ if (nrows==1)      print "total",(1+2*y1+2*y2)
+ else {
+  if (packing==6)   print "total",(1+6*y1+8*y2)
+  else              print "total",(1+4*y1+6*y2);
+ };
+ print "Rin", V[midcone] / I[midcone];
+}
+
+else if (expt=="flash") {
+
+  time = 0;
+  endexp = .05;
+  ploti=1e-4;
+
+  stimdia = 1000;
+  stimtime = 0.02;
+  stim cone (midcone) inten=sbackgr start=stimtime dur=.01;
+  stim spot stimdia loc (xcent,ycent) inten=sbackgr start=0 dur=1e9;
+  //plot L[midcone] max (sbackgr)*2 min 0 plnum 1 filt [.0005, .0005];
+    plot V[midcone]   max -.045 min -0.047 plnum 2 filt [lpfilt];
+    plot V[midcone+1] max -.045 min -0.047 plnum 2 filt [lpfilt];
+    plot V[midcone+2] max -.045 min -0.047 plnum 2 filt [lpfilt];
+  run;
+}
+else if (expt=="flash_repeat") {
+
+/* from "harry_calib.n", stimulus background is 7885 phot/um2/sec */
+
+  prseed = 27314682 + 100000 * scontrast;
+
+  time = 0;
+  ploti=1e-3;
+  midrow = int (nrows * .5) * rowlen + 1;
+  fullfield = 10000;
+
+  /* do pre-stimulus expt to remove artifact */
+
+  if (!disp) {
+    stimstart = .02;
+    stim spot fullfield loc (xcent,ycent) inten=sbackgr start=time dur=stimstart;
+    step stimstart;
+    time = 0;
+  };
+
+    //plot L[midcone] max (sbackgr)*2 min 0 plnum 1 filt [.01, .01];
+
+  nplots = rowlen * 2;
+  for (i=0; i<nplots; i++) {		/* plot a row of cones */
+    plot V[midrow+i]   max -.044 min -0.046 plnum 2;
+  };
+
+  if (notinit(ntrials)) ntrials = 10;
+
+  tincr   = .001;
+  stimdia = 200;
+  stimdur = .05;
+  trial_dur = .1;
+  endexp = ntrials * trial_dur;
+
+  stim spot fullfield loc (xcent,ycent) inten=sbackgr start=0 dur=1e9;
+  stiminten = sbackgr * scontrast;
+  for (t=0; t<endexp; t+= trial_dur) {
+    stim spot stimdia loc (xcent,ycent) inten=stiminten start=time dur=stimdur;
+    if (disp & 16) {
+       display stim at time+stimdur-.01 dscale 2;
+       exit;
+    };
+    step trial_dur;
+  };
+}
+else if (expt=="noise_adj") {
+
+  time = 0;
+  endexp = 2;
+  ploti=1e-4;
+
+  stimdia = 1000;
+  stimtime = 0;
+  stim spot stimdia loc (xcent,ycent) inten=sbackgr start=stimtime dur=1e9;
+  //plot L[midcone] max (sbackgr)*2 min 0 plnum 1 filt [.0005, .0005];
+    plot V[midcone]   max -.044 min -0.046 plnum 2 filt [lpfilt];
+    plot V[midcone+1] max -.044 min -0.046 plnum 2 filt [lpfilt];
+    plot V[midcone+2] max -.044 min -0.046 plnum 2 filt [lpfilt];
+  run;
+}
+else if (expt=="noise") {
+
+  time = 0;
+  endexp = 50;
+  ploti=1e-4;
+
+  stimdia = 1000;
+  stimtime = 0;
+  stim spot stimdia loc (xcent,ycent) inten=sbackgr start=stimtime dur=1e9;
+  //plot L[midcone] max (sbackgr)*2 min 0 plnum 1 filt [.0005, .0005];
+  //plot V[midcone] max -.044 min -0.046 plnum 2 filt [lpfilt];
+    if (gjrand) {
+      plot V[midcone] max -.044 min -0.046 plnum 2;
+      plot V[midcone+5] max -.044 min -0.046 plnum 2;
+      plot V[midcone-5] max -.044 min -0.046 plnum 2;
+      plot V[midcone+5*rowlen] max -.044 min -0.046 plnum 2;
+      plot V[midcone-5*rowlen] max -.044 min -0.046 plnum 2;
+    }
+    else plot V[midcone] max -.044 min -0.046 plnum 2;
+  run;
+}
+else if (expt=="noisy_stim") {
+
+  stim file "conesn_noisy_stim.t";
+
+  ploti=1e-4;
+  plsep = 1;
+
+  ntrials = 1;
+
+  stimdia = 1000;
+  stiminten = sbackgr * scontrast;
+  stimdur = .02;
+  //if (notinit(speriod)) speriod  = microns_degree/10;
+  if (notinit(speriod)) speriod  = microns_degree/8;
+  timc = .2;
+
+  if (disp) {
+    display size rowlen*cone_spac*1.02;
+    display center (xcent,ycent);
+    display sphere matching [-1] dscale .1;
+  };
+
+  ncone_plots = ncones;
+  ncone_plots = 1;
+
+
+/*
+  for (n=1; n<=ncone_plots; n++) {
+    plot L[midcone] max (stiminten+sbackgr)*3 min 0 plnum 1;
+    plot V[midcone] max -.03 min -0.05 plnum 2;
+  }; /* */
+
+  endexp = stimdur;
+
+  //stim spot stimdia loc (xcent,ycent) inten=sbackgr start=time dur=1e9;
+  for (t=0; t<ntrials; t+=1) {
+    time = 0;
+
+    stim gabor speriod loc (xcent,ycent) 
+			blur=blur3 scatter (sa, sd, sp)
+			inten=sbackgr
+			contrast=scontrast
+			sphase 90 sscale .2
+			xenv=3*speriod yenv=3*speriod
+			start=0 dur=stimdur;
+
+    display stim at 0.001 dscale 2.9;
+    step stimdur;
+
+    //print v1,v2,v1-v2,(v2-v1)/v1;
+
+    spacfreq = microns_degree/speriod;
+    //if (speriod > 4*cone_spac) print spacfreq, (v1a-v2a+v1b-v2b)*.5
+    //else                      print spacfreq, (v1a-v2a);
+
+    cone_start=int(nrows/2)*rowlen;
+    cone_end  =cone_start + rowlen;
+    for (i=0,n=cone_start; n<cone_end; i++,n++) {
+      //print i, L[n];
+      print i, V[n];
+    };
+   
+  };
+}
+else if (expt=="signal") {
+
+  stim file "conesn_signal.t";
+
+  ploti=1e-4;
+  plsep = 1;
+
+  ntrials = 1;
+
+  stimdia = 1000;
+  stiminten = sbackgr * scontrast;
+  stimdur = .01;
+  stimrate = 4;
+  if (notinit(speriod)) speriod  = microns_degree/10;
+  resp_dur = 1/stimrate;
+  timc = .2;
+
+  if (disp) {
+    display size rowlen*cone_spac*1.02;
+    display center (xcent,ycent);
+    display sphere matching [-1] dscale .1;
+  };
+
+  ncone_plots = ncones;
+  ncone_plots = 1;
+
+/*
+  for (n=1; n<=ncone_plots; n++) {
+    plot L[midcone] max (stiminten+sbackgr)*3 min 0 plnum 1;
+    plot V[midcone] max -.03 min -0.05 plnum 2;
+  }; /* */
+
+  endexp = ntrials * resp_dur;
+  endexp = resp_dur;
+
+  //stim spot stimdia loc (xcent,ycent) inten=sbackgr start=time dur=1e9;
+  for (t=0; t<ntrials; t+=1) {
+    time = 0;
+    stim gabor speriod loc (xcent,ycent)
+			blur=blur3 scatter (sa, sd, sp)
+			inten=sbackgr
+			contrast=0
+			sphase 90 sscale .2
+			xenv=2*speriod yenv=4*speriod
+			start=0 dur=stimdur;
+
+    stim gabor speriod loc (xcent,ycent)
+			blur=blur3 scatter (sa, sd, sp)
+			inten=sbackgr
+			contrast=scontrast
+			sphase 90 sscale .2
+			xenv=2*speriod yenv=4*speriod
+			start=stimdur dur=stimdur;
+
+    step stimdur;
+    v1a = V[midcone];
+    v1b = V[midcone+1];
+
+    display stim at stimdur dscale 2.9;
+
+    step stimdur;
+    v2a = V[midcone];
+    v2b = V[midcone+1];
+
+    //print v1,v2,v1-v2,(v2-v1)/v1;
+
+    spacfreq = microns_degree/speriod;
+    //if (speriod > 4*cone_spac) print spacfreq, (v1a-v2a+v1b-v2b)*.5
+    //else                      print spacfreq, (v1a-v2a);
+
+    print spacfreq, (v1a-v2a);
+   
+  };
+} 
+else if (expt=="fscan") {
+
+  sprintf(conesn_file,"conesn_%3.2g.t",sbackgr);
+  // print "conesn_file", conesn_file;
+
+  if (sbackgr < 1e3) {
+    blur3 = 1.5;		/* blur and scatter for 5.8 mm pupil */
+    sa = 10;			/*  From Campbell & Gubisch (1966) */
+    sd = 5.4;
+    sp = 1.95;
+  };
+
+  stim file conesn_file;
+
+  ploti=1e-4;
+  plsep = 1;
+
+  ntrials = 1;
+
+  stimdia = 1000;
+  stiminten = sbackgr * scontrast;
+  stimdur = .1;
+  stimrate = 4;
+  if (notinit(speriod)) speriod  = 40*cone_spac;
+  resp_dur = 1/stimrate;
+  timc = .2;
+
+  if (disp) {
+    display size rowlen*cone_spac*.95;
+    display center (xcent,ycent);
+    display sphere matching [-1] dscale .5;
+  };
+
+  ncone_plots = ncones;
+  ncone_plots = 1;
+
+/*
+ for (n=1; n<=ncone_plots; n++) {
+    plot L[midcone] max (stiminten+sbackgr)*3 min 0 plnum 1;
+    plot V[midcone] max -.03 min -0.05 plnum 2;
+  }; /* */
+
+ endexp = 1e9;
+ endexp = stimdur * 2 * 30;
+
+
+/*
+if (!disp) {
+ stimstart = .06;
+ stim spot stimdia loc (xcent,ycent) inten=sbackgr start=time dur=stimstart;
+ step stimstart;
+};
+*/
+
+ spacfreq_start = 4;
+ spacfreq_end = 110;
+ spacfreq_incr = pow(2,.25);
+
+ for (s=spacfreq_start; s<spacfreq_end; s*=spacfreq_incr) {
+    speriod = microns_degree/s;
+
+    stim gabor speriod loc (xcent,ycent)
+			blur=blur3 scatter (sa, sd, sp)
+			inten=sbackgr
+			contrast=0
+			sphase 90 sscale .2
+			xenv=2*speriod yenv=4*speriod
+			start=time dur=stimdur;
+
+    stim gabor speriod loc (xcent,ycent)
+			blur=blur3 scatter (sa, sd, sp)
+			inten=sbackgr
+			contrast=scontrast
+			sphase 90 sscale .2 
+			xenv=2*speriod yenv=4*speriod
+			start=time+stimdur dur=stimdur;
+
+    step stimdur;
+    v1a = V[midcone];
+    v1b = V[midcone+1];
+
+    step stimdur;
+    v2a = V[midcone];
+    v2b = V[midcone+1];
+
+
+    //print v1,v2,v1-v2,(v2-v1)/v1;
+    //if (speriod > 4*cone_spac) print s, (v1a-v2a+v1b-v2b)*.5
+    //else                      print s, (v1a-v2a);
+
+    print s, (v1a-v2a);
+
+ };
+}; 

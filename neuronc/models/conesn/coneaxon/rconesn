@@ -1,0 +1,156 @@
+#! /usr/bin/perl 
+#
+# run the noise
+#
+`nc --expt noise  --gjcond   0e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.0.5e4.r`;
+`nc --expt noise  --gjcond 50e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.50.5e4.r`;
+`nc --expt noise  --gjcond 100e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.100.5e4.r`;
+`nc --expt noise  --gjcond 250e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.250.5e4.r`;
+`nc --expt noise  --gjcond 500e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.500.5e4.r`;
+`nc --expt noise  --gjcond 1000e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.1000.5e4.r`;
+`nc --expt noise  --gjcond 1800e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.1800.5e4.r`;
+`nc --expt noise  --gjcond 2500e-12 --sbackgr 5e4 conesn.n|tail -n +1011>conesn.nois.2500.5e4.r`;
+#
+`nc --expt noise  --gjcond   0e-12 --sbackgr 5e2 conesn.n|tail -n +1011>conesn.nois.0.5e2.r`;
+`nc --expt noise  --gjcond 250e-12 --sbackgr 5e2 conesn.n|tail -n +1011>conesn.nois.250.5e2.r`;
+# 
+# run the signal
+#
+`stim --expt fscan --sbackgr 5e4 conesn.n`;
+`nc --expt fscan --gjcond 0e-12  --sbackgr 5e4 conesn.n>conesn.signal.0.5e4.r`;
+`nc --expt fscan --gjcond 250e-12 --sbackgr 5e4 conesn.n>conesn.signal.250.5e4.r`;
+#
+`stim --expt fscan --sbackgr 5e2 conesn.n`;
+`nc --expt fscan --gjcond 0e-12   --sbackgr 5e2 conesn.n>conesn.signal.0.5e2.r`;
+`nc --expt fscan --gjcond 250e-12 --sbackgr 5e2 conesn.n>conesn.signal.250.5e2.r`;
+#
+#  make the figures
+#
+# `conepic > conesn.pgm`;
+# `convert conesn.pgm conesn.jpg`;
+#
+`stim --expt noisy_stim --scontrast .1 conesn.n`;
+`nc --expt noisy_stim --gjcond 0e-12   conesn.n > conesn.p1`;
+`nc --expt noisy_stim --gjcond 250e-12 conesn.n > conesn.p2`;
+`nc --expt noisy_stim --gjcond 1000e-12 conesn.n > conesn.p3`;
+#
+# unfiltered output
+#
+$nois0_5e4=`var -f conesn.nois.0.5e4.r | cut -d " " -f 14`/1;
+$nois50_5e4=`var -f conesn.nois.50.5e4.r | cut -d " " -f 14`/1;
+$nois100_5e4=`var -f conesn.nois.100.5e4.r | cut -d " " -f 14`/1;
+$nois250_5e4=`var -f conesn.nois.250.5e4.r | cut -d " " -f 14`/1;
+$nois500_5e4=`var -f conesn.nois.500.5e4.r | cut -d " " -f 14`/1;
+$nois1000_5e4=`var -f conesn.nois.1000.5e4.r | cut -d " " -f 14`/1;
+$nois1800_5e4=`var -f conesn.nois.1800.5e4.r | cut -d " " -f 14`/1;
+$nois2500_5e4=`var -f conesn.nois.2500.5e4.r | cut -d " " -f 14`/1;
+$nois0_5e2=`var -f conesn.nois.0.5e2.r | cut -d " " -f 14`/1;
+$nois250_5e2=`var -f conesn.nois.250.5e2.r | cut -d " " -f 14`/1;
+#
+print "unfiltered\n";
+print "noise0_5e4 ",   $nois0_5e4,"\n";
+print "noise50_5e4 ",  $nois50_5e4,"\n";
+print "noise100_5e4 ", $nois100_5e4,"\n";
+print "noise250_5e4 ", $nois250_5e4,"\n";
+print "noise500_5e4 ", $nois500_5e4,"\n";
+print "noise1000_5e4 ",$nois1000_5e4,"\n";
+print "noise1800_5e4 ",$nois1800_5e4,"\n";
+print "noise2500_5e4 ",$nois2500_5e4,"\n";
+print "noise0_5e2 ",   $nois0_5e2,"\n";
+print "noise250.5e2 ", $nois250_5e2,"\n";
+print "\n";
+#
+# filtered output at 5 msec
+# 
+$nois0_5e4_005=`lpfilt --t .005 < conesn.nois.0.5e4.r   |var| cut -d " " -f 14`/1;
+$nois50_5e4_005=`lpfilt --t .005 < conesn.nois.50.5e4.r |var| cut -d " " -f 14`/1;
+$nois100_5e4_005=`lpfilt --t .005 < conesn.nois.100.5e4.r |var| cut -d " " -f 14`/1;
+$nois250_5e4_005=`lpfilt --t .005 < conesn.nois.250.5e4.r |var| cut -d " " -f 14`/1;
+$nois500_5e4_005=`lpfilt --t .005 < conesn.nois.500.5e4.r |var| cut -d " " -f 14`/1;
+$nois1000_5e4_005=`lpfilt --t .005 < conesn.nois.1000.5e4.r |var| cut -d " " -f 14`/1;
+$nois1800_5e4_005=`lpfilt --t .005 < conesn.nois.1800.5e4.r |var| cut -d " " -f 14`/1;
+$nois2500_5e4_005=`lpfilt --t .005< conesn.nois.2500.5e4.r |var| cut -d " " -f 14`/1;
+$nois0_5e2_005=`lpfilt --t .005 < conesn.nois.0.5e2.r |var| cut -d " " -f 14`/1;
+$nois250_5e2_005=`lpfilt --t .005 < conesn.nois.250.5e2.r |var| cut -d " " -f 14`/1;
+# 
+print "5 ms.\n";
+print "noise0_5e4_005 ",   $nois0_5e4_005,"\n";
+print "noise50_5e4_005 ",  $nois50_5e4_005,"\n";
+print "noise100_5e4_005 ", $nois100_5e4_005,"\n";
+print "noise250_5e4_005 ", $nois250_5e4_005,"\n";
+print "noise500_5e4_005 ", $nois500_5e4_005,"\n";
+print "noise1000_5e4_005 ",$nois1000_5e4_005,"\n";
+print "noise1800_5e4_005 ",$nois1800_5e4_005,"\n";
+print "noise2500_5e4_005 ",$nois2500_5e4_005,"\n";
+print "noise0_5e2_005 ",   $nois0_5e2_005,"\n";
+print "noise250.5e2_005 ", $nois250_5e2_005,"\n";
+print "\n";
+#
+# run with output filtered at 50 msec
+# 
+$nois0_5e4_05=`lpfilt --t .05 < conesn.nois.0.5e4.r   |var| cut -d " " -f 14`/1;
+$nois50_5e4_05=`lpfilt --t .05 < conesn.nois.50.5e4.r |var| cut -d " " -f 14`/1;
+$nois100_5e4_05=`lpfilt --t .05 <  conesn.nois.100.5e4.r |var| cut -d " " -f 14`/1;
+$nois250_5e4_05=`lpfilt --t .05 <  conesn.nois.250.5e4.r |var| cut -d " " -f 14`/1;
+$nois500_5e4_05=`lpfilt --t .05 <  conesn.nois.500.5e4.r |var| cut -d " " -f 14`/1;
+$nois1000_5e4_05=`lpfilt --t .05 < conesn.nois.1000.5e4.r |var| cut -d " " -f 14`/1;
+$nois1800_5e4_05=`lpfilt --t .05 < conesn.nois.1800.5e4.r |var| cut -d " " -f 14`/1;
+$nois2500_5e4_05=`lpfilt --t .05< conesn.nois.2500.5e4.r |var| cut -d " " -f 14`/1;
+$nois0_5e2_05=`lpfilt --t .05 < conesn.nois.0.5e2.r |var| cut -d " " -f 14`/1;
+$nois250_5e2_05=`lpfilt --t .05 < conesn.nois.250.5e2.r |var| cut -d " " -f 14`/1;
+#
+print "50 ms.\n";
+print "noise0_5e4_05 ",   $nois0_5e4_05,"\n";
+print "noise50_5e4_05 ",  $nois50_5e4_05,"\n";
+print "noise100_5e4_05 ", $nois100_5e4_05,"\n";
+print "noise250_5e4_05 ", $nois250_5e4_05,"\n";
+print "noise500_5e4_05 ", $nois500_5e4_05,"\n";
+print "noise1000_5e4_05 ",$nois1000_5e4_05,"\n";
+print "noise1800_5e4_05 ",$nois1800_5e4_05,"\n";
+print "noise2500_5e4_05 ",$nois2500_5e4_05,"\n";
+print "noise0_5e2_05 ",   $nois0_5e2_05,"\n";
+print "noise250_5e2_05 ", $nois250_5e2_05,"\n";
+print "\n";
+#
+#  make plot of noise amplitude
+#
+system ("echo 0 1 > conesn.coupl.p");
+$n=$nois0_5e4_005/$nois50_5e4;
+system ("echo 50  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois100_5e4;
+system ("echo 100  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois250_5e4;
+system ("echo 250  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois500_5e4;
+system ("echo 500  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois1000_5e4;
+system ("echo 1000  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois1800_5e4;
+system ("echo 1800  $n >>conesn.coupl.p");
+$n=$nois0_5e4_005/$nois2500_5e4;
+system ("echo 2500  $n >>conesn.coupl.p");
+#
+`fsdiv conesn.signal.0.5e4.r   $nois0_5e4_05 > conesn.0.5e4.sn`;
+`fsdiv conesn.signal.250.5e4.r $nois250_5e4_05 > conesn.250.5e4.sn`;
+`fsdiv conesn.signal.0.5e2.r   $nois0_5e2_05   > conesn.0.5e2.sn`;
+`fsdiv conesn.signal.250.5e2.r $nois250_5e2_05 > conesn.250.5e2.sn`;
+`hc conesn.0.5e4.sn conesn.250.5e4.sn | column3 1 2 4 > conesn.5e4.sn`;
+`hc conesn.0.5e2.sn conesn.250.5e2.sn | column3 1 2 4 > conesn.5e2.sn`;
+`hc conesn.0.5e2.sn conesn.250.5e2.sn | column2 2 4 > conesn.5e2.x`;
+`hc conesn.5e4.sn conesn.5e2.x > conesn.sn`;
+#
+#`nc --expt noise --gjcond 0e-12   --dcm 1e-6 conesn.n>conesn.nois.0.1e6.r &`;
+#`nc --expt noise --gjcond 250e-12 --dcm 1e-6 conesn.n>conesn.nois.250.1e6.r&`;
+#`nc --expt noise --gjcond 0e-12   --dcm 1e-7 conesn.n>conesn.nois.0.1e7.r &`;
+#`nc --expt noise --gjcond 250e-12 --dcm 1e-7 conesn.n>conesn.nois.250.1e7.r&`;
+##
+#`nc --expt noise_adj --gjcond 0e-12   --dcm 1e-6 conesn.n>conesn.adj.0.1e6.r &`;
+#`nc --expt noise_adj --gjcond 250e-12 --dcm 1e-6 conesn.n>conesn.adj.250.1e6.r&`;
+#`nc --expt noise_adj --gjcond 0e-12   --dcm 1e-7 conesn.n>conesn.adj.0.1e7.r &`;
+#`nc --expt noise_adj --gjcond 250e-12 --dcm 1e-7 conesn.n>conesn.adj.250.1e7.r&`;
+#
+## set cone sphere dia=5
+##
+#`nc --expt noise_adj --gjcond 0e-12   --dcm 1e-6 conesn.n>conesn.adj.0.1e6.5.r &`;
+#`nc --expt noise_adj --gjcond 250e-12 --dcm 1e-6 conesn.n>conesn.adj.250.1e6.5.r&`;
+#

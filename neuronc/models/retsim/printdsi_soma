@@ -1,0 +1,11 @@
+#! /bin/bash 
+#
+for i in $@; do
+    printpeakdsi_soma $i
+done
+
+##! /bin/csh -f
+#foreach i ($argv) 
+#  printpeakdsi_soma $i  
+#end
+#

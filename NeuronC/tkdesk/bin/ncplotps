@@ -1,8 +1,0 @@
-#! /bin/csh -f
-#  ncplotps
-#
-foreach i ($argv) 
-  plotmod $i | vid -B 0 -c > $i:r.ps
-end
-
-

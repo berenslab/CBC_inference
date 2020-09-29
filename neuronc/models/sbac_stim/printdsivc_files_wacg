@@ -1,0 +1,69 @@
+#! /usr/bin/perl
+#
+#  printdsicv_files 
+#
+
+@sbspacvals = (135,145,155);         # cell spacing
+$sbspacnum = $#sbspacvals + 1;
+
+
+@contvals = (0.0030, 0.0035, 0.0040, 0.0045, 0.0050, 0.0055, 0.0060, 0.0065, 0.0070, 0.0075, 0.0080, 0.0085, 0.0090, 0.0095, 0.0100);
+$contnum = $#contvals + 1;
+
+@barvals = (70,300);             # bar length
+$barnum = $#barvals + 1;
+
+@synanvals = (90,100,110,150);       # synanpo
+$synannum = $#synanvals + 1;
+
+@signalvals = ("c","v");         # c, v
+$signalnum = $#signalvals + 1;
+
+
+
+ $relangle = 300;
+     $sdia = 0.3;
+    $noinh = 0;
+    $sbarr = 107;
+   $sbspac = 155;
+$barlength = 70;
+   $cadist = 2.2e-3;
+  $synanpo = 90;
+$dbp1_cond = 2.3e-10;
+
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "synanpo=f"   => \$synanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib,
+             "wac_g=f"     => \$wac_g
+            );
+
+  $sd = sprintf("%4.2f",$sdia);
+$wacg = sprintf("%3.1f",$wac_g*1e10);
+
+    for ($s=0; $s<$sbspacnum; $s++) {
+       # $sbspac = $sbspacvals[$s];
+       $sbspac = sprintf("%.3d",$sbspacvals[$s]);
+         for ($b=0; $b<$barnum; $b++) {
+            $barlength = sprintf("%.3d",$barvals[$b]);
+            for ($a=0; $a<$synannum; $a++) {
+	    #   $synanpo = $synanvals[$a];
+                $synanpo = sprintf("%.3d",$synanvals[$a]);
+               for ($i=0; $i<$signalnum; $i++) {
+                  $signal = $signalvals[$i];
+
+system ("sbac_dsi_print$signal sbac_dsi.$relangle.$sbspac.$barlength.$synanpo.$sd.$wacg.txt > sbac_dsi.$relangle.$sbspac.$barlength.$synanpo.$sd.$wacg.$signal.txt");
+            }
+         }
+      }
+  }
+

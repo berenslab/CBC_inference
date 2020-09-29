@@ -1,0 +1,74 @@
+#! /usr/bin/perl
+#
+#  printdsicv_files 
+#
+
+# @sbspacvals = (135,155);         # cell spacing
+@sbspacvals = (135);         # cell spacing
+$sbspacnum = $#sbspacvals + 1;
+
+
+@sdiavals = (0.26, 0.3, 0.5);
+$sdianum = $#sdiavals + 1;
+
+@contvals = (0.002,0.0025,0.003,0.0035,0.0040,0.0045,0.005);
+$contnum = $#contvals + 1;
+
+# @barvals = (70,300);             # bar length
+@barvals = (70);             # bar length
+$barnum = $#barvals + 1;
+
+# @synanvals = (90,100,110);       # synanpo
+@synanvals = (110);       # synanpo
+$synannum = $#synanvals + 1;
+
+@signalvals = ("v");         # c, v
+$signalnum = $#signalvals + 1;
+
+
+
+ $relangle = 300;
+     $sdia = 0.22;
+    $noinh = 0;
+    $sbarr = 107;
+   $sbspac = 135;
+$barlength = 70;
+   $cadist = 2.2e-3;
+  $synanpo = 100;
+$dbp1_cond = 2.3e-10;
+
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "synanpo=f"   => \$synanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib,
+            );
+
+    $sd = sprintf("%4.2f",$sdia);
+
+#    for ($s=0; $s<$sbspacnum; $s++) {
+#       $sbspac = $sbspacvals[$s];
+#         for ($b=0; $b<$barnum; $b++) {
+#            $barlength = sprintf("%.3d",$barvals[$b]);
+       for ($d=0; $d<$sdianum; $d++) {
+            $sdia = sprintf("%4.2f",$sdiavals[$d]);
+            for ($a=0; $a<$synannum; $a++) {
+                $synanpo = sprintf("%.3d",$synvals[$a]);
+	        for ($c=0; $c<$contnum; $c++) {
+	             $cont = sprintf("%6.4f",$contvals[$c]);
+                    for ($i=0; $i<$signalnum; $i++) {
+                         $signal = $signalvals[$i];
+
+system ("sbac_dsi_na_print$signal sbac_dsi_na.$relangle.$cont.$sdia.txt > sbac_dsi_na.$relangle.$cont.$sdia.$signal.txt");
+                   }
+                }
+            }
+       }

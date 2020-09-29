@@ -1,5 +1,0 @@
-#XFM
-Dosemu:::app_dos.xpm:exec xdos:
-A\::/disk:a:disk.xpm:OPEN:
-B\::/disk:b:floppy.xpm:OPEN:
-C\::/disk:c:floppy.xpm:OPEN:

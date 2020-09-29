@@ -1,0 +1,861 @@
+/* module celfuncs.n for script retsim.n *
+
+/* Definitions for constructing cells.  */
+
+ptrace = 0;
+
+/*-------------------------------------------------*/
+
+/*  Definition of columns for "anatfile" which defines cell morphology: */
+/*
+
+#    node  parent   dia     xbio     ybio     zbio     region   dendn
+#
+      0      0     15       -15.42   2.34     10       SOMA     0
+      1      0     3.5      -12.12   5.4      15       AXON     0
+      2      1     2.1      -13.61   6.71     15       DEND     1
+      3      2     1.58     -12.25   4.76     15       DEND     2
+      .
+      .
+      .
+*/
+
+NODE  = 0;
+PAR   = 1;
+DIA   = 2;
+AX    = 3;
+AY    = 4;
+AZ    = 5;
+REG   = 6;
+DENDN = 7;
+
+/* Regions: Column number 7 */
+
+DEND         = 0;
+DEND_PROX    = 1;
+DEND_DIST    = 2;
+SOMA         = 3;
+HILLOCK      = 4;
+AXON_THIN    = 5;
+AXON         = 6;
+AXON_LONG    = 7;
+AXNODE       = 8;
+nregions     = 9;
+VARICOS      = 9;   /* don't make table entry for VARICOS, part of DEND */
+
+/*-------------------------------------------------*/
+
+LOCX = 0;
+LOCY = 1;
+DIR = 2;
+
+MORPH_REAL = 0;
+MORPH_A1 = 1;
+MORPH_A2 = 2;
+MORPH3_SIMP = 3;
+
+/*-------------------------------------------------*/
+
+/* Channel types: Row numbers in "stddens.n" */
+
+NA     = 0;       /* noise type 1 */
+NA5    = 1;       /* slowly inactivating Na: type 5 */
+NA6    = 2;       /* persistent Na: type 6 */
+NA8    = 3;       /* persistent Na: type 6 */
+KDR    = 4;       /* type 0 , noise: type 1 */
+KA     = 5;       /* type 2 , noise: type 3 */
+KH     = 6;	  /* type 4 */ 
+KHz    = 7;	  /* type 5 */ 
+SKCA1  = 8;
+SKCA2  = 9;
+BKCA   = 10;
+CA     = 11;
+CA5    = 12;	  /* Q-type Ca channel for SBAC */
+CAPUMP = 13;      /* capump factor */
+CAEXCH = 14;      /* ca exch factor */
+CVSTART= 15;      /* starting voltage */
+CVREV  = 16;      /* membrane reversal potential */
+CRM    = 17;      /* membrane resistivity */
+CCM    = 18;      /* membrane capacitance */
+nchans = 19;
+
+
+dim chname[] = {{ "Na", "Na5", "Na6", "Na8", "Kdr", "KA", "KH", "KHz",
+		"SKCa1", "SKCa2", "BKCa", 
+		"Ca", "Ca5", "Capump", "Caexch", "Vstart", "Vrev", "Rm", "Cm" }};
+
+dim regname[] = {{
+ "dend","dend_prox","dend_dist","soma","hillock",
+				"axon_thin","axon","axon_long","node"}};
+
+/* defs for "chval[][]" */
+
+CHOFFM = 0;		/* channel m offset */
+CHOFFH = 1;		/* channel h offset */
+CHTAUA = 2;		/* channel tau a */
+CHTAUB = 3;		/* channel tau b */
+CHTAUC = 4;		/* channel tau c */
+CHTAUD = 6;		/* channel tau d */
+nchrate= 7;
+
+/*-------------------------------------------------*/
+
+func mod (a,b)
+
+{
+    local div,a1,a2;
+    if (a>=0 && b>0)
+    {
+     a1=a/b;
+     a2=a1*b;
+     return (a-a2);
+    }
+    else printf ("Cannot divide by zero!");
+};
+
+/*-------------------------------------------------*/
+
+func round(n,p)
+
+{
+   return (int((n / p) + 0.5) * p);
+};
+
+/*-------------------------------------------------*/
+
+func modangl(a)
+
+{
+ while (a<0)    { a+= 2*PI;};
+ while (a>=2*PI) { a-= 2*PI;};
+ return a;
+};
+
+/*-------------------------------------------------*/
+
+func sindeg (theta)
+
+/* sine function in degrees */
+
+{
+  return (sin(theta*PI/180));
+};
+/*-------------------------------------------------*/
+
+func cosdeg (theta)
+
+/* cosine function in degrees */
+
+{
+  return (cos(theta*PI/180));
+};
+
+/*-------------------------------------------------*/
+
+PI2=2*PI;
+
+/* function to test range of angle */
+func inrange(a1, a2, t)
+/* a1, a2 define a chord range. a1 is less, and a2 is greater. */
+/* If t is in that range, return 1, else return 0 */
+
+{
+  a1 = modangl(a1);
+  a2 = modangl(a2);
+  t  = modangl(t);
+
+  if (a1>a2) {
+     a2 += PI2;
+     if (t < a1) t += PI2;
+  };
+  retval = (t>=a1 && t <=a2);
+  return retval;
+};
+
+/*-------------------------------------------------*/
+
+func atanx (dx, dy)
+
+{
+    local slope, theta;
+
+  if (dx == 0) dx = 1e-6;
+  slope = dy/dx;
+  theta = atan(slope);
+  if (slope >= 0) {
+        if(dx < 0) theta -= PI;
+  }
+  else {
+        if(dx < 0) theta += PI;
+  };
+  if (theta < 0) theta += 2 * PI;
+  return theta;
+};
+
+/*-------------------------------------------------*/
+
+func mid(siz)
+
+/* Returns center element of array */
+/* Useful to find "center cone" */
+ 
+{
+  if (int(siz/2)*2==siz) {
+/*    print "even"; */
+    m = (siz+1) * siz / 2;
+  }
+  else {
+/*    print "odd"; */
+    m = (siz*siz-1) / 2;
+  };
+  return m;
+};
+
+/*-------------------------------------------------*/
+
+func midrow(siz)
+
+/* function to return start of middle row of array */
+
+{
+  return (siz*int(siz/2));
+};
+
+/*-------------------------------------------------*/
+ 
+func ff()
+
+/* return fifty percent chance */
+
+{
+  return (rand() > 0.5);
+};
+
+/*-------------------------------------------------*/
+
+func ffs()
+
+/* return 1 or -1 with fifty percent chance */
+
+{
+  return ((rand() > 0.5) * 2 - 1);
+};
+
+/*-------------------------------------------------*/
+
+func rrange (L, H)
+
+/* return a number between L and H */
+
+{
+    local t__;
+
+  if (H < L) { 
+      t__ = L;
+      L = H; 
+      H = t__;
+   };
+
+  return ( L + rand() * (H - L) ); 
+};
+
+/*-------------------------------------------------*/
+
+func rad_dist2 (celtyp, n, tnod, parent, stflag) 
+
+/* Compute distance along dendrite back to cell body
+   as the radial distance from the distal node to
+   the soma.
+*/
+
+{
+  return (n3dist ([celtyp][n][tnod], [celtyp][n][0]));
+};
+
+/*-------------------------------------------------*/
+
+func rad_dist (celtyp, n, tnod, parent, stflag) 
+
+/* Compute distance along dendrite back to cell body.
+   Generate an exponentially decreasing diameter
+   along dendrite.  Assumes that dendrites with lower
+   node numbers are created first (closer to soma).
+*/
+
+{
+  local i,diam,nconn,ncabl,nelem;
+  local nod1, nod2, tracenode;
+  local this_length, desc_length;
+
+// printf ("rad_dist %g %g %g %g %g\n", celtyp,n,tnod,parent,stflag);
+
+if (ptrace) print "rad_dist, node", celtyp, n, tnod, "parent", parent, "start", stflag;
+
+  nconn = node [celtyp][n][tnod] -> numconn;
+if (ptrace) print "node", tnod, "nconn", nconn, "parent", parent;
+
+   if (tnod == 0) return 0;
+   if (nconn <= 1 && !stflag) return 0;
+
+   for (ncabl=0,i=1; i<=nconn; i++) {        /* Count the cable connections */
+        nelem = node [celtyp][n][tnod] -> i;
+	if (element nelem->ntype == ntype(cable)) ncabl++;
+   };
+   if (ptrace) print ncabl," cable connections.";
+
+   for (i=1; i<=nconn; i++) {  /* Find the path back to soma */
+        nelem = node [celtyp][n][tnod] -> i;
+	if (element nelem->ntype != ntype(cable)) continue;
+	if (ptrace) print "tracing conn", i;
+        nod1=element nelem->node1c;
+        nod2=element nelem->node2c;
+        if (nod1 == parent || nod2 == parent)
+           continue; 
+        if (nod1 != tnod && nod2 == tnod) {
+	   tracenode = nod1;
+	}
+	else {
+	  if (nod2 != tnod && nod1 == tnod) {
+	    tracenode = nod2;
+	  }
+	  else {
+	   fprintf ("rad_dist: error, connection to node %g not found.\n",tnod);
+	   return 0;
+	  };
+	};
+	if (tracenode < 0) tracenode = 0;
+
+	if (ptrace) print "tracenode", tracenode;
+
+	this_length=element nelem->length;
+if (ptrace)
+  print "tracing element", nelem, "nodes", nod1, nod2, "length", this_length;
+
+        if (tracenode==0) {
+	   return this_length; 
+	} 
+	else {
+	   if ((desc_length=rad_dist (celtyp, n, tracenode, tnod, 0)) != 0) {
+if (ptrace) printf ("rad_dist returning with %g\n",desc_length);
+		return (this_length + desc_length); 
+	   };
+	};
+
+   }; /* for (i;;) */
+   return 0; 
+};
+
+/*-------------------------------------------------*/
+
+func rad_dir (elnum, c1, c2, c3) 
+
+/* Find which end of element is closest to center of cell,
+   and return a 1 if it should be rotated. */
+
+{
+   local x1,y1,z1, x2,y2,z2;
+   local n1a,n1b,n1c;
+   local n2a,n2b,n2c;
+
+  n1a = element elnum->node1a;
+  n1b = element elnum->node1b;
+  n1c = element elnum->node1c;
+
+  n2a = element elnum->node2a;
+  n2b = element elnum->node2b;
+  n2c = element elnum->node2c;
+
+  x1 = node [n1a][n1b][n1c] -> xloc;
+  y1 = node [n1a][n1b][n1c] -> yloc;
+  z1 = node [n1a][n1b][n1c] -> zloc;
+
+  if (element elnum->ntype == ntype(cable)) {
+     if (n3dist([n1a][n1b][n1c], [c1][c2][c3]) >
+         n3dist([n2a][n2b][n2c], [c1][c2][c3]))
+       return 1
+       else return 0;
+   }
+  else return 0;
+
+};
+
+/*-------------------------------------------------*/
+
+func rad_diam (dist,diaspc,diabs)
+
+{
+  local diam;
+
+  diam = exp (-dist/diaspc) * diabs;
+  return diam;
+};
+
+/*-----------------------------------------*/
+
+func taperden  (ct,cn,n1,n2,cd1,cd2,nden) {
+
+/* Make a tapered dendrite starting at existing nodes 
+   [n1a][n1b][n1c], [n2a][n2b][n2c], adding extra cable 
+   segments if nodes are far apart.  Return the minor 
+   node number of the newly created node.
+*/
+
+    local xrange,yrange,drange;
+    local i,x1,y1,x2,y2,z1,z2;
+    local dist,newdist,nlength;
+    local nsegs,xincr,yincr,zincr,dincr;
+
+
+ x1 = node [n1a][n1b][n1c] -> xloc;
+ y1 = node [n1a][n1b][n1c] -> yloc;
+ z1 = node [n1a][n1b][n1c] -> zloc;
+
+ x2 = node [n2a][n2b][n2c] -> xloc;
+ y2 = node [n2a][n2b][n2c] -> yloc;
+ z2 = node [n2a][n2b][n2c] -> zloc;
+
+ xrange = (x2-x1);
+ yrange = (y2-y1);
+ zrange = (z2-z1);
+
+ nlength = sqrt (xrange*xrange + yrange*yrange);
+ nsegs = int (nlength / 10) + 1;
+ xincr = xrange / nsegs;
+ yincr = yrange / nsegs;
+ zincr = zrange / nsegs;
+
+ drange = cd1 - cd2;
+
+ if (nsegs > 2) dincr = drange / (nsegs-1)
+ else           dincr = .1;
+
+ if (ptrace) 
+printf ("taperden: cable from node %g %g %g to %g %g %g dia %g\n\n",ct,cn,n1c,
+							      ct,cn,n2c,cd1);
+
+/* conn [n1a][n1b][n1c] to [n2a][n2b][n2c] cable dia=cd1 dia2=cd2 rm=hrm vrest=hrest;
+
+return nden;
+*/
+
+
+ if (nsegs==1) {
+    make_celseg(ct,cn,n1,n2,cd1,0,region=DEND);
+ }
+ else {					/* nsegs = 2 or more */
+
+    at [ct][cn][nden+1] loc (x1+xincr, y1+yincr, z1+zincr);
+    make_celseg(ct,cn,n1,nden+1,cd1,0,region=DEND);
+
+   for (i=1; i<nsegs-1; i++) {		/* middle segments */
+
+    at     [ct][cn][nden+i+1] loc (x1+(i+1)*xincr, 
+				   y1+(i+1)*yincr, 
+				   z1+(i+1)*zincr);
+
+    make_celseg(ct,cn,nden+1,nden+i+1,cd1-dincr*i,0,region=DEND);
+
+   };
+
+    make_celseg(ct,cn,nden+i,n2,cd2,0,region=DEND);
+ };
+
+ return nden+nsegs-1;
+};
+
+/*-------------------------------------------------*/
+
+func taperdistden  (ct,cellnr,nod1,nod2, diabs, diaspc, nden) {
+
+/* Make a tapered dendrite starting at existing nodes 
+   [n1a][n1b][n1c], [n2a][n2b][n2c], adding extra cable 
+   segments if nodes are far apart.  Return the minor 
+   node number of the last newly created node.
+
+   Diameters are calculated from distance back to the soma.
+*/
+    local xrange,yrange,drange;
+    local x1,y1,x2,y2;
+    local d1,d2;
+    local dist,newdist,nlength;
+
+ x1 = node [ct][cellnr][nod1] -> xloc;
+ y1 = node [ct][cellnr][nod1] -> yloc;
+
+ x2 = node [ct][cellnr][nod2] -> xloc;
+ y2 = node [ct][cellnr][nod2] -> yloc;
+
+ xrange = (x2-x1);
+ yrange = (y2-y1);
+
+ dist = rad_dist2 (ct, cellnr, nod1, nod2, 1);	/* find distance to soma */
+
+ if (ptrace) printf ("taperdistden: node %g %g %g dist %g\n",ct,cellnr,nod1,dist);
+
+ newdist = sqrt (xrange*xrange + yrange*yrange);
+
+ d1 = rad_diam (dist,diaspc,diabs);
+ d2 = rad_diam (newdist,diaspc,d1);
+
+/*  return (taperden(ct,celnr,nod1, ct,celnr,nod2, d1,d2,nden)); */
+
+ make_celseg(ct,cellnr,nod1,nod2,d1,d2,region=DEND);
+
+ return nden;
+};
+
+/*-------------------------------------------------*/
+
+func taperdia  (n1a,n1b,n1c, n2a,n2b,n2c, diabs, diaspc) {
+
+/* Find diameter of far end of a tapered dendrite, given start
+   diameter. Calculate from space constant. 
+*/
+    local xrange,yrange,drange; 
+    local x1,y1,x2,y2; 
+    local edia;
+    local dist,newdist,nlength;
+
+ x1 = node [n1a][n1b][n1c] -> xloc;
+ y1 = node [n1a][n1b][n1c] -> yloc;
+
+ x2 = node [n2a][n2b][n2c] -> xloc;
+ y2 = node [n2a][n2b][n2c] -> yloc;
+
+ xrange = (x2-x1);
+ yrange = (y2-y1);
+
+ dist = rad_dist2 (n1a, n1b, n1c, n2c, 1);	/* find distance to soma */
+
+ if (ptrace) printf ("taperdistden: node %g %g %g dist %g\n", n1a,n1b,n1c,dist);
+
+ newdist = sqrt (xrange*xrange + yrange*yrange);
+
+ edia = rad_diam (newdist,diaspc,diabs);
+
+ return (edia);
+};
+
+/*-------------------------------------------------*/
+
+func sigm(xmin,xmax,ymin,yrange,pointx)
+
+/* Returns y-val on specified sigm func for pointx */
+
+{
+     local i, midpoint;
+
+ i= pointx;
+ midpoint=(xmin+xmax)/2;
+ y = ymin + yrange/(1+E^(-i+midpoint));
+ return y;
+};
+
+/*-------------------------------------------------*/
+
+func comp_phase(tfreq,delaytime) {
+
+  local phase, ncycles;
+
+  while (delaytime < 0)	      //make delaytimes positive
+    delaytime = delaytime + 1/tfreq;
+  ncycles = delaytime * tfreq; //nr of cycles in delaytime
+  while (ncycles>=1)	      //subtract all whole cycles
+     ncycles--;
+  phase = ncycles*360;	      //convert remainder into degrees
+
+  return phase;
+};
+
+/*-------------------------------------------------*/
+
+func sinewaves(phase1,phase2,ampl1,ampl2) {
+  //add 2 sinewaves, return ampl of sum
+
+  shiftrad1 = (phase1/360)*2*PI;  //deg -> rad
+  shiftrad2 = (phase2/360)*2*PI;
+
+  ysum = 0;
+  ypeak = 0;
+  yratio = 0;
+
+  nsteps=100;
+
+  for (x=0;x<=2*PI;x+=(2*PI)/nsteps) {
+    y1 = ampl1*sin(x+shiftrad1);
+    y2 = ampl2*sin(x+shiftrad2);
+    ysum = y1+y2;
+    if (ysum>ypeak) ypeak=ysum;
+  };
+
+  yratio = ypeak/(ampl1+ampl2);
+
+  return ypeak;
+
+};
+
+/*-------------------------------------------------*/
+
+func findmid(ct, xoffset, yoffset)
+
+/* Procedure to find a cell in array to record from. */
+/* Find cell closest to (xoffset, yoffset) from center of array. */
+
+{
+   local i,n,cn,found,midn,midcn;
+   local sumx, sumy;
+   local dx, dy, xcent, ycent, dist, mindist;
+
+  midcn = found = n = 0;
+  sumx = sumy = 0;
+  foreach node [ct] ?cn [soma] {
+     sumx += node [ct][cn][soma]->xloc;                // find x,y max,min
+     sumy += node [ct][cn][soma]->yloc;
+     n++;
+  };
+  xcent = sumx / n;
+  ycent = sumy / n;
+  mindist = 1e10;
+  foreach node [ct] ?cn [soma] {
+     dx = node [ct][cn][soma]->xloc - xcent - xoffset;
+     dy = node [ct][cn][soma]->yloc - ycent - yoffset;
+     dist = sqrt(dx*dx+dy*dy);
+     if (mindist>dist) {
+       mindist = dist;
+       midcn = cn;
+       found = 1;
+     };
+  };
+  if (!found) {                         // find first one that still exists
+    foreach node [ct] ?cn [soma] {
+       midcn = cn;
+       break;
+     };
+  };
+  return midcn;
+};
+
+/*-------------------------------------------------*/
+
+func findmidc(ct, offset)
+
+/* procedure to find a cell in array to record from */
+
+{
+   local i,n,found,midn,midcn;
+
+  n = found = 0;
+  foreach node [ct] ?cn [soma] {
+    n++;
+  };
+  midn = n/2 + offset;
+  i = found = 0;
+  foreach node [ct] ?cn [soma] {
+     if (i==midn) {
+       midcn = cn;
+       found = 1;
+       break;
+     };
+     i++;
+  };
+  if (!found) midcn = 1;
+  return midcn;
+};
+
+/*-------------------------------------------------*/
+
+func tot_ncel_ind(ct,cn) {};
+
+func find_gtconn(ct,nconn)
+
+/* procedure to find a cell in array to record from */
+
+{
+   local i,found,retcn;
+
+  found = 0;
+  foreach node [ct] ?cn [soma] {
+     if (tot_ncel_ind(ct,cn)>=nconn) {
+       retcn = cn;
+       found = 1;
+       break;
+     };
+  };
+  if (!found) {
+     fprintf (stderr,"find_gtconn: can't find cell with %g inputs.\n",nconn);
+     retcn = 0;
+  };
+  return retcn;
+};
+
+/*-------------------------------------------------*/
+
+proc find_maxmin(celltype,cellnum)
+
+ /* Find size of cell arrays; if celltype=-1, look at all celltypes, */
+ /*  if cellnum = -1, look at all cells of that type */
+
+{
+    local ct,cn,n;
+    local xl, yl, zl;
+
+    xmax = -1e6;
+    xmin =  1e6;
+    ymax = -1e6;
+    ymin =  1e6;
+    zmax = -1e6;
+    zmin =  1e6;
+    xmaxnode = -1;
+    xminnode = -1;
+    ymaxnode = -1;
+    yminnode = -1;
+    zmaxnode = -1;
+    zminnode = -1;
+    ct=cn=0;
+
+    /* find existing dendritic tree, ignore photoreceptors and axons */
+
+
+    foreach element ?br node [celltype] [cellnum] ?n {  
+
+       if ((element br -> type  == "cable" || element br->type == "sphere") &&
+           (element br -> elabl) != "axon" && (element br -> elabl) != "axon_long" &&
+           (element br -> elabl) != "axon_thin" && (element br -> elabl) != "hillock")
+       {
+ 	ct = element br -> node1a;
+ 	cn = element br -> node1b;
+
+        /* if ((ct==xcone) || (ct==xrod)) print xcone, xrod, ct; */
+
+	  xl = node [ct][cn][n] -> xloc;
+	  yl = node [ct][cn][n] -> yloc;
+	  zl = node [ct][cn][n] -> zloc;
+	  if (xl < xmin) { xmin = xl; xminnode = n; };
+	  if (xl > xmax) { xmax = xl; xmaxnode = n; };
+	  if (yl < ymin) { ymin = yl; yminnode = n; };
+	  if (yl > ymax) { ymax = yl; ymaxnode = n; };
+	  if (zl < zmin) { zmin = zl; zminnode = n; };
+	  if (zl > zmax) { zmax = zl; zmaxnode = n; };
+       };
+    };
+    if (make_rod) zmax += 10;
+    if (xmax < xmin)
+    {  xmax = 1;
+       xmin = 0;
+    };
+    if (ymax < ymin)
+    {  ymax = 1;
+       ymin = 0;
+    };
+};
+
+/*-------------------------------------------------*/
+
+func find_maxrad(ct,cn)
+
+ /* proc to find size of cell arrays; if celltype=-1, look at all celltypes */
+
+{
+    local n;
+    local xd, yd;
+    local xl, yl;
+    local xmax, xmin;
+    local ymax, ymin;
+
+    xmax = -1e6;
+    xmin =  1e6;
+    ymax = -1e6;
+    ymin =  1e6;
+
+    foreach element ?br node [ct][cn] ?n
+    {  /* find existing dendritic tree, ignore photoreceptors and axons */
+
+       if ((element br -> elabl) != "axon" && 
+	   (element br -> elabl) != "axon_long" &&
+           (element br -> elabl) != "axon_thin" && 
+	   (element br -> elabl) != "hillock" )
+       {
+	  xl = node [ct][cn][n] -> xloc;
+	  yl = node [ct][cn][n] -> yloc;
+	  if (xl < xmin) xmin = xl;
+	  if (xl > xmax) xmax = xl;
+	  if (yl < ymin) ymin = yl;
+	  if (yl > ymax) ymax = yl;
+       };
+    };
+    xd = xmax - xmin;
+    yd = ymax - ymin;
+    maxrad = (xd + yd) / 2;
+    return maxrad;
+};
+
+/*-------------------------------------------------*/
+
+func qfact(q10) {
+  return (exp(log(q10)*(tempcel-22)/10));
+};
+
+/*-------------------------------------------------*/
+
+proc makanatfile (celltype,cellnr) {
+
+  local node1, node2, dendcount, dendnr, region, xpos, ypos, zpos, diam ;
+  local dim dendnodes[30][100];	/* hold the nodes belonging to each dend */
+
+  fprintf (stdout, "#  node  parent   dia     xbio    ybio     zbio       region  dendnr\n");
+
+  /* initialise local array dendnodes */
+
+  for (d=0;d<30;d++)
+    for (n=0;n<100;n++)
+      if (notinit(dendnodes[d][n])) dendnodes[d][n] = -1;
+
+  dendcount=0; /* count nr of dendrites */
+
+  /* foreach element ?br node[celltype][cellnr][-1] { */
+
+  /* go through all cables, for every node print out parameters for amacfile */
+
+  foreach element ?br {
+   node1 = element br -> node1c; /* descendent node */
+   node2 = element br -> node2c; /* parent node */
+
+   /* soma has neg nodenr as parent, call the rest dend */
+
+   if (node2<0){
+   	region="SOMA";
+	node2=0;
+	dendnr=0;
+   }
+   else region="DEND";
+
+   /* count nr of dendrites leaving soma, make array with parents for every dend nr */
+
+   if (node2==0) {  	/* if parent is soma, give child its own dendr-nr. */
+     dendnodes[dendcount][0] = node1;
+     dendnr=dendcount;
+     dendcount++;
+   }
+   else  /* go through dendnodes, find parent, use its dendnr, add node to arr */
+     for(d=0;d<dendcount;d++)
+       for (n=0;n<100;n++) {
+         if (dendnodes[d][n]>-1 && dendnodes[d][n]==node2) {
+	   dendnr=d;
+	   dendnodes[d][n+1]=node1;
+	   break;
+	};
+     };
+
+   xpos = node [am][cellnr][node1] -> xloc;
+   ypos = -1* (node [am][cellnr][node1] -> yloc);  /* -1 is needed.. */
+   zpos = node [am][cellnr][node1] -> zloc;
+   diam = element br -> dia;
+   zpos = -5;
+
+   fprintf (stdout,
+   "%7g %6g   %-7.3g %-8.4g %-8.4g %-8.4g   ",
+   node1, node2, diam, -1*xpos, -1*ypos, zpos);
+   fprintf(stdout, "%-s  ", region);
+   fprintf(stdout, "%6g\n", dendnr);
+  };
+};

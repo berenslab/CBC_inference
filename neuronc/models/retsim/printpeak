@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# printpeak
+#
+# $1=time, $21, $22, $23 traces to find max
+#
+awk 'BEGIN {
+
+      peaka1=peakn1=peakg1=0;
+      peaka2=peakn2=peakg2=0;
+      tpeaka1=tpeakn1=tpeakg1=0;
+      tpeaka2=tpeakn2=tpeakg2=0;
+      peak2Time=0.3;
+      tracenum = 0; 
+     }
+
+     !/^#/ { 
+            if ($1 == "0") tracenum++; 
+	    if (tracenum==7) {
+	      if ($1<peak2Time) {
+	        if (peaka1 < $21) { peaka1 = $21; tpeaka1 = $1; }
+	        if (peakn1 < $22) { peakn1 = $22; tpeakn1 = $1; }
+	        if (peakg1 < $23) { peakg1 = $23; tpeakg1 = $1; }
+	      }
+	      else {
+	        if (peaka2 < $21) { peaka2 = $21; tpeaka2 = $1; }
+	        if (peakn2 < $22) { peakn2 = $22; tpeakn2 = $1; }
+	        if (peakg2 < $23) { peakg2 = $23; tpeakg2 = $1; }
+	      }
+	    } 
+	  } 
+	END {
+	# printf ("Peak1: ampaCond  %-9.4g  nmdaCond %-9.4g  gabaCond %-9.4g  \n",
+	# 	peaka1, peakn1, peakg1); 
+	# printf ("Peak2: ampaCond  %-9.4g  nmdaCond %-9.4g  gabaCond %-9.4g  \n",
+	# 	peaka2, peakn2, peakg2); 
+	 printf ("Peak1: ampaCond  %-6.4g: %-9.4g  nmdaCond %-6.4g: %-9.4g  gabaCond %-6.4g: %-9.4g  \n",
+		tpeaka1, peaka1, tpeakn1, peakn1, tpeakg1, peakg1); 
+	 printf ("Peak2: ampaCond  %-6.4g: %-9.4g  nmdaCond %-6.4g: %-9.4g  gabaCond %-6.4g: %-9.4g  \n",
+		tpeaka2, peaka2, tpeakn2, peakn2, tpeakg2, peakg2); 
+	}
+   ' $1

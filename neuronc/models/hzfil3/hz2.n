@@ -1,0 +1,69 @@
+/* simple model of cone-hz cell circuit */
+
+timinc=1e-4;
+exponf = 2;
+exponb = 2;
+
+condf = 1.4e-10;
+condb = 1.0e-10;
+thra  = -.045;
+thrb  = -.050;
+
+thrax  = -.045;
+thrbx  = -.045;
+
+drm = 30000;
+
+plmax = -.02;
+plmin = -.055;
+
+x = setvar();
+
+at 1 sphere dia 10 vrest= -.04;
+conn 1 to 10 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 2 sphere dia 10 vrest= -.04;
+conn 2 to 10 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 10 sphere dia 10 vrest= -.04;
+conn 10 to 1 synapse open expon=exponb maxcond=condb 
+			thresh= thrb vrev= -.067 nfilt1 1 timec1 6;
+conn 10 to 2 synapse open expon=exponb maxcond=condb 
+			thresh= thrb vrev= -.067 nfilt1 1 timec1 6;
+
+/********************************************************/
+
+at 3 sphere dia 10 vrest= -.04;
+conn 3 to 20 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 4 sphere dia 10 vrest= -.04;
+conn 4 to 20 synapse open expon=exponf maxcond=condf 
+			thresh= thra vrev= -.01 nfilt1 1 timec1 2;
+
+at 20 sphere dia 10 vrest= -.04;
+conn 20 to 3 synapse open expon=exponb maxcond=condb 
+			thresh= thrbx vrev= -.067 nfilt1 1 timec1 6;
+conn 20 to 4 synapse open expon=exponb maxcond=condb 
+			thresh= thrbx vrev= -.067 nfilt1 1 timec1 6;
+
+darkc = 6.0e-12;
+lightc = -0.2 * darkc;
+
+stim node 1 cclamp darkc start 0 dur 1;
+stim node 2 cclamp darkc start 0 dur 1;
+stim node 1 cclamp lightc start .08 dur .13;
+stim node 3 cclamp darkc start 0 dur 1;
+stim node 4 cclamp darkc start 0 dur 1;
+stim node 3 cclamp lightc start .08 dur .13;
+/* stim node 1 cclamp 1e-12 start .01 dur .01; /* */
+
+plot V[1], V[2], V[10];
+plot V[3], V[4], V[20];
+
+endexp = .25;
+
+run;
+

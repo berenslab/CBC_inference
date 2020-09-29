@@ -1,0 +1,40 @@
+
+  ploti=1e-4;
+  plsep = 1;
+ 
+  pnoise = 1;
+ 
+  at 1 cone (0,0) pigm=1 photnoise=pnoise;
+  at 1 sphere dia 3 rm = 3000 vrev = -.06 vrest = -.02;
+
+  at 2 cone (0,0) pigm=100 photnoise=pnoise;
+  at 2 sphere dia 3 rm = 3000 vrev = -.06 vrest = -.02;
+
+  ntrials = 1;
+
+  stimdia   = 100;
+  scontrast = 1;
+  sbackgr   = 1e5;
+  stiminten = sbackgr * scontrast;
+  stimdur   = .31;
+  stimtime  = .1;
+  stimrate  =  4;
+  resp_dur  = .5;
+
+  prestim = .4;
+//  stim spot stimdia loc (0,0) inten=sbackgr start=time dur=prestim;
+//  step prestim;
+  time = 0;
+ 
+  ncone_plots = 2;
+  for (n=1; n<=ncone_plots; n++) {
+    plot L[n] max (sbackgr)*3 min 0 plnum 1 filt [.0005, .0005];
+    plot V[n] max -.010 min -0.030 plnum 2;
+  };
+  endexp = resp_dur;
+  
+  stim spot stimdia loc (0,0) inten=sbackgr start=time dur=1e9;
+  stim spot stimdia loc (0,0) blur=2 inten=stiminten
+                                         start=stimtime dur=stimdur;
+  step resp_dur;
+

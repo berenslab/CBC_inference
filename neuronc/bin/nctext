@@ -1,0 +1,14 @@
+#! /bin/bash 
+#
+for i in $@; do
+    # echo ${i%.*}.r
+    nc $i >& ${i%.*}.r
+done
+
+##! /bin/csh -f
+##  nctext
+##
+#foreach i ($argv) 
+#  nc $i >& $i:r.r
+#end
+

@@ -1,6 +1,0 @@
-#
-# make gcrf distribution
-#
-mkdir gcrf
-cp gcrf.n makcel.n celfunc.n celseg.n runpov makdist gcrf
-tar cvzf gcrf.tgz gcrf

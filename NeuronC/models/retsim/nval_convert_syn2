@@ -1,8 +1,0 @@
-#
-#
-# nval_convert_syn
-#
-#  Script to add a synaptic parameter row to nval.n  (2011 April 8)
-#
-nval_addrow 73 $1 | nval_addrow 109 | nval_addrow 145 | nval_addrow 181 | nval_addrow 217 | \
-		    nval_addrow 253 | nval_addrow 289

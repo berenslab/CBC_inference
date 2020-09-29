@@ -1,0 +1,10 @@
+#! /bin/bash
+for i in $@; do
+  cradd <$i  >$i.tmp && mv $i.tmp $i
+done
+
+##! /bin/csh -f
+#foreach i ($argv) 
+#  cradd <$i  >$i.tmp && mv $i.tmp $i
+#end
+

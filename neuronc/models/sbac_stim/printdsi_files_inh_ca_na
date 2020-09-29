@@ -1,0 +1,77 @@
+#! /usr/bin/perl
+#
+#  printdsi_files 
+#
+
+@sbspacvals = (125,155);         # cell spacing
+$sbspacnum = $#sbspacvals + 1;
+
+@barvals = (70,300);             # bar length
+$barnum = $#barvals + 1;
+
+# @synanvals = (90,100,110,150);       # synanpo
+@synanvals = (100);       # synanpo
+$synannum = $#synanvals + 1;
+
+@cavals = (0, 1.0e-3, 2.0e-3, 2.2e-3, 2.4e-3);  # cadist
+$canum = $#cavals + 1;
+#
+@navals = (0e-3,0.5e-3,1e-3,1.5e-3,2e-3);
+$nanum = $#navals + 1;
+
+
+
+ $relangle = 360;
+     $sdia = 0.27;
+    $noinh = 0;
+    $sbarr = 107;
+   $sbspac = 155;
+$barlength = 70;
+   $cadist = 2.2e-3;
+  $synanpo = 90;
+$dbp1_cond = 2.3e-10;
+    $wac_g = 0e-10;
+ $sb_inhib = $sbac_inhib = 80e-12;
+ $stimtype = 1;
+      $nsb = 7;
+
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "synanpo=f"   => \$synanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib,
+             "wac_g=f"     => \$wac_g
+            );
+
+    $sd = sprintf("%4.2f",$sdia);
+  $wacg = sprintf("%3.1f",$wac_g*1e10);
+$sb_inh = sprintf("%d",$sb_inhib*1e12);
+
+ for ($s=0; $s<$sbspacnum; $s++) {
+      # $sbspac = sbspacvals[$s];
+      $sbspac = sprintf("%.3d",$sbspacvals[$s]);
+      for ($b=0; $b<$barnum; $b++) {
+	   $barlen = sprintf("%.3d",$barvals[$b]);
+           $barlength = $barvals[$b];
+           for ($n=0; $n<$nanum; $n++) {
+	        $nadist = $navals[$n];
+	        $nad    = sprintf("%3.1f",$nadist*1e3);
+	        for ($c=0; $c<$canum; $c++) {
+	             $cadist = $cavals[$c];
+	             $cad    = sprintf("%3.1f",$cadist*1e3);
+
+system ("echo sb_inhib $sb_inhib sbspac $sbspac barlength $barlength sdia $sdia cad $cadist nad $nadist");
+system ("printdsi sbac$nsb.midbp_ca.$relangle.0.*.$sb_inh.$sbspac.$barlength.$stimtype.$cad.$nad.$sd.$wacg.r > sbac_dsi.$relangle.$sb_inh.$sbspac.$barlen.$cad.$nad.$sd.$wacg.txt");
+               }
+          }
+      }
+  }
+

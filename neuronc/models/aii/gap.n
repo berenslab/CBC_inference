@@ -1,0 +1,24 @@
+
+
+graph X max 1 min 0;
+graph Y max .1 min 0;
+
+graph init;
+
+k = 50;
+dt = .005;
+
+v1 = -.004;
+v2 = -.008;
+
+ g = 1.0;
+for (i=1,v=00; v<= .081; v+= .02,i++) {
+ graph pen i;
+ ginf = exp ((v - v1) / v2);
+  for (t=0; t<1.0; t+=dt) {
+    c = v * g;
+    graph (t,c);
+    g -= (g-ginf) * k * v * dt;
+  };
+ graph restart;
+};

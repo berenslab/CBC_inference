@@ -1,0 +1,22 @@
+/* tcomp23:  saturation test of 10 cones */
+
+plmax = .0;
+plmin = -.06;
+endexp = .4;
+ploti = .001;
+
+fdur = .002;
+istart = 100*1/fdur;
+
+for (i=0; i<12; i++) {
+ at [i] sphere dia 2 rm 10000;
+ at [i] cone (0,0);
+ stim cone [i] inten istart*(2^i) start .02 dur fdur; /* */
+ stim node [i] vclamp -.03 start 0 dur .4;  /* */
+ plot I[i] max 10e-12 min -40e-12;
+};  /* for */
+
+plot L[0] max istart*20 min -istart;
+
+run;
+

@@ -1,0 +1,112 @@
+# Turtle sensitivity data taken from:
+#
+#     Perlman, Itzhaki, Malik, and Alpern: 
+#     "The action spectra of cone photoreceptors in the turtle retina",
+#     Visual Neuroscience,(1994),Vol.11, page 247, Figs.4, 10.
+#
+#   Data originally digitized by Amermuller et al, Oldenburg, DE.
+#   Peak shape modified for smoothness, RGS
+#   Extrapolated from 400 through 380, RGS
+#
+#   Each curve has been extrapolated on the long wave end by
+#   the method of Lewis, 1955 (J.Physiol 130:45), in which the 
+#   log(sens) of a visual pigment is supposed to be linear in the 
+#   deep red when plotted against wavenumbmer (1/wavelength).  
+#   The script "turtlesens.n" implements this method and was used 
+#   to produce "turtle.h" which contains the log(sensitivity) 
+#   functions extrapolated to 800 nm.  In turn, "turtle.h" is 
+#   included in "wave.cc" which generates log (specific OD) functions 
+#   required in "wave.h" for "ncstim.cc".
+#
+#   The three turtle pigments are supposed to match very closely
+#   (after superposition) but the medium and shortwave cones also
+#   include a colored oil droplet that narrows their responses.
+#   Possibly the pigments might be generated entirely by
+#   superposition (i.e. shifting the curve when plotted vs.
+#   wavenumber), with the oil droplet filters implemented as separate
+#   filters as the "macular filter" currently is in "nc".  This would
+#   be fairly easy but was not thought to be useful in this case.
+#   
+#   To fine-tune the turtle spectra, you can change the numbers
+#   in this file, and look at them with:
+#
+#      nc turtlesens.n | plotmod | vid
+#
+#   You can change the output print statement to display 
+#   absolute sensitivity or optical density if desired. (see
+#   comments in "turtlesens.n").
+#
+#   To broaden or narrow the apperance of the peaks, you can 
+#   modify the "pigmlen" array in "wave.cc" (larger "pigmlen" = 
+#   narrower peak; smaller "pigmlen" = wider peak, opposite the
+#   effect in "nc").  The "pigmconst" array defines the log(sensitivity) 
+#   of the pigments at their peaks.  It has been set at 0.7 for the 
+#   turtle pigments but this is only maintained if "pigmlen" for each 
+#   pigment in the "nc" definition of a photoreceptor is the same as 
+#   "pigmlen" in wave.cc.
+#
+380     0.0437          0.0450          0.400
+385     0.0426          0.0450          0.438
+390     0.0416          0.0445          0.485
+395     0.0407          0.0430          0.530
+400     0.0398107       0.0398107       0.5754399
+405     0.0389045       0.0354813       0.6025596
+410     0.0380189       0.0323594       0.6456542
+415     0.0371535       0.0301995       0.6918310
+420     0.0346737       0.0263027       0.752
+425     0.0331131       0.0239883       0.798
+430     0.0316228       0.0223872       0.86
+435     0.0301995       0.0208930       0.93
+440     0.0257040       0.0211349       0.972
+445     0.0239883       0.0218776       0.992
+450     0.0223872       0.0223872       0.9999999
+455     0.0218776       0.0229087       0.992
+460     0.0218776       0.0234423       0.977
+465     0.0218776       0.0234423       0.96
+470     0.0229087       0.0229087       0.93
+475     0.0245471       0.0223872       0.89
+480     0.0251189       0.0213796       0.84
+485     0.0301995       0.0204174       0.7585776
+490     0.0354813       0.0208930       0.6606934
+495     0.0398107       0.0251189       0.5888437
+500     0.0446684       0.0354813       0.5011872
+505     0.0501187       0.0630957       0.3981072
+510     0.0562341       0.1122018       0.3162278
+515     0.0630957       0.1995262       0.2511886
+520     0.0758578       0.3548134       0.1778279
+525     0.0954993       0.5623413       0.1348963
+530     0.1122018       0.7943282       0.1000000
+535     0.1258925       0.97            0.0660693
+540     0.1380384       0.9999999       0.0467735
+545     0.1513561       0.991           0.0323594
+550     0.1584893       0.96            0.0208930
+555     0.1778279       0.8912509       0.0112202
+560     0.2089296       0.7943282       0.0093325
+565     0.2570396       0.7079458       0.0063096
+570     0.3388442       0.6309573       0.0039811
+575     0.3981072       0.5128614       0.0025119
+580     0.4786301       0.4466836       0.0016218
+585     0.5370318       0.3715352       0.0010000
+590     0.6309573       0.2951209       0.0007079
+595     0.78            0.2511886       0.0005012
+600     0.86            0.1995262       0.0003236
+605     0.93            0.1584893       0.0002239
+610     0.972           0.1258925       0.0001514
+615     0.992           0.1000000       0.0001047
+620     0.9999999       0.0707946       0.0000794
+625     0.992           0.0501187       0.0000589
+630     0.977           0.0331131       0.0000437
+635     0.96            0.0223872       0.0000355
+640     0.93            0.0144544       0.0000282
+645     0.89            0.0091201       0.0000224
+650     0.84            0.0063096       0.0000195
+655     0.7943282       0.0039811       0.0000162
+660     0.73            0.0025119       0.0000141
+665     0.6760830       0.0013804       0.0000126
+670     0.6165950       0.0009550       0.0000112
+675     0.5623413       0.0005370       0.0000095
+680     0.49            0.0003467       0.0000081
+685     0.5069907       0.0002455       0.0000068
+690     0.5011872       0.0001778       0.0000055
+695     0.5011872       0.0001413       0.0000043
+700     0.5011872       0.0001259       0.0000032

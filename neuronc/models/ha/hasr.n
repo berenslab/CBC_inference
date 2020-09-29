@@ -1,0 +1,104 @@
+/* ha.n */
+/* creates horizontal cell, type A */
+
+timinc = 1e-4;
+plmax  = -.02;
+plmin  = -.08;
+crit = 1e-8;
+complam = .1;
+ploti = .0001;
+drm = 20000;
+lamcrit=0.3;
+
+fddia = .2;
+spdia = .1;
+splen=5;
+syncond=200e-12;
+synthresh = -.04;
+
+n = setvar();
+
+fread ("ha.cabl", cabldia, clines, ccols);
+
+fread ("ha.loc", xynode, xylines, xycols);
+
+fread ("ha.syn", syntab, nsyn);
+
+/*  display the data file: */
+
+
+/* for (i=0; i<clines; i++) {
+     print cabldia[i][0], cabldia[i][1], cabldia[i][2];
+}; /* */
+
+proc makseg(nod1, nod2, d) {                    /* proc to make dendrites */
+    conn nod1 to nod2 cable dia d;
+};
+
+proc maksynap(nodenum) {
+     p = nodenum-1;
+     at [nodenum][1] loc (xynode[p][1],xynode[p][2]) sphere dia 1;
+     conn [nodenum][1] to [nodenum][2] loc (xynode[p][1],xynode[p][2])
+        synapse open expon 5 maxcond syncond vrev -.07 thresh synthresh;
+     conn [nodenum][2] to [nodenum] cable dia spdia length splen;
+};
+
+for (i=0; i<clines; i++)                        /* make the dendritic tree */
+     makseg( cabldia[i][0], cabldia[i][1], cabldia[i][2]);
+
+at [1] sphere dia 15;                           /* make the soma */
+
+for (i=0; i<xylines; i++) {
+     at xynode[i][0] loc (xynode[i][1],xynode[i][2]);    /* */
+/*     print xynode[i][0], xynode[i][1], xynode[i][2];   /* */
+};
+
+                                                /* connect synapses to nodes */
+for (i=0; i<nsyn; i++) {
+      maksynap(syntab[i]);
+};
+
+
+display size 400;
+display center (0,0);
+display calibline 25;
+display xrot 0 matching [-1][-1]; 
+
+if (! (disp&7)) {
+
+tc =  4 * drm * dcap;
+endexp = clines * tc;
+partial = synthresh + 0.019;		/* voltage for 1/2 of maxcond */
+
+for (i=0; i<nsyn; i++) {		/* turn on synapses partially */
+   cn = syntab[i];
+   stim node [cn][1] vclamp partial start time dur endexp;
+};
+
+/* calculate input resistance: */
+
+iinj = 1e-9;
+step tc;
+v0 = V[1];
+stim node [1] cclamp iinj start time dur tc;
+step tc;
+rin = (V[1]-v0) / iinj;
+printf ("# Rin = %7.4g V[1] %8.6g\n",rin,v0);
+stim node [1] vclamp -.07 start time dur .001;
+step tc;
+cn = syntab[0];
+printf ("# V(1) = %8.6g   V(%g) = %7.4g\n",V[1],cn,V[cn]);
+
+
+printf ("# node      V[1]      V[node]     X       Y\n");
+
+stim node [1] vclamp -.02 start time dur tc-.001;
+step tc-.001;
+
+for (i=0; i<nsyn; i++) {
+   cn = syntab[i];
+   printf ("%-4g      %8.6g     %8.6g    %8.4g  %8.4g \n",
+                cn,V[1],V[cn][2], node [cn]->xloc, node [cn]->yloc);
+};
+
+};

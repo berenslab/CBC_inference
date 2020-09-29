@@ -1,0 +1,46 @@
+/* tcomp2:  test of cable with segments */
+
+t1 = elap_time();
+
+timinc = 5e-5; 
+endexp = .05;
+complam=.1;
+relax = 0;
+relincr = 0;
+
+crit  = 1e-12;
+ploti = 2e-4;
+implicit = 1;
+
+plmax = -.0645;
+plmin = -.065;
+
+vcl = -.065;
+
+dri = 100;
+drm = 40000;
+
+cablen = 2000;
+
+x = setvar();
+
+conn 1 to 2 cable length=cablen dia=1;
+
+/* stim node 1 cclamp 0.1e-9 start 0 dur 1e10; */
+stim node 1 vclamp vcl     start 0 dur .005;
+stim node 1 vclamp vcl+.01 start .005 dur .005;
+stim node 1 vclamp vcl     start .01 dur 1;
+
+/* plot V[1]; */
+plot V[2];
+
+run;
+
+t2 = elap_time();
+
+totsecs = (t2 - t1) * 60;
+
+neff = totsecs / endexp;
+
+print neff;
+

@@ -1,4 +1,0 @@
-#! /bin/bash
-#
-nc -d 1 -v $@ | xvid
-

@@ -1,0 +1,14 @@
+/* test of current clamp */
+
+
+endexp = .05;
+
+at 1 sphere dia 10;
+conn 1 to 2 synapse expon 5 thresh -.08 timec1 1.5; 
+at 2 sphere dia 10;
+conn 2 to 3 synapse expon 5 thresh -.08 timec1 1.5;
+at 3 sphere dia 10;
+
+stim node 1 cclamp 5e-11 start .004 dur .02; 
+plot V[3],V[2],V[1];
+run;

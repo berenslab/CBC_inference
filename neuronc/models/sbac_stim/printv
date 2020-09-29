@@ -1,0 +1,12 @@
+#! /bin/bash 
+#
+for i in $@; do
+    printpeakv $i
+done
+
+
+##! /bin/csh -f
+#foreach i ($argv) 
+#  printpeakv $i  
+#end
+#

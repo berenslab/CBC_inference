@@ -1,0 +1,29 @@
+/* XPM */
+static char * neuron_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"16 16 7 1",
+/* colors */
+" 	s None	c None",
+".	c LightSlateGray",
+"X	c gray",
+"o	c white",
+"O	c PaleGoldenrod",
+"+	c black",
+"@	c red",
+/* pixels */
+"                ",
+"...........Xo   ",
+".OOOOOOOOOO+oo  ",
+".O@OOO@OOOO+++. ",
+".OO@@O@OO@OO@O.+",
+".OOOO@OO@@@@OO.+",
+".OOOOO@@OOOOOO.+",
+".OOOOOO@OOOOOO.+",
+".OOOO@@@@OOOOO.+",
+".OOO@@@@@@OOOO.+",
+".OOO@@@@@@OOOO.+",
+".OOO@@@@@@OOOO.+",
+".OOOO@@@@OOOOO.+",
+".OOOOOOOOOOOOO.+",
+"...............+",
+" +++++++++++++++"};

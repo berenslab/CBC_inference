@@ -1,0 +1,35 @@
+/* tcomp7cc */
+/* test of high-pass filter in synapse */
+/* Use with nc vers 6.0.84 or more recent */
+/* These high pass settings pretty much duplicate */
+/* the transient from tcomp7cb */
+
+timinc = 5e-5;
+ploti  = 5e-5;
+crit = 1e-8;
+endexp = .20;
+
+at (1) sphere dia 10 vrest = -0.06;
+at (2) sphere dia 10 vrest = -0.06;
+
+conn (1) to (2) synapse open 
+		expon 3 
+		maxcond 1e-9 
+		thresh -.045
+		nfilt1 1 timec1 .2
+		nfilt1h 1 timec1h 14 hgain 29 
+		ename syn1;
+
+
+stim node (1) vclamp -.06 start   0 dur .01;
+stim node (1) vclamp -.04 start .01 dur .1;
+stim node (1) vclamp -.06 start .11 dur .5;
+
+plot V[2],V[1];
+//plot FA0 syn1 max .1 min -.10;
+//plot FA1 syn1 max .1 min -.10 pen 4;
+//plot FH1 syn1 max .1 min -.1 pen 5;
+//plot FH2 syn1 max .1 min -.1 pen 6;
+//plot FH3 syn1 max .1 min -.1 pen 14;
+plot FA9 syn1 max 4000 min 0 pen 7;
+run;

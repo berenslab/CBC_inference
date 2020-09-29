@@ -1,0 +1,82 @@
+
+/* test of single rod  -  tcomp42 */
+/* connected to a horizontal cell */
+/* inhibitory feedback from hz cells to rod */
+
+timinc = 1e-4;
+crit = 1e-8;
+endexp = .5;
+ploti = endexp/1000;
+ploti = .001;
+relax = .05;
+drm = 10000;
+
+scal = 6;
+// scatter = 1;
+drg = 2.5e6;
+hbrm = 20000;
+rodrest = -.030;
+hzrev = -0.06;
+hrest = -.055;
+rodrm = 5000;
+rbrm = 10000;
+rbrest = -.03;
+
+include "rod.m";
+
+ i = j = 0;
+ x = 0;
+ ped = mrod(i*scal,j*scal, x); 
+
+ cnode = x;
+ ped2  = ped;
+ htip1 = 10;
+ htip2 = 2;
+ htip3 = 3;
+ hznode = 20;
+ rodbp  = 30;
+
+conn [cnode][ped2] to [htip1][htip2]
+  synapse  open expon .5 maxcond 5e-10 thresh -.025 vrev -.01 timec1 1.0;
+
+conn [htip1][htip2] to [cnode][ped2]
+  synapse open expon 10 maxcond 5e-10 thresh -.055 vrev -.08 timec1 2.0;
+
+/* the rod bipolar: */
+
+conn [cnode][ped2] to [rodbp][0]
+  synapse  open expon .5 cgain 5 maxcond 5e-10 thresh -.019 vrev -.01 timec1 1.0;
+
+at [rodbp][0] sphere dia 10 rm rbrm vrev hzrev vrest rbrest;
+
+conn [htip1][htip2] to [htip1][htip3]
+         cable dia .1 length 2 rm hbrm vrev hzrev vrest hrest+.005;
+
+conn [htip1][htip3] to [hznode]
+         cable dia 2 length 20 rm hbrm vrev hzrev vrest hrest;
+
+at [hznode] sphere dia 100 rm hbrm vrev hzrev vrest hrest;
+
+/*
+stim spot 10 loc (0,0) inten 2e3 wavel 500 start 0.05 dur .001;
+*/
+
+
+for (i=0; i<3; i++) 
+   stim node 0 cclamp -2e-12 start 0.15 + i*.15 dur .015;
+
+
+stim node hznode cclamp -5e-11 start 0.22 dur .15;
+
+for (tim=0; tim<endexp; tim += timinc) 
+    stim node 0 cclamp -7e-12 * (rand() - 0.5) start tim dur timinc;
+
+plmax = .02;
+plmin = -.07;
+
+plot V[cnode][1];
+plot V[htip1][htip2];
+plot V[rodbp][0];
+
+run;
+

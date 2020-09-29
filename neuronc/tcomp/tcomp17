@@ -1,0 +1,41 @@
+/* tcomp17: test of voltage clamp current recording
+   from a rod with simultaneous voltage recording */
+
+/* calibrate at flash intensity of 20e3 for 1e-3 sec,
+   then at 500e3 for tail length
+*/
+
+ 
+
+timinc = 1e-4;
+plsep = 1; 
+plmax = -.01;
+plmin = -.06;
+
+endexp = 1.50;
+ploti = endexp / 200;
+
+pois = 0;
+
+rodrm=5000;
+at 1 sphere dia 1 rm rodrm;		/* rod anatomy */
+at 1 rod (0,0); 
+
+at 2 sphere dia 10 rm rodrm;		/* rod anatomy */
+at [2] rod (0,0); 
+					/* synapse from rod to horiz */
+
+flash=20e3;
+stim rod [1] inten flash wavel 500 start .009 dur .001;
+stim node [1] vclamp -.06 start .008 dur 1.5;
+
+
+stim rod [2] inten flash start .009 dur .001;
+
+
+plot I[1] max 0e-12 min -60e-12 pen 4;
+
+plot V[2] max 0 min -.08 pen 2;
+
+run;
+

@@ -1,0 +1,6 @@
+#! /bin/sh -f
+#
+cp ~/.xinitrc ~/.xinitrc.old
+echo "xrdb -merge ~/.Xresources" > ~/.xinitrc
+echo "xsetroot -solid gray40" >> ~/.xinitrc
+cat ~/new.xinitrc >> ~/.xinitrc 

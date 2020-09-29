@@ -1,0 +1,27 @@
+/* tcomp22:  test of 2 rods */
+
+
+endexp = 1.0;
+ploti = endexp/200;
+drm = 10000;
+
+rodrm = 5000;
+
+include "rod.m";	/* */
+
+p1 = mrod(0,0,100);
+p2 = mrod(2,0,200);
+
+stim rod 100 inten 10e3 start .009 dur .001;
+stim rod 200 inten 10e3 start .009 dur .001;
+
+/* stim node 1 vclamp -.06 start .005 dur 1;  */
+/* plot I[1] max 40e-12 min 0; */
+
+plmax = .0;
+plmin = -.07;
+
+plot V[100][p1],V[200][p2];	 /* */ 
+//plot V[100],V[200],V[100][p1],V[200][p2],V[130];	 /* */ 
+
+run;

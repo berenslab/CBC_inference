@@ -1,0 +1,65 @@
+/* tcomp24:  transfer function for synapse */
+/* presynaptic voltage (offset from thresh)
+   vs. postsynaptic conductance */
+
+crit = 1e-8;
+endexp = 1;
+ploti=.0001;
+drm=1e5;
+
+syncond = 1e-9;
+synthresh = -.04;
+
+at 1 sphere dia 1;
+conn 1 to 2 synapse open expon 1 maxcond syncond thresh synthresh;
+at 2 sphere dia 1;
+conn 1 to 3 synapse open expon 1 maxcond syncond thresh synthresh;
+at 3 sphere dia 1;
+conn 1 to 4 synapse open expon 1 maxcond syncond thresh synthresh;
+at 4 sphere dia 1;
+conn 1 to 5 synapse open expon 5 maxcond syncond thresh synthresh;
+at 5 sphere dia 1;
+conn 1 to 6 synapse open expon 5 maxcond syncond thresh synthresh;
+at 6 sphere dia 1;
+conn 1 to 7 synapse open expon 5 maxcond syncond thresh synthresh;
+at 7 sphere dia 1;
+conn 1 to 8 synapse open expon 50 maxcond syncond thresh synthresh;
+at 8 sphere dia 1;
+
+
+/* plot V[1] max .04 min -.07;
+plot V[2] max .04 min -.07;
+*/
+
+stimlen = .015;
+
+graph X max .05 min -.02;                       /* volts */
+graph Y max 1 min 0;                    /* conductance */
+graph Y max 1 min 0;
+graph Y max 1 min 0;
+graph Y max 1 min 0;
+graph Y max 1 min 0;
+graph Y max 1 min 0;
+graph Y max 1 min 0;
+graph init;                                     /* draw axes */
+
+/* stim node 2 vclamp -.07 start 0 dur 1;       /* */
+
+vx = -.08;
+stim node 2 vclamp vx start 0 dur 1;
+stim node 3 vclamp vx start 0 dur 1;
+stim node 4 vclamp vx start 0 dur 1;
+stim node 5 vclamp vx start 0 dur 1;
+stim node 6 vclamp vx start 0 dur 1;
+stim node 7 vclamp vx start 0 dur 1;
+stim node 8 vclamp vx start 0 dur 1;
+
+for (i=0,vc=synthresh-.02; vc<synthresh+.05; vc+=.001,i++) {
+   stim node 1 vclamp vc start i * stimlen dur stimlen; /* */
+   step stimlen;                                /* wait for equilbration */
+   graph (V[1]-synthresh, I[2]/vx/syncond, I[3]/vx/syncond,
+                 I[4]/vx/syncond, I[5]/vx/syncond, I[6]/vx/syncond,
+                 I[7]/vx/syncond, I[8]/vx/syncond);
+
+};
+

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Computes morphological properties for a specified morphology
-# and writes them to a file. This file can be used for offline data
-# analysis of morphological properties.
-
-retsim --expt morph_props --celltype dsgc --cellnum 1 --morphfile runconf/morph_ds1e

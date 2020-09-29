@@ -1,0 +1,12 @@
+#! /bin/bash 
+#
+for i in $@; do
+    printpeakdsi_na $i
+done
+
+
+##! /bin/csh -f
+#foreach i ($argv) 
+#  printpeakdsi_na $i  
+#end
+

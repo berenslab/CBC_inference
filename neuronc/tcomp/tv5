@@ -1,0 +1,30 @@
+
+/* tcomp34: plot of diffusion of molecule in rod */
+
+timinc = 1e-1;
+ploti = timinc;
+endexp =10;
+implicit = 1;
+crit=1e-8;
+relax = .3;
+
+plmax=1;
+plmin=0;
+
+drm = 1e30;
+vcl = 0;
+molconv = 1e3;
+
+/* D = 2e-5; */			/* cm2/sec */
+D = 2e-6;			/* cm2/sec */
+dri = molconv / D;
+
+segdia = 2;			/* um */
+holesiz = 1;
+at 1 sphere dia segdia cm 1e-2*segdia*1e-5*6;
+conn 1 to 2 cable dia holesiz length 1 cm 1e-2*holesiz*1e-5/4;
+plot 1;
+stimdur = endexp;
+stim node 2 vclamp 1 start 0 dur stimdur;
+
+run;

@@ -1,0 +1,366 @@
+### -------------------------------------------------------------------------
+###
+###  AppBar (TkDesk Configuration File)
+###
+###  This file defines the contents and appearance of the Application Bar,
+###  which can be opened from the "TkDesk" menu.
+###
+###  *** Press F5 to save changes and reload this file into TkDesk, 
+###  *** F6 to do the same plus to close this window.
+###
+### -------------------------------------------------------------------------
+
+### Whether to let the application bar be managed by the window manager.
+### The "disadvantage" of this is that you get a border around the appbar
+### window and that the appbar is not automatically present on all virtual
+### screens. Note that you can MOVE the appbar by invoking the menu-entry
+### "Application Bar/Move..." from the popup menu of the very first button.
+### You can then drag the appbar around your screen by pressing the left
+### mouse button and moving your mouse simultaneously. Strange, but this
+### is by far the MFAQ.
+
+set tkdesk(appbar,wm_managed) 0
+
+### Max. number of buttons in one column resp. row of the application bar
+### (when layout is vertical resp. horizontal):
+
+set tkdesk(appbar,max) 19
+
+###
+### Definitions of fonts used in the time and date "button":
+
+set tkdesk(appbar,font,time) -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+set tkdesk(appbar,font,weekday) -*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*
+set tkdesk(appbar,font,day) -*-times-bold-r-*-*-24-*-*-*-*-*-*-*
+set tkdesk(appbar,font,month) -*-helvetica-medium-o-*-*-12-*-*-*-*-*-*-*
+
+###
+### Delay between updates of the load and mail display in seconds:
+
+set tkdesk(appbar,load,delay) 15
+set tkdesk(appbar,mail,delay) 30
+
+###
+### Images to be used for the xbiff replacement (mail notifier):
+
+set tkdesk(appbar,mail,nomail) mailbox_empty.xpm
+set tkdesk(appbar,mail,oldmail) mailbox_old.xpm
+set tkdesk(appbar,mail,newmail) mailbox_full.xpm
+
+###
+### Background colour to change the mail icon to when new mail arrived,
+### use "" if the colour should not be changed:
+
+set tkdesk(appbar,mail,newbg) slategray
+
+### ------------------------------------------------------------------------
+### Definition of the Application Bar (AB): The Application Bar is defined
+### by the elements of a Tcl list.  (In the following I try to explain its
+### structure, although it will probably best to just have a look at the
+### example definition below.)
+### 
+### Each element of the list is again a Tcl list, whose first element is
+### the file name of the image to use while the second is another Tcl list
+### defining the popup menu associated with that button. If the image file
+### name is not absolute, TkDesk will look for the image in each directory
+### given by the variable tkdesk(path,images), which is defined in the
+### config file "System". Supported formats are XBM, XPM, GIF, and P?M.
+### If the image name starts with "special:" it is a special display button.
+### Currently the following displays are implemented:
+###
+###   special:date - time and date display
+###   special:load - system load display
+###   special:mail - displays the status of your mailbox
+###
+### The popup menu list contains usually a set of 2-element lists. The
+### first element always gives the label of the menu entry, while the
+### second element contains a Tcl script to execute when this menu entry
+### is invoked.
+### 
+### One label has a special meaning: If the label of an entry is "dd", the
+### respective action will be executed when files are dropped on the
+### button (their names can be accessed via %A in the action
+### specification).  One-element lists inside the menu list are handled as
+### follows: {-} adds a separator to the menu. If the list is one of
+### {history:...}  or {config}, TkDesk will insert the corresponding menu
+### at that place.  Otherwise the element is treated as a (disabled) menu
+### entry, and can be used for inserting "headlines." Cascaded menus are
+### also possible, have a look at the example below to see how they are to
+### be defined.
+### 
+### A single click with the left mouse button always invokes the first
+### menu entry of the corresponding popup menu. The menu gets posted when
+### the right mouse button is pressed over an AB button.
+###
+### TkDesk commands that can be used in the list definition:
+### (Only the most common ones are listed here. For a complete overview
+### and a detailed explanation refer to the User's Guide.)
+###
+### dsk_exec cmd ...   : Executes shell command cmd in background.
+### dsk_view cmd ...   : Executes cmd, displays output in Editor window.
+### dsk_open_dir path  : Opens a new file list for directory path.
+### dsk_open_browser path    : Opens a new file browser for directory path.
+### dsk_edit file      : Edits file.
+### dsk_du path        : Displays disk usage of directory path.
+### dsk_periodic cmd seconds : Executes cmd every x seconds.
+### dsk_confirm text script  : Executes script when confirmation was positive.
+### dsk_read_string label script  : Executes script when entered string is
+###                      not empty. "label" will be displayed in the dialog.
+### dsk_sound id       : Plays sound id (defined in config-file Sounds). 
+### dsk_cbhelp file regexp   : Invokes TkDesk's help system on file.
+### dsk_ask_exec       : Asks for a command to execute.
+### dsk_ask_dir        : Asks for a directory to open.
+### dsk_save_config    : Saves window layout, history, bookmarks etc.
+### dsk_exit ?ask?     : Quits TkDesk. "ask" may be one 1 or 0.
+###
+### Abbreviations that will be replaced with file names etc.:
+###
+### %s : Full pathname of the first selected file.
+### %f : Its filename only.
+### %b : "Basename": just the filename without extension.
+### %d : Its directory only.
+### %A : List containing full pathnames of all selected resp. dropped files.
+### %B : Same as %A, but will be replaced with "" if no files are selected.
+### %D : Directory of last "ative" viewer.
+### %x : Current X selection.
+###
+### The very first Button provides access to a few functions of TkDesk,
+### like history menus, configuration menu etc. Its labels are mostly
+### "internally reserved" keywords.
+### The second button is only defined by the magic word "date" which inserts
+### TkDesk's date display at that place into the AB.
+
+set tkdesk(appbar) {
+    {{comet.xpm} {
+	{{TkDesk Version $tkdesk(version)}}
+	{-}
+	{{Execute...} {dsk_ask_exec}}
+	{{Open directory...} {dsk_ask_dir}}
+	{{Home Directory} {dsk_open_dir ~}}
+	{{Find Files...} {dsk_find_files}}
+	{{Quit TkDesk..} {dsk_exit 1}}
+	{-}
+	{bookmarks}
+	{history:files}
+	{history:execs}
+	{history:dirs}
+	{-}
+	{{Application Bar}
+	  {{Edit AppBar} {dsk_edit_configs AppBar}}
+	  {{Reload AppBar} {dsk_reread_config AppBar}}
+	  {-}
+	  {{Layout}
+	    {{Vertical} {dsk_appbar layout vertical}}
+	    {{Horizontal } {dsk_appbar layout horizontal}}
+	  }
+	  {{Move...} {dsk_appbar move}}
+	  {{Raise} {dsk_appbar raise}}
+	  {{Hide} {dsk_appbar close}}
+	}
+	{config}
+	{{dd} {dsk_openall %A}}
+    }}
+    
+    {{special:mail} {
+        {{Electronic Mail}}
+	-
+    	{{Mail} {dsk_exec xterm -geometry 80x25 -e mail}}
+    	{{Pine} {dsk_exec xterm -geometry 80x25 -e pine}}
+	{{Mail Queue} {dsk_view mailq}}
+    }}
+    
+    {{special:date} {
+    	{{xcalendar} {dsk_exec xcalendar}}
+    }}
+    
+    {{special:load} {
+    	{{Top} {dsk_exec xterm -geometry 40x80 -e top}}
+    	{{NetStat} {dsk_view netstat}}
+    }}
+    
+    {{xterm32.xpm} {
+	{{XTerm } {dsk_exec xterm -T "XTerm" -sb}}
+	{{rxvt } {dsk_exec rxvt}}
+	{{Processes } {dsk_periodic "ps -xw" 60}}
+	{{File Systems } {dsk_periodic "df" 60}}
+	-
+	{{Screen Saver} {dsk_exec xlock -nolock -mode random}}
+	{{Blank Screen} {dsk_exec xlock -nolock -mode blank}}
+    }}
+    
+    {{book_edit.xpm} {
+	{{Edit File} {dsk_edit}}
+	{{New File} {dsk_edit ~/*scratch*}}
+	{{XEmacs} {dsk_exec xemacs}}
+	{{Clipboard} {dsk_exec xclipboard}}
+	-
+    	{{.fvwmrc} {dsk_edit ~/.fvwmrc}}
+    	{{.xinitrc} {dsk_edit ~/.xinitrc}}
+    	{{.profile} {dsk_edit ~/.profile}}
+    	{{.Xresources}
+    	    {{Edit} {dsk_edit ~/.Xresources}}
+    	    {{Reread } {dsk_exec xrdb ~/.Xresources}}
+    	}
+	{{dd} {dsk_edit %A}}
+    }}
+
+    {{xfig.xpm} {
+    	{{XFig} {dsk_exec xfig}}
+    	{{XPaint} {dsk_exec xpaint}}
+    	{{Pixmap} {dsk_exec pixmap}}
+    	{{Xbmbrowser} {dsk_exec xbmbrowser}}
+    	{{acroread} {dsk_exec acroread}}
+    	{{XV} {dsk_exec xv}}
+    	{{dd} {dsk_exec xfig %A}}
+    }}
+    
+    {{neuron-m.xpm} {
+        {{Create a .dat file}}
+	-
+	{{picture} {dsk_exec xterm -n montage -e montage -x}}
+    	{{dd} {dsk_exec xterm -T montage -e montage -x %b.dat}}
+    }}
+    {{neuron.xpm} {
+        {{Display a .cor file}}
+	-
+	{{picture} {dsk_exec picture -s %b.cor}}
+	{{picture, in window} {dsk_exec xterm -T picture -e picture}}
+    	{{dd} {dsk_exec picture -s %b.cor}}
+    }}
+    {{neuron-h.xpm} {
+        {{Display a hidden .cor file}}
+	-
+	{{picthide} {dsk_exec picthide -s %b.cor}}
+    	{{dd} {dsk_exec picthide -s %b.cor}}
+    }}
+    {{neuron-ps.xpm} {
+        {{Make .ps file}}
+	-
+        {{picture-ps} {dsk_exec picture-ps %A}}
+    	{{dd} {dsk_exec picture-ps %s}}
+    }}
+    {{neuron-ps-h.xpm} {
+      {{Make hidden .ps file}}
+       -
+      {{picture-hide-ps} {dsk_exec picture-hide-ps %A}}
+      {{dd} {dsk_exec picture-hide-ps %s}}
+    }}
+    {{neuron-fs.xpm} {
+        {{Store a .dat file}}
+	-
+	{{fstor} {dsk_exec fstor -s %s %s.dat}}
+    	{{dd} {dsk_exec xterm -T fstor -n fstor -e fstor -s %s %b.sto}}
+    }}
+    
+    {{neuron-fr.xpm} {
+        {{Restore from a .sto file}}
+	-
+	{{fstor} {dsk_exec fstor -l 4096 -r %s %b.dat}}
+    	{{dd} {dsk_exec xterm -T fstor -n fstor -e fstor -l 4096 -r %s %b.dat}}
+    }}
+    {{neuron-h-lpr.xpm} {
+      {{Print picture file}}
+       -
+      {{picture-hide-lpr} {dsk_exec picture-hide-lpr %A}}
+      {{dd} {dsk_exec picture-hide-lpr %s}}
+    }}
+    {{ps2ai.xpm} {
+	{{ps2ai} {}}
+    	{{dd} {dsk_exec aimaker %A}}
+    }}
+    
+    {{netscape.xpm} {
+    	{{Netscape} {dsk_exec netscape -ncols 64 http://bip}}
+    	{{X-Selection}
+	    {{Go to URL } {dsk_netscape url %x raise}}
+	    {{New window } {dsk_netscape url %x window}}
+	}
+	{{dd} {foreach f "%A" {dsk_netscape file \$f window}}}
+    }}
+	
+    {{help.xpm} {
+    	{{TkDesk User's Guide } {dsk_cbhelp $tkdesk(library)/doc/Guide howto}}
+    	{{FAQ } {dsk_cbhelp $tkdesk(library)/doc/Guide#Frequently howto}}
+    	{{Changes} {dsk_cbhelp $tkdesk(library)/doc/CHANGES}}
+    	-
+    	{{Manual Page ...} {
+    		dsk_read_string {Show manual page for: (e.g. col(1))} {
+		        # view_manual_page is defined below
+			view_manual_page $dsk_read_string
+    		}
+    	}}
+    	{{XMan } {dsk_exec xman}}
+    	{{TkMan } {dsk_exec tkman}}
+    	{{TkMan Remote ...} {
+    		dsk_read_string {Show manual page for (requires a running TkMan):} {
+    		    catch {send -async tkman \
+		    "wm deiconify .man; manShowMan $dsk_read_string"}
+    		}
+    	}}
+    	{{dd} {dsk_view man %f | col -b}}
+    }}
+    
+    {{printer.xpm} {
+    	{{Watch Queue}
+    	    {{Default } {dsk_periodic lpq 60}}
+    	    {{ascii } {dsk_periodic {lpq -Pascii} 60}}
+    	    {{lp1} {dsk_periodic {lpq -Plp1} 60}}
+    	    {{lp5} {dsk_periodic {lpq -Plp5} 60}}
+    	}
+    	{{Select Printer}
+    	    {{Default } {set tkdesk(cmd,print) "lpr"}}
+    	    {{ascii } {set tkdesk(cmd,print) "lpr -Pascii"}}
+    	    {{lp1} {set tkdesk(cmd,print) "lpr -Plp1"}}
+    	    {{lp5} {set tkdesk(cmd,print) "lpr -Plp5"}}
+    	}
+    	{{dd} {dsk_print %A}}
+    }}
+    
+###    {{door_run.xpm} {
+###	{{Quit TkDesk   } {dsk_exit 1}}
+###    }}
+        
+    {{recycle.xpm} {
+    	{{Delete Files } {dsk_delete}}
+    	{{Open Trash Can} {dsk_open_dir $tkdesk(configdir)/.trash}}
+    	{{Empty Trash Can} {dsk_empty_trash}}
+    	{{dd} {dsk_delete {%A}}}
+    }}
+}
+###    {{mcell.xpm} {
+###    	{{mcell} {dsk_exec xterm -T mcell -n mcell -e mcell %A}}
+###    	{{dd} {dsk_exec mcell %A}}
+###    }}
+###
+###    {{neuronc-plot.xpm} {
+###    	{{nc-plot} {dsk_exec xterm -T nc -n nc -e nc}}
+###    	{{dd} {dsk_exec ncdisp -v %A}}
+###    }}
+###    
+###    {{neuronc-disp.xpm} {
+###    	{{nc-disp} {dsk_exec xterm -T nc -n nc -e nc}}
+###    	{{dd} {dsk_exec ncdisp -d 1 -v %A}}
+###    }}
+###    
+###    {{neuronc-pov.xpm} {
+###    	{{nc-pov} {dsk_exec xterm -T nc -n nc -e nc}}
+###    	{{dd} {dsk_exec ncpov %A}}
+###    }}
+###    
+    
+
+### You can add any sort and number of Tcl procedures in TkDesk's
+### configuration files. For example:
+
+proc view_manual_page {names} {
+    # example for $names: "col(1) socket(2) malloc(3)"
+    foreach name $names {
+	set l [split $name ()]
+	if {[llength $l] == 1} {
+	    dsk_view man $l | col -b
+	} else {
+	    dsk_view man [lindex $l 1] [lindex $l 0] | col -b
+	}
+    }
+}
+

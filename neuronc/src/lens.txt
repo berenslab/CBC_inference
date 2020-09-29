@@ -1,0 +1,121 @@
+#
+# Taken from Andrew Stockman's web page: (Feb, 1998):
+#                 http://www-cvrl.ucsd.edu
+#      
+# Proposed adjustment to the lens templates of Wyszecki & Stiles
+# (1967) and van Norren & Vos (1974). The lens densities were
+# optimized to transform cone fundamentals based on the CIE 1964
+# 10-deg color matching functions to cone photopigment curves.
+# WIthout this small correction, the photopigment curves have a
+# discontinuity in the violet. The discontinuity is dependent on
+# the CMFs-- not on the choice of cone fundamentals (see Stockman,
+# MacLeod & Johnson, 1993). 
+# 
+# 390-460 nm from Stockman, MacLeod & Johnson, 1993 (see Table 7) 
+# 465-730 nm from Wyszecki & Stiles, 1982 (see Table 1(2.4.6)). 
+# 
+# These values are for a small pupil. For an open pupil, divide by
+# 1.16. 
+# 
+# 
+# References
+# 
+# Stockman, A., MacLeod, D. I. A., & Johnson, N. E. (1993).
+# Spectral sensitivities of human cones. Journal of the Optical
+# Society of America A, 10, 2491-2521.
+# 
+# van Norren, D. & Vos J.J. (1974) Spectral transmission of the
+# human ocular media Vision Research, 14, 1237-1244.
+# 
+# Wyszecki, G., & Stiles, W. S. (1967). Color Science New York:
+# Wiley.
+# 
+# Wyszecki, G., & Stiles, W. S. (1982). Color Science (2nd ed.).
+# New York: Wiley.
+# 
+# 
+ 380 3.368 
+ 385 2.862 
+ 390 2.400
+ 395 1.985
+ 400 1.620
+ 405 1.308
+ 410 1.050
+ 415 0.840
+ 420 0.675
+ 425 0.557
+ 430 0.468
+ 435 0.393
+ 440 0.335
+ 445 0.290
+ 450 0.260
+ 455 0.240
+ 460 0.225
+ 465 0.215
+ 470 0.203
+ 475 0.191
+ 480 0.180
+ 485 0.168
+ 490 0.162
+ 495 0.151
+ 500 0.145
+ 505 0.133
+ 510 0.128
+ 515 0.122
+ 520 0.116
+ 525 0.110
+ 530 0.104
+ 535 0.099
+ 540 0.093
+ 545 0.087
+ 550 0.081
+ 555 0.075
+ 560 0.070
+ 565 0.064
+ 570 0.058
+ 575 0.052
+ 580 0.046
+ 585 0.041
+ 590 0.036
+ 595 0.031
+ 600 0.028
+ 605 0.024
+ 610 0.021
+ 615 0.017
+ 620 0.014
+ 625 0.012
+ 630 0.009
+ 635 0.007
+ 640 0.005
+ 645 0.003
+ 650 0.002
+ 655 0.001
+ 660 0.000
+ 665 0.000
+ 670 0.000
+ 675 0.000
+ 680 0.000
+ 685 0.000
+ 690 0.000
+ 695 0.000
+ 700 0.000
+ 705 0.000
+ 710 0.000
+ 715 0.000
+ 720 0.000
+ 725 0.000
+ 730 0.000
+ 735 0.000
+ 740 0.000
+ 745 0.000
+ 750 0.000
+ 755 0.000
+ 760 0.000
+ 765 0.000
+ 770 0.000
+ 775 0.000
+ 780 0.000
+ 785 0.000
+ 790 0.000
+ 785 0.000
+ 800 0.000

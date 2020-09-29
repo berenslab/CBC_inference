@@ -1,0 +1,36 @@
+#! /bin/ash
+#
+# setgetmail 
+#  
+# Set default settings for getmail when used by xfm
+#
+#  Default settings are kept in .xfm/Apps (the "getmail" line).
+
+if [ $# -lt 3 ]; then 
+  echo Usage: setgetmail user remote-machine password
+  exit
+fi
+
+getmdir=$HOME/.getmail
+
+if [ ! -d $getmdir ]; then
+   mkdir $getmdir
+   chmod 700 $getmdir
+fi
+
+echo $1 > $getmdir/user
+echo $2 > $getmdir/remote
+echo $3 > $getmdir/passwd
+chmod 600 $getmdir/user $getmdir/remote $getmdir/passwd
+
+setfile=$HOME/.xfm/Mail
+
+# first, find the line to be changed
+#
+awk '!/setgetmail/{print}
+      /setgetmail/{ start=index($0,"setgetmail"); 
+ line1=substr($0,0,start-1);
+ line2="setgetmail %username--"arg1"% %mail-server--"arg2"% %password--xxxxxx%; RELOAD";
+      print line1""line2; }
+      ' arg1=$1 arg2=$2 $setfile > $setfile.tmp && mv $setfile.tmp $setfile
+

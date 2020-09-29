@@ -1,0 +1,7 @@
+#! /bin/csh -f
+#  ncps
+#
+foreach i ($argv) 
+  nc -d 1 -v $i | vid -B 0 -c > $i:r.ps
+end
+

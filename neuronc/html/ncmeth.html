@@ -1,0 +1,1769 @@
+
+
+Published in:  J. Neurosci. Methods (1992) 43: 83-108.
+        
+
+<H2>       NeuronC: a computational language for investigating
+         functional architecture of neural circuits.
+</H2>
+
+
+
+
+<h3>      Robert G. Smith
+</h3>
+<address>
+          Department of Neuroscience,
+          University of Pennsylvania,
+          Philadelphia, PA  19104-6058<p>
+</address>
+     
+<h4> [ Please note: many features have been added to NeuronC since
+this article was written. Click <A href="ncnews.html"> here </A>
+for the latest developments. ]
+
+</h4>
+
+<h2>
+Abstract 
+</h2>
+
+    A computational language was developed to simulate neural circuits.  
+A model of a neural circuit with up to 50,000 compartments is 
+constructed from predefined parts of neurons, called "neural elements".   
+A 2-dimensional light stimulus and a photoreceptor model allow 
+simulating a visual physiology experiment.  Circuit function is computed 
+by integrating difference equations according to standard methods.  
+Large-scale structure in the neural circuit, such as whole neurons, 
+their synaptic connections, and arrays of neurons, are constructed with 
+procedural rules.  The language was evaluated with a simulation of the 
+receptive field of a single cone in cat retina, which required a model 
+of cone-horizontal cell network on the order of 1000 neurons.  The model 
+was calibrated by adjusting biophysical parameters to match known 
+physiological data.  Eliminating specific synaptic connections from the 
+circuit suggested the influence of individual neuron types on the 
+receptive field of a single cone.  An advantage of using neural elements 
+in such a model is to simplify the description of a neuron's structure.  
+An advantage of using procedural rules to define connections between 
+neurons is to simplify the network definition. <p>
+
+
+<h2>INTRODUCTION</h2>
+
+     How the microscopic properties of membrane channels and synapses 
+produce the macroscopic properties of whole neurons and networks is an 
+unsolved problem in neuroscience.  Although many structural and 
+biophysical details may be known about a real neural network, typically 
+the number of parameters and their possible interactions are so large 
+that intuitions about the function of the network or the contribution of 
+any particular element are quickly overwhelmed.  For example, a single 
+cone photoreceptor in cat connects through electrical synapses to 
+neighboring cones and through chemical synapses to horizontal cells 
+(Kolb, 1974,1977; Smith et al, 1986; Steinberg, 1969; Foerster et al, 
+1977; Nelson, 1977).  These in turn connect electrically with each other 
+and, collecting from many cones, feed back negatively onto all of them 
+(Figure 1).  Consequently, to understand the effect of the network on a 
+single cone requires a grasp of the direct and indirect interactions in 
+space and time of at least 1000 neurons.<p>
+                                                            Figure 1<p>
+
+     To explore the contributions of the myriad elements in such a 
+network requires simulating details of biophysics, such as membrane ion 
+channels, synaptic transfer functions, and cell morphology.  The theory 
+of compartmental modeling has developed over the past 25 years precisely 
+to address this problem at the single neuron level (Cooley and Dodge, 
+1966; Rall, 1964; 1967; Pellionisz and Llinas, 1977; Joyner et al., 
+1978; Carnevale and Lebeda, 1987; Segev et al., 1990).  Recently Hines 
+(1991, 1989) presented a neuron simulation program in which branching 
+structures and various types of membrane conductance are described to an 
+interpreter for translation into difference equations.  It is well 
+suited for studying one complex branching neuron or a few simple ones. <p>
+
+     However, to explore the contribution of any given microscopic 
+property to a large neural network requires that the detailed 
+biophysical properties be simulated on a much larger scale.  The goal of 
+simulating such a network creates a new problem because the description 
+of the network must be specified at many different levels.  The problem 
+is how to decide what level of detail is appropriate for a particular 
+network and how to describe and organize this detail in a way that is 
+comprehensible.   <p>
+
+    To address this problem, I have developed a simulation language, 
+called "NeuronC".  It employs the basic approach developed by Hines 
+(1991, 1989) and earlier workers (Cooley and Dodge, 1966; Joyner et al., 
+1978; Smith et al., 1984) in using a variation of the Crank-Nicholson 
+method of numerical integration.  However, NeuronC contains several 
+special features:  1) it can construct and run models as large as 50,000 
+compartments using a conventional workstation, with run times on the 
+order of hours (proportionately less for smaller models); 2) the model 
+can be constructed hierarchically as a set of "modules", and this allows 
+parameters and connections of a module or entire neural circuit to be 
+comprehended and easily altered; 3) it translates a macroscopic stimulus 
+(such as a spot or bar of light) into microscopic events (such as 
+photons) that neurons actually register. <p>
+
+    Before one can comprehend a large-scale computational simulation of 
+a neural circuit with all of its biological detail and assumptions, one 
+requires a full description of the computational methods.  This paper 
+describes the computational assumptions, methods and their consequences 
+for a typical large-scale simulation using NeuronC.  The METHODS section 
+contains details about the NeuronC language (description of neural 
+elements, corresponding data structures, and numerical computations).  
+The RESULTS section evaluates the language, presenting "higher-level" 
+issues and possible solutions, i.e. how to use the language to construct 
+and run a typical large-scale neural circuit simulation.  <p>
+
+<h2>METHODS</h2>
+
+    To simplify modeling large networks, I have focussed on defining 
+"conceptual modules".  The network is organized as a set of such 
+modules, each one "constructed" from lower level components (Figure 2).  
+The most useful types of module seem naturally to be those already 
+familiar, such as "membrane channel", "synapse", "dendrite", "neuron 
+type", "synaptic interconnection pattern", and "array of neurons".  Each 
+module is simulated with an appropriate algorithm, either precompiled or 
+defined explicitly.<p>
+                                          Figure 2<p>
+                     
+<h2>Neural elements and their representation.</h2>
+
+     The smallest modules of a neural circuit are predefined in the 
+NeuronC language.  A circuit is constructed with a sequence of 
+statements that specify these modules, called "neural elements", and 
+their interconnections and biophysical parameters.  Each succeeding 
+neural element statement adds to the existing model, and statements may 
+be grouped to define a whole neuron or larger multi-neuron circuit.   
+This may be done in a "program" (algorithm) that contains standard 
+procedural language statements, such as "for" loops and "if" statements 
+(see APPENDIX 1).  The set of difference equations that computes each 
+neural element's function are not specified in the program that 
+constructs the neural circuit because they are precompiled.  However, 
+the parameters of a neural element may be specified individually, so the 
+neural element may "tuned" to vary its functional properties.<p>
+
+<h2>Elements and nodes</h2>
+
+     A neural microcircuit is constructed in the NeuronC language by 
+specifying neural elements that connect to each other at "nodes" (Table 
+1).  For example, a neuron having a soma and a branching dendritic tree 
+starts as a "sphere" connected at a node to a "cable" segment (Figure 
+3).  To represent a bifurcation in the dendritic tree, 2 more "cables" 
+connect to the first one at a node.  Elements with 2 ends connect to a 
+circuit at 2 nodes ("cable", "synapse", etc.) but others connect at only 
+one node ("sphere", "photoreceptor", "membrane channel").  A node is 
+specified with a number or name that uniquely identifies it, and may 
+optionally be assigned to a 3-dimensional location.  A sphere is 
+described by its diameter, and a cable by its diameter and length.      
+Each neural element statement starts with a node connection clause 
+(either "at" or "connect"), followed by the neural element and optional 
+parameter values (See APPENDIX 1 and 2).  Optional parameters for 
+"sphere" and "cable" statements include membrane resistance, axial 
+resistance, channel properties, and initial resting voltage. <p>
+<pre>
+Table 1
+
+Features of NeuronC Language
+
+Neural            # of      Usage
+elements:         nodes    
+
+cable               2       Dendritic cable with electrotonic decay
+sphere              1       Isopotential sphere: cell body
+synapse             2       Chemical synapse between two nodes
+gap junction        2       Series resistance, calibr. by membrane area
+series resistor     2       Series resistance, calibr. in Ohms
+load resistor       1       Parallel resistance to ground
+gnd capacitor       1       Parallel capacitance to ground
+capacitor           2       Series capacitor 
+battery             2       Voltage clamp
+rod                 1       Transduction model of rod
+cone                1       Transduction model of cone
+channel             1       Voltage sensitive channels in membrane
+voltage buffer      2       Voltage follower (similar to op. amp.)
+
+Descriptor terms:
+
+length, diameter            Describe stimulus, cables, rods/cones
+rm,ri,rg                    Membrane, axial, gap junction resistance
+reversal  potential         Battery V in series with syn. or cable cond.
+resting   potential         Initial resting potential at start
+threshold potential         Threshold for control of synaptic cond.
+conductance                 Max conductance for synapses and photoreceptors
+noise                       Vesicle and channel noise for synapse
+location                    (x,y) location of receptor     
+bar, spot, sine wave        Type of light stimulus
+intensity                   Intensity of light stimulus
+wavelength                  Wavelength of light stimulus
+start, duration             Time for stimulus
+blur                        Stimulus point spread function diameter
+scatter                     Scattered light function 
+pigment                     Photosensitive cone or rod pigment
+
+
+Simulation actions:
+
+stimulus                    Light, voltage or current clamp stimulus 
+record                      Function which returns voltage at a node  
+plot                        Make continuous plot of a node during run
+graph                       Graph any variables at end of step or run
+modify                      Change value of neural element parameter
+step                        Run for short time and stop to allow graphing
+run                         Run simulation continuously for high speed
+
+
+Standard programming language statements/features:
+
+if
+else
+for
+foreach
+while
+block definition {}
+assignment
+define procedure, function
+call procedure, function
+formal parameters in procedure, function
+local variables in procedure, function
+return
+break
+continue
+formatted print
+arithmetic and logical operators
+increment operators
+numeric expressions
+trig, log, expon, power, sqrt functions
+predefined constants (pi, e, etc.)
+
+
+include file
+edit file
+run a system command
+automatic variable definition
+local variables
+dynamically allocated, multidimensional arrays
+read array from file 
+</pre>
+
+Figure 3<p>
+
+<h2>Translating sphere and cable into compartments</h2>
+
+     After a model's neural elements have been specified, the NeuronC 
+simulator translates them into a compartmental model.  A  "sphere" is 
+translated into one compartment, which represents an isopotential region 
+enclosed by membrane (without axial resistance).  In contrast, NeuronC 
+translates a "cable" into a series of isopotential compartments, each 
+representing a small patch of membrane and a small volume of cytoplasm 
+(see Rall, 1964; Joyner et al., 1978).  <p>
+
+    The compartments and their resistive interconnections are created 
+from the neural circuit description by a cable-segmentation algorithm.  
+This algorithm partitions each cable into multiple compartments of equal 
+size based on a criterion length.  Ends of cable segments are 
+partitioned into half-sized compartments so that 2 cable segments join 
+at a full-size common compartment (Hines, 1989; Figure 4).  The 
+criterion length for a cable segment partition is calculated 
+individually for each cable as a small fraction (default 10%) of the 
+space constant (lambda) for that cable.  This method approximates a 
+continuous cable model reasonably well in terms of amplitude and 
+waveshape (Perkel and Mulloney, 1978).  Accuracy can be evaluated by 
+using successively smaller compartments until no further change in 
+amplitude or waveshape results (Perkel et al., 1981).<p>
+                                                             Figure 4<p>
+<h2>Low and high level structures</h2>
+
+     NeuronC creates 2 levels of information, "high-" and "low-level", 
+to represent the neural circuit at different levels of abstraction.  
+High-level data structures store the information directly from the 
+experiment description in the input file.  They describe stimulus, 
+record, node, and neural element (cable, sphere, synapse, sensory 
+transduction element, etc.).  At runtime, this high-level information is 
+translated by the simulator program to low-level information, stored in 
+different data structures.  These comprise: compartment, connection, 
+channel, stimulus event, record event.  Low level data structures store 
+information specifically for use by the simulator during computation.<p>
+
+     Each compartment is represented by a data structure that specifies 
+the current state of numerical computations simulating the compartment.  
+Compartment state variables include membrane conductance, capacitance, 
+voltage and convergence estimates, and a pointer to a list of 
+connections to other compartments.  Each connection is represented by a 
+data structure that contains a conductance value (axial resistance) and 
+pointers to the 2 compartments it connects.  A compartment may have as 
+many (low-level) connections as necessary to represent the corresponding 
+branching pattern in the neural circuit.  <p>
+
+<h2>Synapses</h2>
+
+     Chemical synapses are represented in NeuronC by a transfer function 
+that relates the presynaptic voltage to the postsynaptic conductance.  
+The transfer function consists of a sequence of separable amplitude and 
+time functions (see APPENDIX 2 and Figure 5):  1) a series of temporal 
+low-pass filters that delay and set the frequency response of the 
+presynaptic voltage signal (parameters: tau, number of filter stages); 
+2) a transfer function that describes release of neurotransmitter 
+(linear or exponential) vs. voltage; 3) a second series of temporal low-
+pass filters that delay and set frequency response of neurotransmitter 
+action at the post-synaptic receptor; 4) a static saturation function 
+for neurotransmitter binding to post-synaptic receptors; 5) a battery 
+for post-synaptic reversal potential and 6) a conductance in series with 
+the battery.  Parameters for these functions can be individually 
+specified for each synapse in its definition statement (see APPENDIX 2).  
+If no value is specified for a parameter, a default value (which may 
+also be set) is used.  In addition, synaptic parameters may be given 
+"plasticity" by modifying them during a simulation (see "Runtime Circuit 
+Modification" below).<p>
+                                                            Figure 5<p>
+
+   Binomial noise (originating in vesicular neurotransmitter release and 
+channel activation) can be specified by defining the number of vesicle 
+release sites or channels.  For static simulations, the synaptic time 
+functions are removed and the synapse runs as an instantaneous transfer 
+function.  Electrical synapses (gap junctions) are represented in 
+NeuronC as linear conductances, although their conductance may be varied 
+at runtime (see below).  <p>
+
+<h2>Runtime modification</h2>
+
+     During a simulation run, NeuronC allows values of parameters such 
+as synaptic gain and threshold to be modified.  The new values can be a 
+function of any measurable response of the neural circuit.  This feature 
+allows a complex interaction (for instance, a nonlinear time-varying 
+interaction between the gain of a synapse and voltage in a postsynaptic 
+neuron) to be simulated without requiring the interaction to be 
+predefined in one of NeuronC's neural element types.  Thus, "non-
+stationarities" in synaptic function, such as long-term potentiation or 
+adaptive gain control, can be simulated by modifying the parameters of a 
+"standard" NeuronC synapse over a long time course.<p>
+
+
+<h2>Voltage-sensitive channels</h2>
+
+     Macroscopic voltage-sensitive membrane channels are simulated in 
+NeuronC using a sequential-state channel model (Armstrong and Matteson, 
+1984) (Figure 6).  Sequential-state sodium and potassium channels that 
+match the model of Hodgkin and Huxley (1952) are provided. In addition, 
+the model of Hodgkin and Huxley (1952) for macroscopic sodium and 
+potassium currents is included.  For the sequential-state model, NeuronC 
+simulates a macroscopic channel by defining: 1) its states, 2) allowable 
+transitions between the states, 3) kinetic rate "constants" (functions 
+of membrane voltage) for the transitions, 4) state conductances, and 5) 
+maximum total conductance.  As membrane voltage varies, the fraction of 
+channels that exist in each state changes according to the transition 
+rate constants (Armstrong and Matteson, 1984).  NeuronC integrates the 
+state concentrations over time in a manner similar to voltage 
+integration.  Total conductance is the sum of the macroscopic 
+conductances for all the channel's states.<p>
+                                                            Figure 6<p>
+
+    Channels may be joined to other neural elements at nodes, or 
+specified as a membrane property (conductance density).  They allow the 
+simulation of many types of nonlinear effects, including action 
+potentials and regenerative feedback.  Several channel types may be 
+specified in unison for sphere or cable membrane in order to match 
+published physiological records (e.g. see Fohlmeister et al., 1990; 
+Traub and Llinas, 1979).  A new channel type can be added to NeuronC by 
+adding a set of states and transition functions to the source code and 
+recompiling.  Channel kinetics may be altered by modifying the number of 
+states or allowable transitions between states, or by altering the 
+transition functions.  The transition functions for a channel may be 
+modified at runtime (overriding the default functions) by writing a 
+function in NeuronC to calculate alpha and beta rate constants as a 
+function of voltage, in the manner of Hodgkin and Huxley (1952).
+<p>
+
+
+<h2>Graphic display</h2>
+
+     NeuronC can portray the morphology and connectivity of a 3-
+dimensional network with a "display" statement.  This statement allows 
+selective display and exclusion of parts of a neural circuit.  The 
+neural model can be rotated and scaled on the color video screen, then 
+drawn on standard graphics devices (VGA, X11, PS).  The visual display 
+is drawn with simple icons that represent neural element types.  Each 
+icon is projected from its 3-dimensional location onto the 2-dimensional 
+graphics screen so correct anatomical relationships can be visualized.  
+In addition, the visual display can include an overlay showing the 3-
+dimensional correspondence between complex branching dendritic trees and 
+low-level compartments (see Figure 10).<p>
+                                                              Figure 7<p>
+
+     NeuronC can plot voltage, current, or light flux from any point in 
+a neural circuit as a function of time (Figure 7), and in addition can 
+parametrically graph any 2 variables (one as a function of the other).  
+For example, to observe how a neuron's input resistance varies, one can 
+direct NeuronC to record voltage before and after a current step, 
+calculate input resistance at a node in the circuit, and graph the 
+node's input resistance as a function of time.  I/V plots may be graphed 
+in a similar fashion using a programmed sequence of voltage or current 
+steps with associated current or voltage records.<p>
+
+<h2>Features for simulating visual circuits</h2>
+
+<h2>Photoreceptor transduction</h2>
+
+     The photoreceptor neural element model for NeuronC allows results 
+of simulations to be directly compared with recordings of neural 
+responses to light.  The transduction model was calibrated "by eye" to 
+give flash responses similar in their timecourse to published data for 
+monkey rods and cones (Baylor et al, 1984; 1987; Schnapf et al, 1990) 
+(Figure 8).  The model includes saturation characteristics but does not 
+explicitly include adaptation (see APPENDIX 3).  Pigment sensitivity 
+curves (Baylor et al., 1984; 1987) extrapolated from 380 nm to 800 nm 
+define the spectral sensitivity of the simulated
+photoreceptors.<p>
+                                                                     Figure 8<p>
+<h2>Stimulus and recording</h2>
+
+     NeuronC includes 3 possible ways to stimulate a neural circuit.  To 
+excite photoreceptors, NeuronC includes a light stimulus.  Spots, bars, 
+or sine-wave gratings can be generated with arbitrary location, 
+intensity, wavelength, duration, and optical point-spread (blur).  
+NeuronC's light stimulator translates a macroscopic description of light 
+intensity into a microscopic description of photon flux, which can 
+include random Poisson statistics for simulating photon noise.  The 
+photon flux is translated by NeuronC's transduction model into a 
+description of channel activity as explained above. <p>
+
+     In addition, an "electrode" may be placed at any node to clamp 
+voltage or current, and simultaneously, current or voltage respectively, 
+can be recorded.  Number of recording or stimulating electrodes is not 
+limited. <p>
+
+     A light stimulus such as a spot or bar of light is defined in 
+NeuronC by a statement that specifies the optical parameters as well as 
+start time and duration.  From this information, contained in a sequence 
+of stimulus statements, NeuronC creates an internal linked list of 
+photoreceptor stimulus events (low-level), which initiate stimulus 
+actions during a simulation run.  A stimulus statement normally 
+specifies intensity as an increment above a background.  This feature 
+allows several stimuli to be spatially summed, so complex stimuli can be 
+fashioned from a collection of simple stimuli.  When a stimulus event is 
+processed during the simulation, the stimulus wavelength defines which 
+photopigment lookup table to use for calculating a light response.  
+Stimuli may be white or monochromatic (wavelength 380-800 nm), and these 
+may be combined for more complex hues. <p>
+
+     To simulate optical blur, one can specify a stimulus blurred by a 
+Gaussian point-spread function.  In this case, a separate program called 
+"Stim" (which interprets the same syntax as NeuronC) is used to 
+"generate" the stimulus.  The effect of light scatter can also be 
+simulated (see Robson and Enroth-Cugell, 1978).  The Stim program 
+calculates light intensity individually for each photoreceptor defined 
+in the neural microcircuit by convolving the optical stimulus with the 
+blur function.  Additional calculations are done whenever the stimulus 
+intensity changes.  The result is saved in a "stimulus file", which 
+contains a list of stimulus events for individual photoreceptors (Figure 
+9).  In order to save computation, the stimulus file may be used for 
+many different simulation runs but need only be calculated
+once.<p>
+                                                                
+                                                          Figure 9<p>
+
+     To simulate photon noise, quantal absorptions in a photoreceptor 
+during one time step can be made a random function of the instantaneous 
+flux with Poisson statistics.  A pseudo-random number sequence generates 
+photon arrival times, and the random sequence is determined by the 
+numeric value of a "seed" which may be changed to produce different 
+random sequences (Press et al., 1988).  By specifying the same seed, it 
+is possible to "re-run" a simulation with identical photon noise. <p>
+
+<h2>Numerical Methods</h2>
+
+     NeuronC depends on 2 levels of abstraction for its analogy with a 
+neural circuit.  At the first level, neural elements are decomposed into 
+small compartments (see "neural elements" above) which are represented 
+as electronic circuits.  At the second level, function of the electronic 
+circuits is simulated using a set of difference equations evaluated with 
+the appropriate numerical integration method, normally a variation of 
+the Crank-Nicholson implicit method.  NeuronC also includes the "fully-
+implicit" method and the "explicit" Euler integration method because 
+these are often useful (Hines, 1984; 1989). <p>
+
+     The "implicit" method of solving simultaneous difference equations 
+("backward-Euler" method) is included in NeuronC because it has the best 
+mathematical stability (Joyner, et al., 1978; Hines, 1989; Mascagni, 
+1989).  Stability in this context means that any combination of time 
+step and compartment size (also related to coupling between 
+compartments) may be used without generating the spurious oscillations 
+that can occur with "explicit" solution methods (Conte and de Boor, 
+1980; Mascagni, 1989; Press et al.. 1988).  NeuronC achieves stability 
+(with the Crank-Nicholson and "implicit" methods) by evaluating the 
+instantaneous effect of a compartment's voltage change on the voltages 
+of all other compartments resistively connected with it (see below).  
+Two compartments connected by a chemical synapse are not resistively 
+coupled, because a NeuronC chemical synapse normally includes a temporal 
+delay.  This delay in coupling increases stability of computation 
+(Hines, 1984).<p>
+
+     To solve the equations generated by the implicit integration 
+methods, NeuronC uses a "relaxation" method known as a variation of 
+Gauss-Seidel iteration (Conte and de Boor, 1980).  In this technique, 
+the voltage in each compartment during one time step is repeatedly 
+calculated as a function of its neighbors' voltages until the new 
+calculated voltage converges to within a predefined criterion voltage.  <p>
+
+     Other methods for solving matrices generated from neural cables, 
+such as the Gaussian elimination method, may be faster than the 
+"relaxation" method in some cases when the circuit model lacks resistive 
+loops (Hines, 1984; 1989).  However, these methods are impractical for 
+retinal networks which have many resistive feedback loops caused by gap 
+junctions.  The relaxation method I have implemented is fast for 
+reasonably small  compartment size (0.2 - 0.1 lambda), resistant to 
+instability due to "round-off error", and compatible with any network 
+geometry.  <p>
+
+
+<h2>Implicit difference equations</h2>
+
+     There are many derivations of difference equations describing 
+neural cable segments (e.g. Cooley and Dodge, 1966; Perkel et al., 1981; 
+Joyner et al., 1978; Hines, 1984; Carnevale and Lebeda, 1987), so I 
+offer a condensed explanation here.  A linked list of data structures 
+contains the state variables (voltages, currents, etc.) for all 
+compartments.  This method avoids the use of matrix techniques and the 
+necessity for data compaction with huge arrays.  Voltage in a 
+compartment over one time step is found by calculating current flows 
+from channels and neighboring compartments using Kirchoff's Law, and 
+integrating them using an implicit method.  <p>
+
+   Simply, my version of the Crank-Nicholson algorithm is: <p>
+
+<pre>
+   1) for all compartments, calculate: 
+
+       Vnew = Vold + dt/c * ((Inew + Iold) / 2) *  implf        (1)
+
+     Where:
+
+      Vnew  = voltage at end of time step.
+      Vold  = voltage at beginning of time step.
+      Inew  = total current in compartment at end of time step (func. of Vnew).   
+      Iold  = total current in compartment at beginning of time step.
+      implf = implicit factor (function of dt, c, total comp. conductance).
+      dt    = time step. 
+      c     = membrane capacitance in compartment.     
+
+References: Cooley and Dodge, 1966
+            Joyner et al, 1978
+            Crank and Nicholson, 1947
+            Hines, 1984; 1989
+</pre>
+
+  2) Repeat step 1) above, recalculating Inew for all compartments, 
+until Vnew converges with a change (from its previous value) less than a 
+preset criterion voltage.  The iterations are started by assuming that 
+Inew equals Iold (Euler's method).<p>
+
+<h2>Computation speed</h2>
+
+     A major issue with a large compartmental model is computational 
+speed.  Of particular concern, therefore, is the method for computing 
+compartmental voltage.  Since NeuronC iterates the calculation of 
+compartment voltage for all compartments until the voltage converges, 
+any savings on the number of iterations for convergence would have an 
+immediate effect on computational speed.  <p>
+
+     The number of iterations required for convergence is a function of 
+the number of compartments, their voltage activity, and their closeness 
+of resistive coupling.  This function is related to the average "space 
+constant", or "diffusion distance" for a voltage step along a chain of 
+compartments during one time step.  In a static model, the "space 
+constant" defines how far a voltage perturbation spreads along neural 
+cable (Rall, 1959), and in a compartmental model the space constant is a 
+function of the closeness of coupling between adjacent compartments.  
+Within one time step, voltage in a dynamic model ideally should spread 
+instantaneously along a chain of compartments as it would in a static 
+model. <p>
+
+     However, the iterative compartment calculations of NeuronC are 
+"second order in space" (Mascagni, 1989), which means practically that a 
+voltage perturbation spreads laterally along a chain of compartments 
+only one additional compartment (in each direction along a cable) per 
+iteration.  Thus, the number of iterations required (in one time step) 
+to compute the spread of a voltage perturbation is related to the 
+closeness of coupling between compartments.  The closeness of coupling 
+between compartments in a dynamic model varies inversely with time step 
+duration.  A longer time step increases the influence of a compartment's 
+voltage on its neighbor's voltage by increasing voltage change (time 
+integral of current).  Therefore, although a longer time step tends to 
+reduce computation by reducing the number of time steps, a longer time 
+step also tends to increase computation time for NeuronC because more 
+iterations are required to compute voltage spread.  These two opposing 
+tendencies define a broad "window" of time step duration (50 - 200 usec) 
+in which computation speed for a typical neural model is constant.  As a 
+result, the advantage of a shorter time step is primarily better 
+accuracy when computing fast-changing voltages. <p>
+
+<h2>Simultaneous over-relaxation</h2>
+
+     To obtain faster convergence, each successive Vnew estimate is 
+overestimated using the method of "simultaneous over-relaxation" (SOR) 
+(Conte and de Boor, 1980; Press et al., 1988).  SOR is equivalent to 
+over-estimating (anticipating) the amount of voltage change at each 
+convergence iteration, thereby converging faster.  SOR is implemented by 
+multiplying the change in Vnew in equation (1) at each iteration by a 
+"SOR factor" of between 1.0 and 2.0.  Typically this increases speed by 
+50%-80%.<p>
+
+    If the SOR factor is too large, voltage estimates oscillate and 
+convergence suffers, i.e. the final voltage for a compartment has been 
+anticipated "too much" and successive voltage estimates alternate 
+positive and negative.  This oscillation can occur even with the 
+"optimal" over-relaxation factor because compartments converge at 
+different rates.   A quiescent compartment requires a smaller over-
+relaxation factor because its convergence is inherently faster, i.e. 
+intermediate estimates of voltage for one time step are closer to the 
+final estimate.   Active compartments (those that receive current from a 
+synaptic input or electrode stimulus) and those that are closely coupled 
+to active neighbors require a larger over-relaxation factor to 
+anticipate current spread during the time step.  <p>
+
+    To increase the overall convergence rate, a separate SOR factor is 
+generated for each compartment.  It is difficult to anticipate SOR 
+factors for individual compartments in a simulation with instantaneously 
+varying synaptic conductances and stimuli.  However, since the optimal 
+SOR factor depends to some extent on the (unvarying) degree of coupling 
+between adjacent compartments, it is useful to compute the SOR factor 
+from the compartment's previous convergence rate.  This is implemented 
+by counting the number of oscillations of the voltage estimate that 
+occur within a time step and after convergence comparing this number 
+with the total number of iterations.  If there were any oscillations, a 
+compartment's SOR factor (for the next time step) is decreased, 
+depending on the number of oscillations, or increased if no oscillations 
+occurred.  Thus the SOR factor is controlled by a negative feedback loop 
+and is self-adjusting.  Typically 10 time steps (1 msec) are required 
+(depending on the amount of change) for the SOR factor to reach an 
+approximate equilibrium. <p>
+
+     To further reduce convergence iterations, calculations for 
+compartments that have already converged are omitted, using a stepwise 
+decreasing voltage-change criterion.  The initial criterion is set to 
+1e-3 V (1 mV).  If a compartment's voltage estimate has changed less 
+than the criterion, its recalculation is omitted while other 
+compartments' estimates are iteratively converged.  After all 
+compartments converge to this criterion, the criterion voltage is 
+reduced by a factor of 10 and the compartments converged again.  This 
+process is repeated until all compartments reach the final criterion.  
+Omitting calculations in this way increases speed by 50% to 100%; 
+however, when a large fraction of the compartments in a model are 
+quiescent, speed can increase by a factor of 5.<p>
+
+     For neural models partitioned into compartments with a size of 0.1 
+cable space constant, typically between 10 to 200 iterations are 
+required (depending on connectivity and size of model) to obtain 
+convergence.  Criterion values of less than 1e-8 volts are needed to 
+ensure stability of computation, and also to ensure acceptable accuracy 
+over long modeling "run" durations.  The criterion voltage does not 
+completely determine error in the voltage estimate because convergence 
+rates vary, but I have found the typical voltage error to be within 10 
+times the criterion. <p>
+
+<h2>Condensing small compartments</h2>
+
+    A simulation of a neuron with small compartments requires more 
+computation time, because more compartments are required and the small 
+compartments are more closely coupled than equivalent larger ones.  
+Therefore, to eliminate excessively small compartments is an advantage.  
+Such compartments are created in a NeuronC simulation when short (less 
+than 0.1 lambda) cable segments branch profusely.  Since NeuronC 
+generates at least 2 compartments for each cable segment (one at each 
+end), these compartments may be substantially smaller than the normal 
+compartment size, depending on the segment's length and diameter. <p>
+
+    To eliminate smaller compartments, NeuronC compares them to a 
+criterion for minimal compartment size (based on fraction of the space 
+constant).  Any compartments smaller than the criterion are "condensed" 
+with a neighbor compartment if their mutual connection is resistive.  
+This reduces unnecessary compartments (in a typical branched retinal 
+ganglion cell or horizontal cell by about 30-50%) but maintains accuracy 
+of electrotonic decay along the dendritic tree (Figure 10).   
+Normalizing compartment size in this way can reduce computation time 
+(when the iterative solution method is used) by a factor of 10 or more, 
+depending on the original closeness of coupling.<p>
+                                                                     Figure 10<p>
+<h2>RESULTS</h2>
+
+<h2>High-level circuit construction</h2>
+
+     The NeuronC language described in METHODS and the APPENDICES was 
+developed to facilitate setting up a circuit model and running a 
+simulation.  Much of this task was accomplished in developing the 
+algorithms to simulate function of individual "neural elements".  
+However, I found it useful to further modularize the simulation at 
+several higher levels.  This section describes 1) the construction and 
+testing of a single neuron,  2) the establishment of synaptic 
+connections between neurons, 3) efficient construction and 4) 
+calibration of neural circuit arrays, and 5) some results of simulation 
+with implications for the circuit's function.  These high-level 
+approaches are described in the context of the cone-horizontal cell 
+example presented in the INTRODUCTION. <p>
+
+<h2>Biological description </h2>
+
+    Briefly, the model consisted of an array of cone photoreceptors and 
+horizontal cell types A and B that form separate arrays in cat retina 
+(Fisher and Boycott, 1974; Kolb 1974).  Both of these horizontal cell 
+types spread laterally with large dendrites that branch and taper into 
+fine "spines" that contact cones at their terminals in the outer 
+plexiform layer (see Figures 1 and 10).  Each horizontal cell contacts 
+100-200 cones (80% or more of the total cones within its dendritic 
+field) (Wa"ssle et al, 1978).  The cone-horizontal contact is thought to 
+be a "reciprocal" chemical synapse (non-inverting feedforward, inverting 
+feedback).  In addition, each of the three neuron types is 
+interconnected into an array by electrical synapses (gap junctions) 
+(Kolb, 1977; Smith et al., 1986; Vaney, 1991). <p>
+
+<h2>Real morphology defined by data file</h2>
+
+     Several text files may contain the information for a single neuron 
+simulation.  An "experiment" file contains NeuronC statements that 
+specify membrane and synaptic parameters, appropriate synaptic or 
+voltage/current clamp "stimuli", and electrode "recording" sites.  Such 
+a file in the NeuronC language is a "program" or procedural algorithm in 
+the standard sense: it describes a procedure to build the neural circuit 
+and run an experimental protocol.  If morphological data is available 
+for the neuron, the "experiment" file may also direct the NeuronC 
+simulator to read a separate "morphology" file that contains the 
+neuron's dendritic tree definition.<p>
+
+<h2>  Model of single horizontal cell </h2>
+
+     To investigate the functional consequences of horizontal cell 
+morphology, I constructed a preliminary model based on published 
+horizontal cell morphology.  At issue was the effect of dendritic 
+branching and tapering on the strength of synaptic input signals passed 
+to the soma (synaptic "efficiency"), and from the soma back to the 
+peripheral dendrites.  <p>
+
+    The horizontal cell was analyzed into a set of "neural elements", 
+such as a sphere for the soma, a set of cables for the dendritic arbor, 
+and a set of synaptic input locations.  Length and diameter of the cable 
+segments were measured manually from a published drawing (Fisher and 
+Boycott, 1974) (see Figure 10).  A list of the elements' dimensions, 
+connections, and locations was placed into the "morphology" file.  The 
+name of the "experiment" file was given to the NeuronC simulator, which 
+constructed the neuron, ran the "experiment" on the neuron, and plotted 
+temporal or spatial responses (Figure 7) (also see Freed et al, 1992). <p>
+
+    For a range of assumptions about membrane resistivity (Rm=5000-
+50,000 Ohm-cm2), morphology of the type A horizontal cell produced a 
+relatively flat synaptic "weighting function" at the soma.  Type A 
+dendritic branches, being thick (1-5 um) transferred voltages several 
+hundred microns without electrotonic decay.  Magnitude of post-synaptic 
+potential did not transfer in the model with great efficiency to the 
+soma, but this depended on the shunting effect of cell conductance on 
+the synaptic conductance, not primarily on synaptic location within the 
+dendritic arbor (Smith and Sterling, 1991).  Post-synaptic potentials 
+recorded at distal synapses tended to be larger than those recorded at 
+proximal synapses, but this effect was due to the higher input (axial) 
+resistance "seen" by distal synapses and had little influence on signal 
+transfer to the soma (see Rall and Rinzel, 1973). <p>
+
+    Type B horizontal cell morphology gave a shallow dome-shape to the 
+synaptic weighting function at the soma.  Type B dendrites are 
+relatively thin (1-2 um) and tend to branch relatively close to the 
+soma.  Each branch therefore has fewer sub-branches and receives fewer 
+cone synaptic contacts than in the type A cell.  My simulations 
+suggested that electrotonic decay in the type B cell is relatively more 
+important to synaptic signal transfer than in the type A cell (Smith and 
+Sterling, 1991).  However, for a wide range of membrane resistivity (Rm 
+= 5000 - 50000 ohm-cm2), the synaptic "weighting function" in the type B 
+cell was within one space constant. <p>
+
+<h2>Generic morphology defined by rule </h2>
+
+     If morphology of an actual neuron is not used, a "generic" 
+morphology must be derived from assumption.  This task can be 
+accomplished naturally by a procedure roughly analogous to a 
+"developmental rule" (see DISCUSSION).  For example, a dendritic tree 
+might be defined by dendritic diameter, length, interval between 
+branches, and branch angle.  Such a generic rule could define a neuron 
+type explicitly as an algorithm in terms of "neural elements" and their 
+physical locations. <p>
+
+    Lacking a general way to derive such morphological rules, I derived 
+salient features of the two horizontal cell types from published 
+morphological descriptions and my preliminary simulations of their 
+function, and included the salient features into an algorithm.  To 
+simulate a "generic" retinal horizontal cell, I simplified its 
+morphology into a symmetrical pattern and specified this with an 
+algorithm (Figure 11).  <p>
+                                                                      Figure 11<p>
+<h2>Efficient network simulation </h2>
+
+   To run a large neural circuit simulation faster yet maintain 
+accuracy, I reduce the number of compartments 1) by simplifying the 
+specification of morphology (as noted above for the "generic" horizontal 
+cell) and 2) by "condensing" small compartments with their neighbors 
+(see METHODS; Figure 10).  Starting from an assumption about the neuron 
+type's function, such "generic" morphology is verified to be 
+functionally correct for each neuron type with a series of simulations 
+that compare responses of single neurons constructed with different 
+morphologies (see "Single neuron simulation" above; see also Freed et 
+al., 1992).  For example, since the dendritic branches of horizontal 
+cells transfer signals relatively well (see above), the morphology of 
+horizontal cells was reduced from a complex branching pattern to a 
+simpler symmetric one.  Cones were abstracted to 2 spheres connected by 
+a cable representing the axon, with phototransduction and membrane 
+conductances located appropriately (Figure 3). <p>
+
+    To arrange cells of various arrays in correct physical location with 
+respect to both cell density and synaptic interconnection requires some 
+form of "connection rule".  This rule may be implied by a symmetrical 
+morphology, e.g. "all dendritic branches look alike, and each branch 
+makes one synaptic contact".  Alternately, the rule may be a 
+"developmental" one where synaptic contacts are created independently of 
+exact morphology by an algorithm (see DISCUSSION). <p>
+
+    For the cone-horizontal cell network, I chose a simple algorithm to 
+create a regular cone array and a correspondingly regular "generic" 
+dendritic tree for the horizontal cell.  The connection rule was 
+straightforward: each horizontal cell connects to all cones within a 
+square "dendritic field", a separate horizontal cell dendrite reaching 
+from the soma to each cone (Figure 11).  This "connection rule" avoided 
+the issue of incomplete specification of connectivity, at the expense of 
+simplifying morphology. <p>
+
+<h2>Calibration of neural responses in network</h2>
+
+    To calibrate the cone-horizontal cell circuit I used an iterative, 
+empirical method:  1) Establish a resting potential for all neuron types 
+by setting membrane channel constants.  "Calibrate" each array of 
+neurons (e.g. cone, horizontal type A, horizontal type B) by varying 
+synaptic parameters (threshold, exponential gain, and/or conductance) 
+until all resting potentials are close to published values or within 
+basic physiological bounds.  2) Apply a stimulus (light or voltage 
+clamp) to the circuit, and modify synaptic and membrane parameters to 
+bring responses within physiological bounds.  Repeat steps 1) and 2) 
+above several times until both resting and response potentials are 
+within known or plausible bounds.   After this process of rough 
+calibration, the investigation of different models of circuit function 
+can proceed by searching parameter space.  Additional constraints on 
+allowable responses serve to further narrow "free parameter space".<p>
+
+<h2>Model of retinal circuit</h2>
+
+    The cone-horizontal cell model was developed as an array of 900 
+cones, 9 type A horizontal cells, and 36 type B horizontal cells.  Cones 
+were interconnected by electrical synapses (gap junctions), and were 
+connected by reciprocal chemical synapses (non-inverting feedforward 
+with inverting feedback) located at fine tips of horizontal cell 
+dendrites.  I calibrated the circuit as described above by varying 
+synaptic gain, synaptic threshold and membrane channel reversal 
+potential until resting potentials and responses to light stimulation 
+for the 3 neuron types were consistent with known physiological data 
+(Steinberg, 1969; Foerster et al., 1977; Nelson, 1977; Werblin 1974).<p>
+
+     The neural circuit was defined using "for" loops to make 2-
+dimensional arrays of cones and 2 types of horizontal cells.  Horizontal 
+cell dendritic tips were simulated with cable segments of 0.1 um 
+diameter, which were connected to a soma by 2 um diameter primary 
+dendrites.  The complete model required a NeuronC program (text file) of 
+about 300 lines.  The model defined a network of some 12,500 nodes, 
+13,500 compartments, and 10,000 synapses, and gave realistic responses 
+to typical stimuli (Figure 12).  A simulation run of 0.1 second required 
+about 35 minutes on an IBM 6000/320 workstation.<p>
+                                                                      Figure 12<p>
+<h2>Cone receptive field</h2>
+
+     To get a quantitative measure of the cone's receptive field, the 
+receptive fields of the 3 neuron types in the circuit were measured 
+under various conditions.  To set preliminary spatial constraints, I 
+computed (by deconvolution) in a separate operation the cone receptive 
+field profile assuming linear summation in the cone to beta ganglion 
+cell pathway (Smith and Sterling, 1990).  The compartmental model was 
+"tuned" spatially, by varying synaptic parameters, to generate a cone 
+receptive field approximating that of the linear summation model (Figure 
+13).  Constraints for synaptic parameters (from Smith and Sterling, 
+1990) were 1) the receptive field "excitatory" center at 1 degree 
+eccentricity should be about 50 um (at 1/e of peak amplitude) in 
+diameter, and 2) the antagonistic cone surround amplitude should be 
+about 3% of the center amplitude.<p>
+                                                                      Figure 13<p>
+<h2>Computational pharmacology </h2>
+
+     Although calibration of the cone-horizontal cell circuit described 
+above was fairly direct, the network was complex enough that intuition 
+about the function of the 3 neuron types was not immediate.  For 
+example, the receptive field of each neuron type conceivably might be 
+described by a "space constant" (see Nelson, 1977).  However, the 
+receptive field of a single cone could not be generated from the 3 
+separate space constants by linear combination, because synaptic 
+transfer functions and interactions of synaptic conductance with space 
+constant were nonlinear and each space constant affected the other two 
+nonlinearly.<p>
+                                                                   Figure 14<p>
+    Therefore, to investigate the interactions of the individual 
+receptive fields, I selectively "blocked" synaptic connections by 
+modifying "synapse" statements.  With all chemical synapses blocked, the 
+effect of gap junctions was to spread electric signals laterally, giving 
+an exponential skirt (Bessel function) to a point stimulus (Figure 14).  
+When the reciprocal chemical synapses were included, the effect of 
+removing gap junctions between cones was to dramatically reduce the size 
+of the cone receptive field center (Figure 15).  The effect of removing, 
+in a separate "run", the feedback synapse from each horizontal cell type 
+to cones was to modify a different component of the cone receptive field 
+center and surround.  <p>
+                                                                 Figure 15<p>
+
+<h2>DISCUSSION</h2>
+
+<h2>Advantage of predefined "neural elements"</h2>
+ 
+   Use of predefined "neural elements" allows the numerical integration 
+code to be relatively efficient because it is localized in a set of 
+precompiled and optimized subroutines and data structures.  Also, since 
+"neural elements" correspond to one's intuition about actual neuron 
+components, the simulation analogy is direct in both structure and 
+function (as opposed to a more explicitly mathematical formulation that 
+relates well only to function). <p>
+
+    A third advantage of using predefined neural elements is that 
+compartmental detail is summarized succinctly at a high level.  A 
+specification of individual conductances is necessary for a 
+compartmental model, but when the model contains on the order of 104 
+compartments, merely specifying and verifying the details of each 
+compartment can distract from larger scale issues (e.g., see Hines, 
+1989; Segev et al., 1989).  <p>
+
+<h2>Level of detail in neural elements: synaptic model </h2>
+
+    Since much is known about synaptic properties in specific systems 
+(see Edelman et al., 1987), it might seem worthwhile to include in the 
+simulation structural details of known synaptic biophysics, such as 
+kinetics and voltage dependence of presynaptic calcium currents, vesicle 
+binding and fusion, and release and diffusion of neurotransmitter.  On 
+the scale of interactions at an individual synapse, such detail may be 
+necessary, but in a simulation developed for a larger scale, it may be 
+counterproductive, for 2 reasons.  First, a synaptic model based on 
+details of biophysics does not assure an accurate model, unless the 
+values of biophysical parameters are precisely known for the particular 
+synapse in question.  However, such detail does assure slower 
+computation.  Second, in the usual case where synaptic parameters are 
+unknown, they must be tested as part of the simulation's free parameter 
+space.  If one is to comprehend the effect of varying synaptic free 
+parameters, there is an advantage in specifying the synaptic functions 
+to have them simple and separable.  The synaptic model described in 
+Figure 5 can simulate a wide variety of synaptic responses (including 
+long-term potentiation and adaptation), is relatively straightforward to 
+comprehend, and is computationally efficient. <p>
+
+<h2>Connection rules</h2>
+
+     To construct a complete neural circuit, one must specify the 
+pattern of synaptic interconnections between neurons.  If the exact 
+location of individual synapses is known for a circuit, the 
+interconnections between 2 neurons can be specified in terms of 3-
+dimensional position.  This precise specification of synaptic position 
+is available for pairs or small groups of neurons studied with the 
+electron microscope (e.g. in retinal cells, McGuire et al., 1984,1986; 
+Freed and Sterling, 1988; Sterling et al., 1988; Cohen and Sterling, 
+1990).  However, such information is not yet available for large 
+networks of neurons. <p>
+
+    For networks where examples of individual neuron morphology are 
+known and at least a general idea of connectivity is also known (number 
+of synapses, "convergence / divergence"; see Sterling et al., 1988), it 
+might seem trivial to build the network.  However, a problem exists:  
+Given that a neuron of type 1 synaptically connects to each available 
+neuron of type 2, exactly which dendritic branches make the contacts?  
+In the mammalian retina, horizontal cells are thought to receive input 
+from most of the available cone photoreceptors within their dendritic 
+fields (Wa"ssle et al 1978).  However, unless 1) all the individual 
+locations and morphologies for an array of horizontal cells and their 
+dendrites' positional correspondence to cones are specified, or 2) 
+horizontal cell morphology is simplified to a "generic" symmetrical 
+dendritic tree in which dendrites always contact cones in predetermined 
+symmetrical patterns, no neural network can be constructed for lack of 
+actual synaptic positions (Figure 16a).  The problem is more difficult 
+if density of neuron type 2 is not an integral multiple of neuron type 
+1.<p>
+                                                               Figure 16<p>
+
+    A solution is to combine details of morphology and cell density in a 
+"connection rule" that defines for an individual neuron of specific type 
+exactly where and in what quantity it makes synaptic connections with 
+other neurons.  For example, a connection rule might extend a dendrite 
+from a neuron of type 1 to form a spine and make a synaptic connection 
+(according to the proximity of 2 neurons) with the nearest dendrite of 
+type 2. <p>
+
+   By stating a synaptic connection rule in "developmental" terms of 3-
+dimensional distance instead of in terms of predetermined symmetrical 
+cell spacing and morphology, actual neuron morphology and cell density 
+data can be used without simplification (Figure 16b).  The rule must be 
+specified on a precise morphological basis only to the extent that a 
+synapse's effect on the network is related to the synapse's precise 
+location on a cell's dendritic tree.  Because such a rule attempts to 
+bridge a gap in anatomical knowledge with a more general procedure, it 
+seems appropriate to state the rule as an algorithm instead of a purely 
+anatomical pattern.  <p>
+
+    Algorithm to connect cones to a horizontal cell with "real 
+morphology", based on a simple "connection rule":   <p>
+           Create an array of cone photoreceptor neurons, spaced 
+       regularly with a separation defined as "conespace".  Create a 
+       second neural array of horizontal cells, with appropriate 
+       spacing, overlapping the first array.  For each cone located 
+       within 1 "conespace" of a horizontal cell dendrite, connect the 
+       cone axon terminal to the horizontal cell, using a synapse at 
+       the point of closest approach of the cone to the horizontal 
+       cell.  Connect the synapse to the horizontal cell via a thin-
+       necked spine of appropriate length. <p>
+
+    Such "high-level" rules are facilitated by a "foreach" loop 
+statement that searches through all of the neural circuit information 
+(in the network constructed so far).  It executes a series of statements 
+only for neurons or their subregions that match a specified name pattern 
+(a pattern of node and neural element numbers).  This statement 
+specifies a synaptic connection between 2 types (or subregions) of 
+neuron, eliminating other types.  The match is further narrowed by 
+statements inside the "foreach" loop that eliminate neurons based on 
+other criteria, for example, those neurons of type 2 beyond a certain 
+distance from a neuron of type 1.  In this case, a neighboring neuron 
+that matches all the conditions is a candidate for synaptic contacts. <p>
+
+<h2>Advantage of construction rules </h2>
+
+    An alternate focus might be to create hierarchical modules defined 
+entirely by structural definitions, i.e. a neural circuit consists of a 
+set of neurons connected in some exactly specified manner, and these 
+neurons consist of dendritic branches with exactly specified morphology.  
+The advantage of rules over such hierarchically defined structures, in 
+the context of a large neural circuit model, is that rules are 
+generalizable and easily modified.  Thus, a rule for connecting two 
+types of neuron can be designed independently of the exact details of 
+their morphology, but can be calibrated by reproducing a specific 
+example of connectivity (see Sterling et al., 1988).  Such a procedure 
+may be useful for extrapolating from a set of individual neural 
+morphologies and connectivities to construct a model of a larger neural 
+circuit. <p>
+
+    Further, a rule that defines a cell's morphology as well as its 
+connections with neighboring cells serves as a definition of "anatomical 
+cell type" for the neuron.  The effect of modifying the neuron (in 
+morphology or connection) on its function in the circuit can be tested 
+by simply modifying its rule.  Finally, a construction rule relates more 
+directly to intuition about the neuron's function in the circuit than 
+would a simple list of structural details.  <p>
+
+<h2>Comparison to other simulators</h2>
+
+    There are several widely used simulators available, such as GENESIS 
+and NEURON, with which the NeuronC language shares many features.  
+NeuronC is based on the approach of the NEURON and CABLE simulators by 
+Hines (1991, 1989), which are languages in which a neuron and associated 
+experimental setup can be described and "run".   NeuronC is distinct 
+from NEURON in being primarily developed for multi-neuron circuits.   
+The numerical method employed in NeuronC (Gauss-Seidel iteration) is 
+more general than that employed by NEURON because it can simulate any 
+neural circuit geometry, including circuits with resistive loops caused 
+by gap junctions, although it may run slower for circuits without gap 
+junctions.  NeuronC also is distinct from NEURON in having precompiled 
+"neural elements" such as photoreceptors and synapses that do not 
+require an expressly mathematical definition by the user.  NeuronC does 
+not yet directly support integration of calcium concentration for 
+calcium-sensitive channels, thus presently NEURON may be better suited 
+for simulations at the single-neuron level that require changes in 
+calcium concentration. <p>
+
+    The GENESIS simulator (Wilson and Bower, 1989) allows multiple-
+neuron circuits to be defined as hierarchical systems using "elements", 
+uses "script" text files to describe the elements, and uses a similar 
+numerical integration method, but is not primarily defined as a language 
+in the style of other general programming languages.  Compared with 
+GENESIS, NeuronC is relatively specialized because 1) its "neural 
+elements" are compact, predefined and precompiled, and 2) it has a 
+precompiled light stimulator with optical blur and photoreceptor 
+transduction.  However, compared with GENESIS, NeuronC is more general 
+in that it allows neural circuit "connection-rules" to be written in the 
+style of a procedural language.   <p>
+
+    For more information about the NeuronC simulation language, a 
+NeuronC User's Manual is available (110 pp.).  Source code can be 
+provided to run on most UNIX systems. <p>
+
+<h2>ACKNOWLEDGEMENTS</h2>
+
+     I thank Dr. Peter Sterling for his enthusiasm, support, and 
+comments, Drs. A. Vardi, M. L. Hines, and M. V. Mascagni for their 
+comments on the mathematics of numerical integration, and Dr. R. 
+Bookman, Dr. M. Freed, Dr. N. Vardi, Dr. B. Knight, G. Chou, L. Croner, 
+and A. Hsu for their comments. This work was supported by NIH Grant R01-
+EY-00828 and NIH Training Grant T32-EY-07035. <p>
+
+
+
+<h2>APPENDIX 1</h2>
+
+<h2>NeuronC specifics</h2>
+
+     NeuronC contains a subset of the "C" programming language, with 
+standard features such as variables, assignment statements, mathematical 
+operators, conditional and loop statements, and subroutines (see Table 
+1).  NeuronC is an interpreted language, similar to other simulation 
+languages (Hines, 1991; 1989).  The NeuronC simulator compiles input 
+lines (into compact "pseudo-code") and interprets (performs actions 
+directed by) them immediately.  The interpreter consists of a threaded-
+code machine with a "stack" for mathematical processing (Kernighan and 
+Pike, 1984).  As it parses the input file, the NeuronC interpreter 
+builds an internal representation of the neural circuit, stimulus, and 
+recording conditions. <p>
+
+<h2>NeuronC program sequence</h2>
+
+     A typical NeuronC program consists of: 1) parameter definitions 
+such as the simulation time step, biophysical constants (Rm, Ri, Cm, 
+Gna, Gk, Vrest, etc.).  All biophysical parameters have default values 
+so only specific changes need be defined.  2) A sequence of statements 
+to construct neural elements and their interconnections, often enclosed 
+in program loops.  3) Statements defining stimulus and recording 
+conditions, which create a linked list of stimulus and recording 
+structures.  4) a "run" statement, or a "step" statement which may be 
+placed inside a "for" loop.  The NeuronC language includes a subset of 
+the "C" programming language (Kernighan and Pike, 1984; Hines, 1989). <p>
+
+     The "run" statement at program end (or a "step" statement) causes 
+NeuronC to simulate time-related neural actions.  The simulator program 
+translates from neural elements to their electric circuit equivalents 
+(resistors, capacitors, etc.; see Joyner et al., 1978), and translates 
+from these in turn to numerical approximations using difference 
+equations.  Each compartment in the simulation is given an initial 
+starting voltage ("resting potential"), defined by neural element 
+statement parameters or by default.  The starting voltage of neurons in 
+a large network may be approximately set by simulating and obtaining the 
+equilibrium voltages of a smaller but similar network.  The simulation 
+advances in time (normally in steps of 25 to 100 usec) by numerically 
+integrating state variables (voltage, channel state concentrations, and 
+synaptic neurotransmitter concentration).  At each time step, the 
+NeuronC simulator calculates current flows between compartments by 
+tracing the connections of a compartment with its neighbors.  Stimuli 
+and recordings proceed separately from, but synchronized with, the 
+neural circuit time integration.<p>
+
+<h2> APPENDIX 2</h2>
+
+<h2>Neural element parameters </h2>
+
+   What follows are details on the syntax and meaning of the "synapse" 
+statement in NeuronC (see Figure 5).  A more complete explanation of all 
+neural elements, their parameters and equations is given in the NeuronC 
+User's Manual, available from the author. <p>
+
+<pre>
+<h2>Synapse</h2>
+
+Syntax:
+
+conn <node> to <node> synapse 'parameters'
+
+optional parameters:    default:           meaning:
+
+     open   | close    open      Neurotrans opens or closes chans.
+     linear | expon    5 mv      linear or exponential const (1/mvolt)
+     vrev            -.00 V      reversal pot. (battery) (Volts)
+     thresh          -.05 V      threshold for transfer  (Volts)
+     igain             1         synaptic gain (100 mv -> saturate)
+     nfilt1            2         number of presynaptic filters.
+     timec1           .2 msec    synaptic low pass filter.
+     nfilt2            1         number of filters after nt release.
+     timec2           .2 msec    synaptic low pass filter.
+     kd                1         saturation point: cond/(cond+kd)
+     maxcond           1e-8 S    maximum conductance (Siemens)
+
+     chnoise                     defines channel noise
+      N                100       number of channels
+      dur             .0001 sec  duration of channel events
+
+     vesnoise                     defines vesicle noise
+      N                10         number of vesicle release sites
+      dur             .0001 sec   duration of release events
+
+</pre>
+
+   A synapse consists of separable amplitude and time functions which 
+modify the signal passing through them:
+
+1) Presynaptic time delay filter
+
+   This filter affects both time delay and frequency characteristics of 
+the synaptic signal passed on to other synaptic functions.  The two 
+parameters, 1) number of stages and 2) time constant (tau) for each 
+stage allow controlling delay and frequency characteristics separately.  
+Each stage is described by:
+
+<pre>
+      Vout (t+1) = Vout (t) +  (Vin (t) - Vout(t)) * 0.63
+
+where:
+      Vout = output of delay filter.
+      Vin  = input to filter. 
+        t  = time in increments of basic timestep
+
+</pre>
+
+2) Synaptic transfer function
+
+    2) a transfer function which converts from mvolts 
+at the presynaptic node to a normalized "transmitter" 
+level.  
+
+<pre>
+Linear transfer
+
+       Trel = (Vpre - Vthresh)  * igain
+
+where:
+       Trel = transmitter released to postsynaptic receptor.
+                    (limited to be non-negative)
+       Vpre = presynaptic voltage (normalized to mv).
+    Vthresh = synaptic threshold (normalized to mv).
+      igain = linear transfer gain. 
+</pre>
+
+Exponential transfer
+
+   The transfer function may also be exponential, 
+defined by the equation 
+
+<pre>
+       Trel = .025 * e(Vpre-Vthresh)/expon * igain
+
+where:
+       Trel = transmitter released to postsynaptic receptor.
+       Vpre = presynaptic voltage (mv).
+    Vthresh = synaptic threshold (mv).
+      expon = constant defining mvolts per e-fold increase. 
+      igain = transfer gain (normally set to 1).
+ 
+     Reference: Belgum and Copenhagen, 1988
+</pre>
+
+3) Synaptic vesicle noise
+
+   Vesicle noise is defined by two parameters, the number of release 
+sites (N), and the average duration of a vesicle release event. The 
+number of vesicles released is a random function (binomial distribution) 
+of the probability of release at each release site and the number of 
+sites.  Quantal release probability is calculated with the following 
+equations:
+
+<pre>
+          p = Trel / (size * N * k)
+          q = binom(p,N)
+     Tnoise = q * size * k
+ 
+where:
+          p = probability of release.
+          k = constant to reduce p. 
+       Trel = transmitter released.
+       size = average size (duration * height) of release event.
+          q = number of quantal vesicles released per time step.
+          N = number of release sites.
+      binom = random binomial distribution funtion of p, n.
+     Tnoise = transmitter signal with noise, normalized to 1.
+
+     Reference: Korn, et al., 1982.
+ 
+</pre>
+
+4) Postsynaptic delay function for transmitter released
+
+     Identical to presynaptic delay filter described above.       
+
+<pre>
+Vout2 (t+1) = Vout2 (t) + (Vin2 (t) - Vout2(t)) * 0.63
+where:
+      Vout2 = output of delay filter.
+      Vin2  = input to filter. 
+        t   = time in increments of basic timestep
+</pre>
+
+5) Synaptic saturation
+
+   Transmitter levels delivered from the second delay 
+function are passed through a Michaelis-Menten 
+saturation function:
+
+<pre>
+      Rbound = Vout2 / (Vout2 + kd)                        (3) 
+
+where:
+      Rbound = Fraction of receptors bound with transmitter 
+       Vout2 = averaged released transmitter 
+          kd = binding constant for synaptic saturation
+                    (default = 1)
+</pre>
+
+6) Synaptic conductance
+
+   The postsynaptic conductance is related to the product of the 
+transmitter bound (Rbound) to postsynaptic receptors and the maximum 
+synaptic conductance, depending on the action of neurotransmitter:
+
+<pre>
+Neurotransmitter opens channels:
+
+      Gpost = Rbound * maxcond
+
+Neurotransmitter closes channels:
+
+      Gpost = (1 - Rbound) * maxcond
+
+where:
+      Gpost = postsynaptic conductance.
+     Rbound = Fraction of receptors bound, after saturation.
+    maxcond = maximum postsynaptic conductance 
+               (default = 1e-8 S)
+</pre>
+
+   The fraction of receptors bound is always less than 1, so the 
+postsynaptic conductance can only approach the level specified by 
+"maxcond".
+
+7) Synaptic channel noise
+
+   Channel noise is defined by two parameters, the number of channels 
+(N), and the average duration of a channel opening (dur).  The number of 
+open channels is a random function (binomial distribution) of the 
+probability of each channel opening and the number of channels.  Quantal 
+release probability is calculated with the following equations:
+
+<pre>
+          p = Rbound / (size * N)
+          q = binom(p,N)
+     Rnoise = q * size 
+ 
+where:
+          p = probability of opening
+     Rbound = receptors bound with transmitter 
+       size = average size (duration * height) of channel opening
+          q = number of channels opened per time step
+          N = number of channels
+      binom = random binomial distribution funtion
+
+     Rnoise = channel open signal with noise, normalized to 1.
+</pre>
+
+8) Synaptic reversal potential
+
+<pre>
+       Ipost = (Vcell - Vrev) * Gpost
+
+where:
+       Ipost = postsynaptic current
+       Vcell = intracellular voltage
+        Vrev = reversal (battery) voltage for synapse
+       Gpost = postsynaptic conductance
+</pre>
+
+
+<h2>APPENDIX 3</h2>
+
+<h2>Photoreceptors</h2>
+
+<pre>
+Syntax:
+
+at <node> rod  (<xloc>,<yloc>) 'parameters'
+at <node> cone (<xloc>,<yloc>) 'parameters'
+
+   parameters:   default:
+
+   <xloc>,<yloc>            location of receptor in (x,y) plane.
+   maxcond       1.4e-9 S   dark cond of light-modulated channels.
+   dia           2 um       dia of receptor used for phot. flux.
+   pigm          1                  type 0 = rod, type 1-3 = cone r,g,b
+   pathl         25 um     path length for light through receptor
+   attf         .9         light attenuation factor (lens, etc.)
+   filt          0         0=none; 1=macular pigment
+   photnoise     off       poisson photon noise from light flux
+
+The light absorbed by a receptor is calculated from:
+
+   sod  =  function of pigment and wavelength (table lookup)
+   od   =  sod * path length
+   T    =  exp10 ( -od )
+   Labs =  ( 1 - T ) * mfilt * attf * Qeff
+      
+   Where:
+
+   sod   =  specific optical density (extinction coeff. * concentration)
+   od    =  optical density
+   T     =  Transmitted light
+   mfilt =  macular filter (if defined)
+   attf  =  miscellaneous attenuation factor 
+   Qeff  =  quantum efficiency (set at .67)
+   Labs  =  Light absorbed (absolute sensitivity)
+</pre>
+
+Difference equations for rod and cone phototransduction elements.
+
+    The NeuronC rod and cone transduction models are based on the enzyme 
+cascade postulated by Pugh and Altman (1988).  Each individual rod or cone is 
+allocated a data structure that contains its individual set of state 
+variables, along with a pointer to the appropriate parameter set (see APPENDIX 
+2).  The rod and cone data structures define a set of 7 difference equations 
+to simulate the photocurrent rising phase and 4 difference equations to 
+simulate the decay phase and calcium feedback (see Pugh and Lamb, 1990) 
+(Figure 8).  
+
+Difference equations for rod and cone:
+
+<pre>
+  rhod += light_flux;
+  gprt += rhod * gprgain;
+  gpr2 += gprt * ggain2;
+  gpr3 += gpr2 * ggain3;
+
+  pde  += gpr3 * (1.0 - pde) * ggain4;
+  ca2   = cax * cax;
+  gcyc  = 1.0 - (ca2 / (ca2 + kdgcyc));
+
+  cycg -= pde * cycg / (cycg + 1.0) * pdegain;
+  cycg += gcyc * gcygain;
+
+  cond += cycg * cycg * (totcond - cond) / totcond * condgain;
+  ca   += cond * gca;
+  cax  += ca * cxgain;
+
+  rhod *= dec1;
+  gprt *= dec2;
+  gpr2 *= dec3;
+  gpr3 *= dec4;
+  pde  =  (pde - pdebase) * pdedec + pdebase;
+  ca   -= capump * ca / (ca + 1.0); 
+  cond *= dec5;
+  cax  *= dec6;
+
+</pre>
+
+<h2>REFERENCES</h2>
+
+Armstrong, C.M., and Matteson, D.R. (1984)  Sequential models of sodium 
+channel gating.  Current Topics in Membranes and Transport 22: 331-352. <p>
+
+Baylor, D.A., Nunn, B.J., and Schnapf, J.L. (1984)  The photocurrent, noise 
+and spectral sensitivity of rods of the monkey macaca fascicularis.  J. 
+Physiol. 357: 575-607. <p>
+
+Baylor, D.A., Nunn, B.J., and Schnapf, J.L. (1987)  Spectral sensitivity of 
+cones of the monkey macaca fascicularis.  J. Physiol. 390: 145-160. <p>
+
+Belgum, J.H. and Copenhagen, D.R. (1988) Synaptic transfer of rod signals to 
+horizontal and bipolar cells in the retina of the toad (Bufo marinus).  J. 
+Physiol. 396: 225-245. <p>
+
+Carnevale, N.T. and Lebeda, F.J. (1987)  Numerical analysis of electrotonus in 
+multicompartmental neuron models.  J. Neurosci. Meth. 19:
+69-87.<p>
+
+Cohen, E. and Sterling, P. (1990) Microcircuitry related to the receptive 
+field center of the on-beta ganglion cell.  J. Neurophysiol. 65: 352-359. <p>
+
+Cooley, J.W. and Dodge, F.A. (1966)  Digital computer solutions for excitation 
+and propagation of the nerve impulse.  Biophys. J. 6: 587. <p>
+
+Conte, S.D. and de Boor, C. (1980) Elementary numerical analysis.  McGraw-
+Hill, New York. <p>
+
+Crank, J. and Nicholson, P. (1947)  A practical method for numerical 
+evaluation of solutions for partial differential equations of the heat 
+conduction type.  Proc. Camb. Phil. Soc. 43: 50-67. <p>
+
+Edelman, G.M., Gall, W.E., and Cowan, W.M. (1987) editors, Synaptic Function. 
+New York: Wiley. <p>
+
+Fisher, S.K., and Boycott, B.B. (1974) Synaptic connexions made by horizontal 
+cells within the outer plexiform layer of the retina of the cat and the 
+rabbit.  Proc. Roy. Soc. Lond. B, 186: 317-331. <p>
+
+Foerster, M.H., van de Grind, W.A., and Grusser, O.-J. (1977)  The response of 
+cat horizontal cells to flicker stimuli of different area, intensity and 
+frequency.  Exp. Brain Res. 29: 367-385. <p>
+
+Fohlmeister, J.F., Coleman, P.A., and Miller, R.F. (1990) Modeling the 
+repetitive firing of retinal ganglion cells.  Brain Res. 510: 343-345. <p>
+
+Freed, M.A., and Sterling, P. (1988)  The On-alpha ganglion cell of the cat 
+retina and its presynaptic cell types. J. Neurosci. 8: 2303-2320. <p>
+
+Freed, M.A., Sterling, P., and Smith, R.G. (1992)  Computational model of the 
+On-alpha ganglion cell receptive field based on bipolar cell circuitry.  Proc. 
+Nat. Acad. Sci. 89: 236-240. <p>
+
+Hines, M. (1984) Efficient computation of branched nerve equations.  Int. J. 
+Biomed. Comput. 15: 69-76. <p>
+
+Hines, M. (1989) A program for simulation of nerve equations with branching 
+connections.  Int J. Biomed. Comput. 24: 55-68. <p>
+Hines, M. (1991)  NEURON: a program for simulation of nerve equations.  In: 
+Analysis and Modeling of Neural Systems, II.  Kluwer (in press).
+<p>
+
+Hodgkin, A.L. and Huxley, A.F. (1952)  A quantitative description of membrane 
+current and its application to conduction and excitation in nerve.  J. 
+Physiol. 117: 500-544. <p>
+
+Joyner, R.W., Westerfield, M., Moore, J.W., and Stockbridge, N. (1978)  A 
+Numerical Method to model excitable cells.  Biophys. J. 22: 155-170. <p>
+
+Kernighan, B.W., and Pike, R. (1984)  The UNIX programming environment.  
+Englewood Cliffs, NJ: Prentice-Hall. <p>
+
+Kolb, H. (1974)  The connections between horizontal cells and photoreceptors 
+in the retina of the cat: electron microscopy of Golgi preparations.  J. Comp. 
+Neurol. 155: 1-14. <p>
+
+Kolb, H. (1977)  The organization of the outer plexiform layer in the retina 
+of the cat: electron microscopic observations.  J. Neurocytol. 6: 131-153. <p>
+
+Korn, H., Mallet, A., Triller, A., and Faber D.S. (1982)  Transmission at a 
+central synapse,  II. Quantal description of release with a physical correlate 
+for binomial n.  J. Neurophysiol. 48: 679-707. <p>
+
+Mascagni, M.V. (1989)  Numerical methods for neuronal modeling.  Chapter 13 
+in: Methods in Neuronal Modeling, edited by C. Koch and I. Segev. Cambridge, 
+MA: MIT Press. <p>
+
+McGuire, B.A., Stevens, J.K., and Sterling, P. (1984) Microcircuitry of 
+bipolar cells in cat retina. J. Neurosci. 4: 2920-2938. <p>
+
+McGuire, B.A., Stevens, J.K., and Sterling, P. (1986) Microcircuitry of beta 
+ganglion cells in cat retina. J. Neurosci. 6: 907-918. <p>
+
+Miller, R.F., Coleman, P.A., and Jayram, S. (1990) How ganglion cells summate 
+epsps in the receptive field center: physiology, biophysics and computer 
+simulations.  Soc. Neurosci. Abstr. 16: 1217. <p>
+
+Nelson, R. (1977)  Cat cones have rod input: a comparison of the response 
+properties of cones and horizontal. cell bodies in the retina of the cat.  J. 
+Comp. Neurol. 172: 109-136. <p>
+
+Pellionisz, A., and Llinas, R. (1977)  A computer model of cerebellar Purkinje 
+cells.  Neurosci. 2: 37-48. <p>
+
+Perkel, D.H. and Mulloney, B. (1978)  Electrotonic properties of neurons: the 
+steady-state compartmental model.  J. Neurophysiol. 41: 621-639.
+<p>
+
+Perkel, D.H., Mulloney, B., and Budelli, R.W. (1981)  Quantitative methods for 
+predicting neuronal behavior.  Neurosci. 6: 823-837. <p>
+
+Press, W.H., Flannery, B.P., Teukolsky, S.A., and Vetterling, W.T. (1988)  
+Chapter 7, "Random numbers", and Chapter 17, "Partial differential equations" 
+in: Numerical Recipes in C: The Art of Scientific Computing.  New York: 
+Cambridge University Press. <p>
+
+Pugh, E.N. and Altman, J. (1988)  A role for calcium in adaptation.  Nature 
+334: 16-17. <p>
+
+Pugh, E.N. and Lamb, T.D. (1990)  Cyclic GMP and calcium: the internal 
+messengers of excitation and adaptation in vertebrate photoreceptors. Vision 
+Res. 30: 1923-1948. <p>
+
+Rall, W. (1959)  Branching dendritic trees and motoneuron membrane 
+resistivity.  Exp. Neurol. 1: 491-527. <p>
+
+Rall, W. (1962)  Theory of physiological properties of dendrites.  Ann. N. Y. 
+Acad. Sci. 96: 1071-1092. <p>
+
+Rall, W. (1964)  Theoretical significance of dendritic tree for input-output 
+relation.  In: Neural Theory and Modeling, edited by R.F. Reiss. Stanford: 
+Stanford University Press, pp 73-97. <p>
+
+Rall, W. (1967)  Distinguishing theoretical synaptic    potentials computed 
+for different soma-dendritic distributions of synaptic input.  J. 
+Neurophysiol. 30: 1138-1168. <p>
+
+
+Rall, W., and Rinzel, J. (1973)  Branch input resistance and steady 
+attenuation for input to one branch of a dendritic neuron model.  Biophys. J. 
+13: 648-688. <p>
+
+Redman, S.J. (1973)  The attenuation of passively propagating dendritic 
+potentials in a motoneurone cable model.  J. Physiol. 234: 637-664. <p>
+
+Robson, J.G., and Enroth-Cugell, C.E. (1978)  Light distribution in the cat's 
+retinal image.  Vision Res. 18: 159-173. <p>
+
+Schnapf, J.L., Nunn, B.J., Meister, M. and Baylor, D.A. (1990) Visual 
+transduction in cones of the monkey macaca fascicularis.  J. Physiol. 427: 
+681-713. <p>
+
+
+Segev, I., Fleshman, J.W., and Burke, R.E. (1989)  Compartmental models of 
+complex neurons. Chapter 3 in: Methods in Neuronal Modeling, edited by C. 
+Koch, C. and I. Segev. Cambridge, MA: MIT Press. <p>
+
+Smith, R.G., Freed, M.A., Sterling, P., Hines, M.L., and Moore, J.W. (1984)  
+Microcircuitry of the On-Alpha (Y) cell contributes to velocity tuning.  Soc. 
+Neurosci. Abstr. 10: 326. <p>
+
+Smith, R.G., Freed, M.A., and Sterling, P. (1986)  Microcircuitry of the dark-
+adapted cat retina: functional architecture of the rod-cone network.  J. 
+Neurosci. 6: 3505-3517. <p>
+
+Smith, R.G., and Sterling, P. (1990) Cone receptive field in cat retina 
+computed from microcircuitry.   Visual Neurosci. 5: 453-461. <p>
+
+Smith, R.G., and Sterling, P. (1991) Functional consequences of morphology in 
+types A and B horizontal cells in cat retina.  Soc. Neurosci. Abstr. 17: 1012. <p>
+
+Steinberg, R. (1969) Rod and cone contributions to S-potentials from the cat 
+retina.  Vision Res. 9: 1319-1329. <p>
+
+Sterling, P., Freed, M., and Smith, R.G. (1988) Architecture of rod and cone 
+circuits to the on-beta ganglion cell.  J. Neurosci. 8: 623-642.
+<p>
+
+Traub, R.D., and Llinas, R. (1979)  Hippocampal pyramidal cells: significance 
+of dendritic ionic conductances for neuronal function and epileptogenesis.  J. 
+Neurophysiol. 42: 476-496. <p>
+
+Vaney, D.I. (1991) Biocytin and neurobiotin reveal novel connections between 
+retinal neurons.  Invest. Ophthalmol. Vis. Sci. 32: 1131, 1991.
+<p>
+
+Wa"ssle, H., Boycott, B.B., and Peichl, L. (1978)  Receptor contacts of 
+horizontal cells in the retina of the domestic cat.  Proc. R. Soc. B 203: 247-
+267. <p>
+
+Werblin, F. (1974)  Control of retinal sensitivity. II. Lateral interactions 
+at the outer plexiform layer.  J. Gen. Physiol. 63: 62-87. <p>
+
+Wilson, M.A., and Bower, J.M. (1998)  The simulation of large-scale neural 
+networks. Chapter 9 in: Methods in Neuronal Modeling, edited by C. Koch and I. 
+Segev. Cambridge, MA: MIT Press. <p>
+
+
+
+
+<h2>Figure Legends</h2>
+
+Figure 1) Schematic diagram of cone and connections to neighboring cells.  Gap 
+junctions spread current laterally to neighboring cones.  Chemical synapses 
+transmit cone signal to horizontal cells, which in turn feed back negatively 
+on cone terminals. <p>
+
+Figure 2) Conceptual modules used in constructing neural circuit models.  At 
+bottom, "neural elements" may be connected together to make whole neurons, at 
+the second level.  At the third level, a "connection pattern" is an 
+interaction between an individual neuron of one type and one or more neurons 
+of a second type.  At the top level, arrays of neurons are constructed from 
+individual neurons and neural connection patterns. <p>
+
+Figure 3)  Schematic diagram of high level circuit description from cone to 
+horizontal cell (Hz), showing 7 nodes interconnected with neural elements in 
+bold.  Nodes are "points of junction" and are used to define anatomical 
+connection patterns in the circuit.  A node can be connectedto any number of 
+other nodes, and this feature allows the description of loops for feedback.  
+Neural elements such as cables and chemical or electrical synapses connect 2 
+nodes.Other elements such as rod or cone transduction mechanisms 
+andisopotential spheres connect to a single node.  Hz, horizontal cell. <p>
+
+Figure 4) Translation of cable segments into compartments.  Two cable segments 
+connect at Node 2, with Node 1 and Node3 at the cable segment ends.  Each 
+cable segment is translated into appropriate low-level compartments and 
+resistive connections.  Compartments at end of cable are 1/2 standard size, so 
+that when 2 cables connect, their ends form one standard size compartment at 
+the node common to both. <p>
+
+Figure 5) Components used to simulate chemical synapses.  Presynaptic voltage 
+signal passes through a temporal filter, static transfer function with 
+variable gain and threshold, a second temporal filter, and a saturation 
+function which controls the conductance of the output channel.  Finally, a 
+voltage source (Vrev) in series with the conductance applies current to the 
+post-synaptic cell.  <p>
+
+Figure 6) Sequential state model used to describe macroscopic channel 
+currents, similar to that used by Armstrong and Matteson, 1984.  Model 
+represents the average distribution of a population of individual channel 
+proteins.  Channel is described as a series of states and allowable 
+transitions between states.  Rate constants for each transition are calculated 
+as a function of voltage.  Each state is assigned a fractional 
+"concentration", and the sum of all states' concentrations is always 1.  The 
+conductance of each state is either 1 or 0, therefore total conductance is 
+calculated as the sum of concentrations of the open states.  <p>
+
+Figure 7) Time and space plot of a voltage-clamped cable with closed ends.  
+Cable is 2 um diameter, with 40 segments of 20 um length and 41 nodes; Rm=5000 
+Ohm-cm2, Ri=100 Ohm-cm.  Spatial plots drawn every 100 usec, starting at 
+time=100 usec.  Voltage-clamp stimulus applied at time=0 for 500 microseconds, 
+then cable voltage allowed to decay passively.  Note that dV/dx approaches 0 
+at ends of cable. <p>
+
+Figure 8) Response of cone to series of light flashes while voltage clamped to 
+-30 mv.  Lowest intensity was 500 photons/um2.  Flash intensity was increased 
+by a factor of 2 between flashes.  Strength of flash response depends on the 
+clamp voltage because light-dependent conductance of cone is ohmic.  Note that 
+amplitude of downwards "undershoot" saturates in tandem with amplitude of 
+rising phase (see APPENDIX 3), in approximation to responses of monkey cones 
+(Schnapf et al, 1990). <p>
+
+Figure 9) Explanation of macroscopic -> microscopic stimulus generation.  A 
+"spot" definition causes the stimulus generator program to create a spot of 
+appropriate diameter and intensity in its internal stimulus array.  A "blur" 
+definition causes this stimulus to be convolved with a Gaussian point-spread 
+function of appropriate dimensions.  The stimulus generator creates a list of 
+intensity changes for each photoreceptor, and places the resulting event list 
+in a "stimulus file".  At runtime, the neural simulator reads the stimulus 
+file, creates an internal list of stimulus actions, and converts each action 
+into a microscopic stimulus for an individual photoreceptor, using wavelength 
+lookup tables and an optional Poisson photon noise function. <p>
+
+Figure 10)  Model of type A horizontal cell of cat retina, derived from Fisher 
+and Boycott, 1974.  A single synapse from each cone pedicle is assumed to 
+contact the horizontal cell through a 0.1 um dia. spine.  A) Horizontal cell 
+morphology as specified to program;  B) translation of morphology into low-
+level compartments; without compartment condensation, 223 compartments.  A 
+compartment is displayed as a sphere that would possess the equivalent of the 
+compartment's membrane surface area.  Each branch point requires a node, and 
+each node requires 1 compartment to represent it, so thick dendrites are 
+broken into "small" compartments (very closely coupled together). C) Partial 
+condensation; 198 compartments.  Criterion for condensing a compartment with 
+its neighbor was set to 0.1 of standard compartment size (normally 0.1 lambda; 
+criterion in this case set to 0.01 lambda).  Each compartment displayed at 
+mean location of nodes it represents.  D) Greater condensation; criterion set 
+at 0.3 of standard compartment size; 104 compartments.  Simulation D ran 
+approximately 10 times faster than B, yet effect of synaptic potentials at 
+soma between the two differed by less than 5%. <p>
+
+Figure 11) Symmetric morphology of horizontal cell used in model of cone-
+horizontal cell network, shown in radial view.  Each cone photoreceptor makes 
+a synaptic contact with each horizontal cell that extends beneath it.  All of 
+a horizontal cell's dendrites are equal in electrotonic length, so there is no 
+spatial weighting of cone inputs. <p>
+
+Figure 12) Output of 30x30 model during simulation to map cone receptive 
+field.  Simultaneous traces from 10 cones and 2 horizontal cells are plotted 
+vs. time.  Model requires about 50 msec to reach equilibrium.  Stimulus at 50 
+msec, network response sampled at 50 and 110 msec.  Stimulus is small blurred 
+spot, offset from center of array.  Response of cones near edge of array is 
+depolarized.<p>
+
+Figure 13) Solid line, cone receptive field mapped by 30x30 model.  Dotted 
+line, difference-of-Gaussians from linear summation model of cone receptive 
+field (Smith and Sterling, 1990).  Gap junction strength and transfer 
+functions of feedforward and feedback synapses have been tuned to give 
+approximate match. <p>
+
+Figure 14)  Solid line, cone receptive field with optical blur alone; Gaussian 
+of 11 um radius.  Dotted line, cone receptive field with gap junctions alone, 
+no blur or chemical synapses.  Gap junctions give exponential-type receptive 
+field (discretely-sampled Bessel function) with wide skirt.  Gap junction 
+conductance was already tuned to match linear-summation model as in Figure 13. <p>
+
+Figure 15) Solid line, complete cone receptive field. Dotted line, cone 
+receptive computed with chemical synaptic feedback but without gap junctions.  
+Effect of gap junctions is to widen cone receptive field center and surround. <p>
+
+Figure 16) A) Problem that exists when synaptically connecting two types of 
+neuron.  Each neuron of type 2 might conceivably connect to any of several 
+points on type 1, but no rule is specified, so no network can be constructed.  
+B) Rule (R) applied for each neuron of type 2 computes exactly where on type 1 
+to make a synaptic contact.  Rule does not require specifying in advance any 
+particular cell morphology or spacing. <p>
+
+

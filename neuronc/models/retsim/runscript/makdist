@@ -1,0 +1,21 @@
+#! /bin/sh
+#
+# make gcrf distribution
+#
+mkdir gc4
+
+cp celfuncs.cc celfuncs.h celseg.cc celsegca.cc celsegca.h gc4
+
+cp expt_aii_flash.cc expt_dsgc_calib.cc expt_dsgc_cbp_bar.cc expt_dsgc_cbp_stim.cc \
+expt_gc_bphz_flash.cc expt_gc_cbp_flash.cc expt_gc_cbp_flash_ry.cc expt_gcoff_hbp_flash.cc \
+expt_morph_props.cc expt_test.cc gc4
+
+cp gc_signals.txt makcel.cc makefile maknval.cc morphfuncs.cc morphfuncs.h nval.h nval.n \
+nval_bphz.n nvalx.n onplot_dsgc_movie.cc onplot_movie.cc onplot_sb_movie.cc _paramfile \
+plot_funcs.cc rectask.cc rectask.h retcolors.h retsim* retsim.cc retsim.h retsim_var.cc \
+retsim_var.h sb_makfuncs.cc sb_recfuncs.cc setexpt.cc setexpt.h spike_plot.cc stimfuncs.cc \
+stimfuncs.h synfuncs.cc gc4
+
+cp doc/ runconf/ runscript/ gc4
+
+tar cvzf gc4.tgz gc4

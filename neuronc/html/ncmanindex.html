@@ -1,0 +1,102 @@
+<html>
+<body bgcolor="#f0b468">
+<title>NeuronC User's Manual: Index</title>
+<head>
+
+<h1>NeuronC: A neural circuit simulation language</h1>
+</head>
+                                 
+                                
+<h4> User's Manual Version 6.4 <p>
+                                
+Dec, 2017<p>
+</h4>
+
+<address>
+Robert G. Smith<br>
+Department of Neuroscience<br>
+University of Pennsylvania School of Medicine<br>
+Philadelphia, PA   19104-6058<br>
+USA<br>
+</address>
+
+<h4>
+All Rights Reserved.  Copyright (C) 2017.<br>
+</h4>
+
+<hr>
+
+<h3><a name = "table">Table of Contents</a></h3>
+
+<ul><li><a href="ncman1.html">How to use this manual</a></ul>
+
+<ul><li><a href="ncman1.html#B">Hardware, software, and compiling</a></ul>
+
+<ul><li><a href="ncman1.html#C">NeuronC basis in analogy</a></ul>
+
+<ul><li><a href="ncman2.html#D">NeuronC statements and syntax</a></ul>
+
+<ul><li><a href="ncman3.html#E">Constructing neural circuits</a></ul>
+
+<ul><li><a href="ncman3.html#F">Adding new channel types</a></ul> 
+
+<ul><li><a href="ncman4.html#G">Running nc, stim, and plotmod commands</a></ul> 
+
+<ul><li><a href="ncman4.html#H"> Predefined variables</a></ul>
+
+<ul><li><a href="ncman4.html#H2"> List of source code files</a></ul>   
+
+<ul><li><a href="ncman4.html#H3">Neuron-C API (library): list of functions</a></ul>   
+
+<ul><li><a href="ncman4.html#I"> References</a></ul>
+
+<ul><li><a href="ncman4.html#J"> Interpreted script programming examples</a></ul>   
+
+<ul><li><a href="ncman5.html"> Curve fitting with NeuronC</a></ul>   
+
+<ul><li><a href="ncourse.html"> Ncourse: a course for beginners on "nc"</a></ul>   
+
+<ul><li><a href="ncman6.html"> Retsim: a retinal simulator</a></ul>   
+
+<ul><li><a href="ncman4.html#K">NeuronC syntax listing</a></ul> 
+
+<ul><li><a href="ncmeth.html"> An article describing NeuronC</a>  
+NeuronC: a computational language for investigating functional architecture 
+of neural circuits (published in J. Neurosci Meth. (1992)
+43:83-108.</ul>
+
+
+<hr>
+<h3>How to run NeuronC without reading the Manual.</h3>
+
+1)  Boot UNIX on your personal computer either  
+from the hard disk (the Linux partition must be active for 
+this to work)  or from a Linux boot floppy.  Login with   
+either your name if you have a login or someone else's name 
+if you don't have one.<p>
+
+2)  With Linux running in the computer, type "nc<ENTER>".  
+This will run the NeuronC program. <p>
+
+3)  Type in the following lines:<p>
+<pre>
+      connect 1 to 2 cable length=200 dia=0.2;
+      stim node 1 vclamp= -.01 start=.01 dur=.001;
+      plot V[1],V[2];
+</pre>
+   This describes a passive neural cable with a transient 
+voltage clamp on one end and recording sites at both ends.
+<p>
+4) Type "run;" and the model will run.  NeuronC prints out a 
+list of times and voltage or current records according to 
+the plot commands you give it.
+<p>
+5) To give a graphics display, start with the command 
+"ncv<ENTER>".  This is a symbolic link to "nc". To display 
+graphics with NeuronC, the computer should have either 
+X Windows or a VGA compatible display card.
+<p>
+6)  You have successfully run NeuronC.
+
+</body>
+</html>

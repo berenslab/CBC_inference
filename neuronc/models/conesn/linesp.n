@@ -1,0 +1,43 @@
+
+/* 
+ Creates 1-D point spread function based on fit
+ of Campbell and Gubisch (1966) by Geisler (1984)
+ Values are in terms of minutes of visual angle.
+
+ Courtesy of A. Hsu, 1996
+
+ This is implemented in "pointspfov()" inside "stimsub.cc".
+
+*/
+
+minutes_degree = 60;
+microns_degree = 300;
+
+a1 = 0.694;
+b1 = 0.443;
+s1 = 0.443 / minutes_degree * microns_degree;  /* = 2.215 um radius */
+a2 = 0.587;
+b2 = 2.035;
+s2 = 2.035 / minutes_degree * microns_degree;  /* = 10.175 um radius */
+
+
+xstart = -60;		/* microns */
+xstop  = 60;
+incr = .1;
+
+blur_rad = 2.215;
+scatter_rad = 10.175;
+
+y = 0;
+for (x=xstart; x<xstop; x+= incr) {
+
+   r = sqrt (x*x + y*y); 
+   g1=(a1/(2*b1))*exp(-0.5*(r/s1)^2) +
+     (a2/(2*b2))*exp(-0.5*(r/s2)^2);
+
+   g2 = .783 * ( 1.0 * exp (-0.5*(r/blur_rad)^2) +
+                .184 * exp (-0.5*(r/scatter_rad)^2));
+   print x, g1, g2;
+ };
+
+

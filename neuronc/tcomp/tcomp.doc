@@ -1,0 +1,120 @@
+/* tcomp.doc:  A list of the test files for "nc" */
+
+
+tcomp1: simple test of cable
+	no stimulus
+
+tcomp2:
+	10 lambda cable
+	stimulus voltage clamp at one end
+	record from several compartments
+
+tcomp3:
+	2 segment cable
+	transient voltage clamp at one end
+	plot 2 nodes
+
+tcomp4:
+	3 spheres connected by 2 short (10 um) cables
+	transient voltage clamp at one sphere
+	plot all nodes
+
+tcomp5: (same as tcomp4 except longer cables)
+	3 spheres connected by 2 long (100 um) cables
+	transient voltage clamp at one sphere
+	plot all nodes
+
+tcomp6: (same as tcomp5 except longer cables)
+	3 spheres connected by 2 long (200 um) cables
+	transient voltage clamp at one sphere
+	plot all nodes
+
+tcomp7: (test of open, linear synapse)
+	2 spheres connected by a synapse
+	transient voltage clamp on one sphere
+	plot both
+
+tcomp8:
+	2 spheres connected by a synapse
+	transient voltage clamp on one sphere
+	constant voltage clamp afterwards
+	plot both
+
+tcomp9:	
+	2 spheres connected by a synapse
+	transient current clamp on one sphere
+	plot both
+
+tcomp10:
+	sphere connected by synapse to cable;
+	cable connects through synapse to 
+	second sphere, etc.
+
+tcomp11: (test of reciprocal synapses)
+	simple model of cone connected to hz cell
+	reciprocal synapses between cone and hz cell
+
+tcomp12: (simpler test of cone - hz cell synapse)
+	no reciprocal synapse
+
+tcomp13:
+
+tcomp14:
+
+tcomp15: (test of rod morphology)
+
+tcomp16: (test of simultaneous current and voltage clamping)
+	simple compartment consisting of resistor and cap.
+
+tcomp17: (test of rod with flash)
+
+tcomp18: (test of rod with flash)
+
+tcomp19: (more rod calibs)
+
+tcomp20:
+tcomp21:
+tcomp22:
+tcomp23: (test of 10 cones)
+
+
+tcomp24:(test of synaptic transfer function)
+	two spheres connected by synapse - linear
+	two additional spheres connected by synapse - exponential
+	simultaneous plot of vpre/vpost using "graph" statement
+
+tcomp26-28: voltage pulse traveling down a dendrite.
+
+tcomp29:  voltage vs. distance over time with voltage clamp.
+
+tcomp29a: voltage vs. distance over time with voltage clamp in middle.
+
+tcomp30: test of hodgkin-huxley Na, K channels
+
+tcomp31: equivalent to tcomp30 but with
+	  sequential-state channels instead.
+		
+tcomp32: test of HH channels in cable membrane (density).
+
+tcomp34: test of diffusion model:
+		D = 1e3/Ri;
+		dcap = 1e-7 * dia / 4;
+		Rm = inf.
+
+
+rpack1: rallpack 1 from Jim Bower's Lab.
+	Standard test of passive cable with voltage clamp.
+
+rpack3: rallpack 3 from Jim Bower's Lab.
+	Standard test of cable with voltage clamp and Hodgkin-Huxley
+	 channels.
+
+rpack3b: rallpack 3, modified
+	Test of cable with voltage clamp and Hodgkin-Huxley
+	 channels, and variable activation and inactivation tau.
+
+rpack3x: rallpack 3, modified
+	Test of cable with voltage clamp and sequential-state
+	 channels, and variable activation and inactivation tau.
+
+

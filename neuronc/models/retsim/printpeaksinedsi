@@ -1,0 +1,149 @@
+#!/bin/sh
+#
+# printpeak
+#
+# $1=time, V=$30 (col 29 after time), Ca=$31 trace to find max
+#
+awk "BEGIN {
+
+      V  = 30;
+      Ca = 31;
+      peakv1=peakv2= -0.2;
+      peakc1=peakc2= 0;
+      tpeakv1=tpeakv2=0;
+      tpeakc1=tpeakc2=0;
+      peak0Time=0.055;
+      peak2Time=0.40;
+      tv = 0;
+      tc = 0;
+      uppeakv   = -1;
+      downpeakv = 1;
+      uppeakc   = -1;
+      downpeakc = 1;
+      peaknumpv = 4;
+      peaknumnv = 2;
+      peaknumpc = 4;
+      peaknumnc = 2;
+      firstdownv = firstupv = 1;
+      firstdownc = firstupc = 1;
+      printf (\"%s: \",\"$1\");
+#      printf (\"\n\");
+     }
+     
+     "'/^#/   { if ($1 == "#e") {
+		 endexp = $5;
+	        nulltime = endexp / 2;
+#                printf ("nulltime %g\n",nulltime);
+	      }
+	    }
+     $1==0.03 { peakv0 = $V; peakc0 = $Ca; }
+     !/^#/ { 
+            goingupv   = ($V - vold) > 0;
+            goingdownv = ($V - vold) < 0;
+	    if (uppeakv < $V)  { uppeakv = $V;  tuppeakv = $1; }
+	    if (downpeakv > $V)  { downpeakv = $V;  tdownpeakv = $1; }
+	    if (goingdownv && firstdownv) { 
+		    firstdownv = 0; 
+		    firstupv = 1; 
+		    peakva[tv] = uppeakv; 
+		    tpeakva[tv] = tuppeakv; 
+		    updownv[tv] = 1; 
+		    uppeakv = -1;
+		    tv++;
+	    }
+	    if (goingupv && firstupv) { 
+		    firstupv = 0; 
+		    firstdownv = 1; 
+		    peakva[tv] = downpeakv; 
+		    tpeakva[tv] = tdownpeakv; 
+		    updownv[tv] = 0; 
+	    	    downpeakv = 1;
+		    tv++;
+	    }
+	    vold = $V;
+
+            goingupc   = ($Ca - caold) > 0;
+            goingdownc = ($Ca - caold) < 0;
+	    if (uppeakc < $Ca) { uppeakc = $Ca; tuppeakc = $1; }
+	    if (downpeakc > $Ca) { downpeakc = $Ca; tdownpeakc = $1; }
+	    if (goingdownc && firstdownc) { 
+		    firstdownc = 0; 
+		    firstupc = 1; 
+		    peakca[tc] = uppeakc; 
+		    tpeakca[tc] = tuppeakc; 
+		    updownc[tc] = 1; 
+		    uppeakc = -1;
+		    tc++;
+	    }
+	    if (goingupc && firstupc) { 
+		    firstupc = 0; 
+		    firstdownc = 1; 
+		    peakca[tc] = downpeakc; 
+		    tpeakca[tc] = tdownpeakc; 
+		    updownc[tc] = 0; 
+	    	    downpeakc = 1;
+		    tc++;
+	    }
+	    caold = $Ca;
+	  } 
+
+	END {
+	 
+	 #  Voltage
+
+         prefdiffv = nulldiffv = 0;
+	 for (i=j=k=0; i<tv; i++) {
+ 	    if (tpeakva[i] > 0.001) {
+ 	      if (tpeakva[i] < nulltime) {
+		 if (updownv[i]==1) {
+#			 printf ("Pref Time %-5.3g  peakv %-9.4g trough %-9.4g diff %-9.4g\n", 
+#			          tpeakva[i], peakva[i], peakva[i+1], peakva[i] - peakva[i+1] );
+			 if (j==peaknumpv) prefdiffv = peakva[i] - peakva[i+1];
+		         j++;
+		 }
+	      }
+	      else  {    
+		    if (updownv[i]==1) {
+#			  printf ("Null Time %-5.3g  peakv %-9.4g trough %-9.4g diff %-9.4g\n", 
+#			           tpeakva[i], peakva[i], peakva[i+1], peakva[i] - peakva[i+1] );
+			  if (k==peaknumnv) nulldiffv = peakva[i] - peakva[i+1];
+			  k++;
+		    }
+	      }
+	   }
+	 }
+
+	 #  Calcium
+
+         prefdiffc = nulldiffc = 0;
+	 for (i=j=k=0; i<tc; i++) {
+ 	    if (tpeakca[i] > 0.001) {
+ 	      if (tpeakca[i] < nulltime) {
+		 if (updownc[i]==1) {
+#			 printf ("Pref Time %-5.3g  peakc %-9.4g trough %-9.4g diff %-9.4g\n", 
+#			          tpeakca[i], peakca[i], peakca[i+1], peakca[i] - peakca[i+1] );
+			 if (j==peaknumpc) prefdiffc = peakca[i] - peakca[i+1];
+		         j++;
+		 }
+	      }
+	      else  {    
+		    if (updownc[i]==1) {
+#			  printf ("Null Time %-5.3g  peakc %-9.4g trough %-9.4g diff %-9.4g\n", 
+#			           tpeakca[i], peakca[i], peakca[i+1], peakca[i] - peakca[i+1] );
+			  if (k==peaknumnc) nulldiffc = peakca[i] - peakca[i+1];
+			  k++;
+		    }
+	      }
+	   }
+	 }
+#	  printf ("prefdiff(V)  %-9.4g  nulldiff(V) %-9.4g\n", prefdiffv, nulldiffv); 
+#	  printf ("prefdiff(Ca)  %-9.4g  nulldiff(Ca) %-9.4g\n", prefdiffc, nulldiffc); 
+        
+         diffv_sum = prefdiffv + nulldiffv; 
+	 if (diffv_sum == 0) diffv_sum = 1;
+         diffc_sum = prefdiffc + nulldiffc; 
+	 if (diffc_sum == 0) diffc_sum = 1;
+	 printf ("DSI(V)  %-9.4g   ", (prefdiffv - nulldiffv) / diffv_sum); 
+	 printf ("DSI(Ca) %-9.4g\n",  (prefdiffc - nulldiffc) / diffc_sum);
+	}
+   ' $1

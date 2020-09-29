@@ -1,6 +1,0 @@
-#!/bin/tcsh -f
-#
-foreach i ($argv)
-   echo $i  
-   diff --brief $i ../../$i
-end

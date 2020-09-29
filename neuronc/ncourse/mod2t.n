@@ -1,0 +1,37 @@
+   ploti = 1e-4;
+   drm = 5000;                               /* default rm = 5000 */
+   pre = 100;                                /* pre-synaptic node = 100 */
+
+   at pre loc (0,10) sphere dia 1;
+   conn pre to 1 loc (0,0) synapse expon 5 thresh -.05 maxcond 5e-9;
+                                   /* thresh 50 mv, max con 5e-9 S, etc. */
+
+   conn 1 to 2 loc (120,0) cable length 120 dia 1;       /* construct cable */ 
+   conn 2 to 3 loc (240,0) cable length 120 dia 1;
+   conn 3 to 4 loc (360,0) cable length 120 dia 1;
+   conn 4 to 5 loc (480,0) cable length 120 dia 1;
+   conn 5 to 6 loc (600,0) cable length 120 dia 1;
+
+   stim node pre vclamp -.01 start 0 dur .01;     /* voltage clamp */
+
+
+   plot V[1] max 0 min -.07;                 /* max and min define  */
+   plot V[2] max 0 min -.07;                 /*   the Y-axis of graph */
+   plot V[3] max 0 min -.07;
+   plot V[4] max 0 min -.07;
+   plot V[5] max 0 min -.07;
+   plot V[6] max 0 min -.07;
+
+   plot V[pre] max 0 min -.07;
+
+   if (disp) {
+     display center (0,0,0);
+     display size (1000);
+     display matching [-1][-1][-1];
+     exit;
+   };
+
+   endexp=.015;                              /* defines length of X-axis */
+   step .015;                                /* run model for 15 msec */
+
+

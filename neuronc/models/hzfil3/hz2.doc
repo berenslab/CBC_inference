@@ -1,0 +1,189 @@
+hz206:	like hz103 except array of 60 x 60 cones (300 um square)
+	synapses arnential, with igain=1 instead of 2
+
+hz207:	same as hz206 except B feedback synapse 1e-9 
+
+hz208:	same as hz206 except igain 2
+	gsize = .1 instead of .075
+	plot of 5066, 6015 hz cells
+	ploti = .005
+	different hz cell plots  
+
+hz209:	same as hz208 except 
+	B feedback synapse 1e-9
+	A feedback synapse 2e-9
+
+hz210:	same as hz208 except
+	A synapse thresh -.045
+	A synapse thresh -.050
+
+hz211:	same as hz209 except
+	A synapse thresh -.045 maxcond 2e-9
+	B synapse thresh -.050
+
+hz212:	same as hz210 except
+	A synapse thresh -.050 expon 2
+
+hz213:	same as hz214 except
+	full-field flash: stim dia 200; no stim file
+	stim inten 2.5e6
+	
+hz214:	same as hz210 except
+	A,B feedback synapse igain = 1  
+
+hz215.n	same as hz210.n except
+	no stimulus except background
+
+hz216.n	same as hz210.n except
+	igain = 1
+	gsize = .075	( more like hz206.n )
+	no A,B feedback synapses
+	start 0.08
+	stimfile hz216.t
+
+hz217.n same as hz213.n except
+	stim inten 2.5e7
+	
+hz218.n same as hz216.n except
+	no A feedback synapses
+
+hz219.n same as hz216.n except
+	no B feedback synapses
+
+hz220.n same as hz206.n except
+	A synapse thresh -.045
+	A synapse thresh -.050
+	plot of 5066, 6015 hz cells
+	ploti = .005
+	different hz cell plots  
+	start 0.08
+	stimfile hz216.t
+	(more like hz216.n)
+
+hz221.n same as hz216.n except
+	conerm = 3000	
+
+hz222.n same as hz218.n except
+	conerm = 3000	
+
+hz223.n same as hz219.n except
+	conerm = 3000	
+
+
+hz230.n same as hz220.n except
+	feedforward expon=2
+	feedback vrev = -.067
+	Hz soma dia = 15
+
+	result: verifies 60 x 60 array, but 
+	   not enough feedback
+			
+hz231.n: same as hz230 except
+	feedback synaptic delay = 2 x 10
+	type B feedback maxcond=1e-9
+	feedback thresh -.04
+	new hztip numbering scheme  
+	
+	result: network oscillates
+
+hz232.n: same as hz231 except
+	feedback expon=10
+	feedback synaptic delay = 2 x 5
+	extra feedback synapses added to edge cones
+
+	still oscillates 36 Hz
+
+hz233.n: same as hz231 except
+	feedback expon=10
+	feedback maxcond = 5e-10 
+	feedback synaptic delay = 2 x 3
+	extra feedback synapses added to edge cones
+
+	damped oscillation   44 hz: approx correct frequency
+
+hz234.n: same as hz231 except
+	feedback expon=10
+	feedback maxcond = 4e-10 
+	feedback synaptic delay = 2 x 3
+	extra feedback synapses added to edge cones,
+	 but multiple synapses condensed into one larger one
+	horizontal cells vrest set to -20 mv.
+
+	damped oscillation
+	oscillation reduced from hz233.n 
+	  because synapse starts at resting v.
+
+hz235.n: same as hz234 except
+	 hzmaxa = 8
+	 hzmaxb = 16
+	 no stim, no run
+	printout of hz coverage factors only
+		
+	verifies coverage factor:  
+
+		type A = 4
+		type B = 8  (mostly 9, with some 6's)
+
+       
+hz236.n: same as hz234 except
+	hzmaxa = 8
+	hzmaxb = 16
+
+	coverage a = 4
+	coverage b = 8
+
+	B feedback synapses expon 5, maxcond 7e-10
+		(instead of expon 10, maxcond 4e-10 in hz234.n) 
+
+ 35 Hz
+
+hz237.n: same as hz234 except
+
+	array of 30 x 30 cones
+	stimulus and recording like hz103.n 
+	B feedback synapses expon 10 maxcond 7e-10
+
+	Faster way to test what combinations
+	of gain cause oscillations.
+
+	no oscillations
+
+
+hz238.n: same as hz237.n except
+
+	type B feedback expon 5  maxcond 7e-10
+
+	endexp = .12
+
+ 37 Hz 
+
+hz239.n: same as hz238.n except
+
+	type B feedback expon 5  maxcond 4e-10
+
+	oscillates
+
+hz240.n: same as hz234.n except
+
+	type B feedback expon 10 maxcond 7e-10 thresh -50
+	type A feedback expon 20 maxcond 4e-10 thresh -50
+	same for extra synapses on edge
+
+	trying to pare down skirt of cone center
+
+	result: oscillation, slowly damped
+
+hz241.n: same as hz240.n except
+
+	type B feedback expon 10 maxcond 4e-10 thresh -50
+	different resting voltages
+
+	result: slight oscillation, damped in 80 msec
+
+hz242.n: same as hz240.n except
+
+	all synapses like hz230.n
+	should give same result as hz230.n
+	
+	test of what went wrong in hz231:
+

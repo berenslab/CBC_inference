@@ -1,0 +1,86 @@
+#! /usr/bin/perl
+#
+#
+#  run variable contrast with/without inhibition
+#
+@inhvals = (0, 1);
+$inhnum = $#inhvals + 1;
+# $ristart = 200;
+# $ristop  = 800;
+# $ristep  = 100;
+
+$cont = 0.0075;
+
+@contvals = (0.0050, 0.0060, 0.0070, 0.0080);
+# @contvals = (0.0090, 0.0100);
+$contnum = $#contvals + 1;
+
+@velvals = (100, 200, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000);
+$velnum = $#velvals + 1;
+# $nastart = 600;
+# $nastop  = 2000;
+# $nastep  = 100;
+
+$sbarr = 107;
+$sbspac = 135;
+$sdia = 0.3;
+$spdia = 0.6;
+$relangle = 360;
+$cadist = 1e-3;
+$nadist = 3e-3;
+$barlength = 70;
+$synanpo = 90;
+$isynanpo = 60;
+# $isynanpo = 150; outer radius for postsynaptic inhibition
+
+# $dbp1_cond = 3e-10;
+$dbp1_cond = 2.3e-10;
+$sb_inhib = 160e-12;
+$dri = 75;
+
+# $mosrun = "mosrun -l";
+$mosrun = "";
+
+use Getopt::Long;
+
+&GetOptions ("relangle=f" => \$relangle,
+             "sdia=f"      => \$sdia,
+             "spdia=f"     => \$spdia,
+             "dri=f"       => \$dri,
+             "noinh=i"     => \$noinh,
+             "sbarr=i"     => \$sbarr,
+             "sbspac=f"    => \$sbspac,
+             "barlength=f" => \$barlength,
+             "cadist=f"    => \$cadist,
+             "nadist=f"    => \$nadist,
+             "synanpo=f"   => \$synanpo,
+             "isynanpo=f"  => \$isynanpo,
+             "dbp1_cond=f" => \$dbp1_cond,
+             "sb_inhib=f"  => \$sb_inhib
+            );
+
+
+$barleng =  sprintf("%.3d",$barlength);
+$synanpov = sprintf("%.3d",$synanpo);
+$sd = sprintf("%4.2f",$sdia);
+if ($sbspac<=125) {$set_synspac = 10;};
+if ($sbspac>=135) {$set_synspac = 8;};
+if ($sbspac>=145) {$set_synspac = 7;};
+if ($sbspac>=155) {$set_synspac = 5;};
+if ($sbspac==200) {$set_synspac = 10;};
+
+for ($i=0; $i<$inhnum; $i++) {
+     $noinh = $inhvals[$i];
+     for ($c=0; $c<$contnum; $c++) {
+         $cont = sprintf("%6.4f",$contvals[$c]);
+         for ($v=0; $v<$velnum; $v++) {
+             # $vel = $velvals[$v];
+             $vel = sprintf("%.5d",$velvals[$v]);
+	     system ("echo contrast $cont noinh $noinh sbspac $sbspac barlength $barleng synanpo $synanpov sdia $sdia vel $vel");
+             system ("echo $mosrun retsim --barvel 1 --expt sbac_stim --sbac_file morph_sbac_168c --sbac_densfile dens_sbacc.n --sbac_densfile2 dens_sbacd.n --sb_rm 1e4 --sbarr $sbarr --sbspac $sbspac --set_synspac $set_synspac --sb_vs -0.049 --sb_vr -0.060 --radincr 20 --soma_z -50 --sbac_thetax 4 --sbac_thetay 4 --predur 0.15 --vhold -0.06 --minten -0.038 --scontrast $cont --outward 0 --iscal 2e-9 --dri $dri --ninfo 2 --set_vclamp 0 --sdia $sdia --spdia $spdia --dSomaDia 10 --sbac_dend1 1 --sbac_dend_cplam 0.1 --stimtype 1 --barwidth 30 --barlength $barleng  --velocity $vel --stimdur 0.5 --nadist $nadist --namid $nadist --kdist 2e-3 --kmid 2e-3 --kprox 2e-3 --ksoma 3e-3 --cadist $cadist --camid $cadist --plotlabel sb7_midbp.$relangle.$cont.$noinh.$sbspac.$barleng.$synanpov.$sd.$vel -r 12345 --n_hpb1 0 --dbp1_cond $dbp1_cond --dbp1_nscale -2.1 --sbac_nscale -3.05 --sbaclm 0.1 --no_excit 1 --set_inhib $sb_inhib --no_inhib $noinh --sbac_isynanpo $isynanpo --sbac_isynrngi -1$relangle --sbac_isynanni 80 --dbp1_anpi 20 --dbp1_anpo $synanpov --sbac_ithr -0.051 --stim_theta 0 --mxrot 0 --make_movie 0 --space_time 1 --frame_int 0.0002 --Vmin -0.06 --Vmax -0.045  sbac7_midbp_ca.$relangle.$cont.$noinh.$sbspac.$barleng.$synanpov.$sd.$vel.r &");
+	sleep(2);
+        }
+    }
+}
+
+

@@ -1,0 +1,15 @@
+#! nc
+#
+
+fread ("stdin",filein,y,z);
+
+for (i=0; i<y; i++) {
+
+	/* Input: log (spec dens), output: sensitivity */
+	/* Useful for printing out individual pigments from *
+	/*   pigmarr[] in wave.h */
+
+  print 1 - exp (-exp(filein[i]*log(10))* 35 * log(10));
+
+};
+

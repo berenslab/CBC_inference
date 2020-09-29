@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# printpeak
+#
+# $1=time, V=$30 (col 29 after time), Ca=$31 trace to find max
+#
+awk "BEGIN {
+
+      V  = 30;
+      Ca = 31;
+      peakv1=peakv2= -0.2;
+      peakc1=peakc2= 0;
+      tpeakv1=tpeakv2=0;
+      tpeakc1=tpeakc2=0;
+      peak0Time=0.055;
+      peak2Time=0.40;
+      printf (\"%s: \",\"$1\");
+     }
+     
+     "'/^#/   { if ($1 == "#e") {
+		 endexp = $5;
+	        peak2Time = endexp / 2;
+	      }
+	    }
+     $1==0.03 { peakv0 = $V; peakc0 = $Ca; }
+     !/^#/ { 
+	    if ($1<peak2Time) {
+	        if (peakv1 < $V)  { peakv1 = $V;  tpeakv1 = $1; }
+	        if (peakc1 < $Ca) { peakc1 = $Ca; tpeakc1 = $1; }
+	    }
+	    else {
+	      if (NF >= 35) {
+	        if (peakv2 < $V)  { peakv2 = $V;  tpeakv2 = $1; }
+	        if (peakc2 < $Ca) { peakc2 = $Ca; tpeakc2 = $1; }
+	      }
+	    }
+	  } 
+	END {
+	 # printf ("\n"); 
+	 # printf ("Peakv0:  %-6.4g: %-9.4g  \n", peak0Time, peakv0); 
+	 # printf ("Peakv1:  %-6.4g: %-9.4g  \n", tpeakv1, peakv1); 
+	 # printf ("Peakv2:  %-6.4g: %-9.4g  \n", tpeakv2, peakv2); 
+	 # printf ("Peakc0:  %-6.4g: %-9.4g  \n", peak0Time, peakc0); 
+	 # printf ("Peakc1:  %-6.4g: %-9.4g  \n", tpeakc1, peakc1); 
+	 # printf ("Peakc2:  %-6.4g: %-9.4g  \n", tpeakc2, peakc2); 
+	 peakvh1 = peakv0 - peakv1;
+	 peakvh2 = peakv0 - peakv2;
+	 peakch1 = peakc1 - peakc0;
+	 peakch2 = peakc2 - peakc0;
+	 printf ("DSI(V)  %-9.4g   DSI(Ca) %-9.4g\n", (peakvh1-peakvh2)/(peakvh1+peakvh2), (peakch1-peakch2)/(peakch1+peakch2)); 
+	}
+   ' $1

@@ -1,0 +1,34 @@
+/* tcomp31:  Sequential-State Na and K channels */
+
+
+crit = 1e-8;
+endexp = .02;
+ploti= 1e-5;
+timinc = 1e-5;
+implicit = 0;
+
+drm=1e6;
+at 1 sphere dia 1 vrev -.07;
+at 1 chan Na type 0 vrev .04 maxcond 1e-8 tauh 10 chnoise=1 N=100;
+
+at 2 sphere dia 1 vrev -.07;
+at 2 chan Na type 1 vrev .04 maxcond 1e-8 tauh 10 chnoise=1 N=100;	/* */
+
+at 3 sphere dia 1 vrev -.07;
+at 3 chan Na type 1 vrev .04 maxcond 1e-8 tauh 10;		/* */
+
+clv = -0.02;
+
+stim node 1 vclamp -.07 start .00 dur .001;
+stim node 1 vclamp clv start .001 dur .02;
+stim node 2 vclamp -.07 start .00 dur .001;
+stim node 2 vclamp clv start .001 dur .02;
+stim node 3 vclamp -.07 start .00 dur .001;
+stim node 3 vclamp clv start .001 dur .02;
+
+plot I[1] max 1e-10 min -1e-10;
+plot I[2] max 1e-10 min -1e-10;
+plot I[3] max 1e-10 min -1e-10;
+
+run;
+

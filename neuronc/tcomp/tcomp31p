@@ -1,0 +1,34 @@
+/* tcomp31p:  Test of Ca current and pump */
+
+timinc = 1e-5;
+crit =   1e-8;
+endexp = .2;
+ploti=   1e-4;
+implicit= 0;
+tempcel = 10;
+
+drm=1e6;
+
+dcao= .001;
+dcai=50e-9;
+
+at 1 sphere dia 5 vrev -.07 vrest= vcl;
+at 1 chan Ca density 10e-3 
+	capump vmax=1e-4 km=2e-7
+	caexch kex = 1e-8 
+	ename ca0;
+
+vcla = 0.0;
+
+stim node 1 vclamp -0.07 start .0 dur .01;
+stim node 1 vclamp vcla start .01 dur .04;
+stim node 1 vclamp -0.07 start .05 dur 1;
+
+plot I[1] max 1e-10 min -1e-9;
+plot G(0) ca0 max 1e-8 min 0;
+plot Ca(1) 1 max 1e-3 min 0;
+plot Ca(2) 1 max 1e-3 min 0;
+plot Ca(99) 1 max 1e-3 min 0;
+plot G(vrev) ca0 max .1 min 0;
+
+run;

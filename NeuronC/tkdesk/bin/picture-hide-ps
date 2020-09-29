@@ -1,7 +1,0 @@
-#! /bin/csh -f
-#
-# picture-hide-ps
-#
-foreach i ($argv)
-  mpict -s $i | hide11 | vid -c > $i:r.ps
-end

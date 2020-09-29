@@ -1,7 +1,0 @@
-#! /bin/csh -f
-#
-# picture-hide-lpr
-#
-foreach i ($argv)
-  mpict -s $i | hide11 | vid -c | lpr
-end

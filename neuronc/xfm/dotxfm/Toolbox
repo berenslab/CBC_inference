@@ -1,0 +1,17 @@
+#XFM
+exec:::app.xpm:exec %Program\:% %Parameters\:%:exec $1 %Parameters\:%
+make:::app_make.xpm::make -f $1 %Target\:%; echo "*** make done ***"
+gzip:::app_compress.xpm::gzip $*
+tar cfv:::app_tar.xpm::tar cfv %Archive name\:% $*
+tar cfvz:::app_taz.xpm::tar cfvz %Name of compressed archive\:% $*
+zip:::app_zip.xpm::zip -r %ZIP filename\:% $*
+uuencode:::app_uuencode.xpm::uuencode $1 $1 >`basename $1`.uu
+grep:::app_grep.xpm::grep '%Regular expression\:%' $*
+find:::app_find.xpm:find %Directory\:% -name %Name to find% >/dev/console:find $* -name %Name to find% >/dev/console
+locate:::app_find.xpm:locate %File to locate\:% >/dev/console:locate $* %File to locate\:% >/dev/console
+od:~/.xfm:Od:app_od.xpm:LOAD:
+xfmtype:~/.xfm::app.xpm::xfmtype -m ~/.xfm/magic $*
+xxgdb:::xdbx.xpm:exec xxgdb:exec xxgdb $*
+Misc:~/.xfm:::LOAD:
+Calculator:::calc.xpm:exec xcalc:
+top:::top.xpm:exec rxvt -T top -n top -e top >/dev/console:

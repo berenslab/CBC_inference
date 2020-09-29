@@ -1,0 +1,32 @@
+/* rallpack 1:  standard test of voltage-clamped cable */
+
+t1 = elap_time();
+
+timinc = 5e-5; 
+endexp = .25;
+complam=.05;
+relax = .15;
+crit  = 1e-7;
+ploti = 1e-4;
+
+plmax = .1;
+plmin = -.07;
+
+vcl = -.065;
+
+drm = 40000;
+conn 1 to 2 cable length 1000 dia 1;
+
+stim node 1 cclamp 0.1e-9 start 0 dur 1e10;
+
+plot V[1];
+plot V[2];
+
+run;
+
+t2 = elap_time();
+
+totsecs = (t2 - t1) * 60;
+
+speed = ncomps * endexp / totsecs;
+print speed;

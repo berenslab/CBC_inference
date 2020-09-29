@@ -1,0 +1,28 @@
+
+r = 1;
+xk1 = 2e-6;
+xk2 = 2e-6;
+xd1 = 0;
+xd2 = 0;
+ca = .2e-6;
+
+maxv = .04;
+minv = -.08;
+
+graph X max maxv min minv;
+graph Y max 2 min 0;
+graph Y max 2 min 0;
+graph init;
+
+for (v=minv; v<maxv; v+= .001) {
+
+
+  vm = v * 1000 + 50;
+
+  alpha = r / (1.0 + xk1/ca * exp (xd1* -(vm+00)/10.));
+
+  beta = r / (1.0 + ca / (xk2 * exp (xd2* -(vm+00)/10.)));
+
+  graph (v, alpha, beta); 
+};
+

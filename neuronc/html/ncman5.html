@@ -1,0 +1,269 @@
+<html>
+<title>Curve fitting with NeuronC</title>
+<body bgcolor="#ffa289">
+
+<h2><a name = "A">Curve fitting with NeuronC</a></h2>
+<ul><li><a href = "#1">Methods for curve fitting</a></ul>
+<ul><li><a href = "#2">Nonlinear model fits</a></ul>
+<ul><li><a href = "#3">Levenberg-Marquardt least-squares fitting: lmfit</ul>
+<ul><li><a href = "#4">Levenberg-Marquardt least-squares fitting: modelfit</ul>
+<ul><li><a href = "#5">Random search methods</a></ul>
+<ul><li><a href = "#6">Simulated annealing and stochastic search</a></ul>
+</ul>
+<hr>
+<h2><a name = "1">Methods for curve fitting</a></h2>
+
+<p>
+To curve fit a model to a set of data, you run the model with different sets of
+parameters to find the the output that best matches the data. For each parameter
+set, the model output is compared to the existing data with a comparison
+function, which is the difference between the model's output and the data.  This
+function is minimized through a process of testing different parameter sets for
+the model.  The difficulty in this process is finding an algorithm that finds
+the parameter set that produces the best match.  It is difficult because in a
+nonlinear model the output (given a set of parameters) is not always easy to
+predict.
+
+<h3><a name = "2">Nonlinear model fits</a></h3>
+<p>
+There are many methods for fitting parameter sets to a nonlinear model. One
+method is the "downhill simplex" method. This is often useful when a simulation
+function can be evaluated but no first or second derivative is directly
+available.  Since the simplex method does not rely on the derivatives of the
+function, it is not as computationally efficient, but it can work with a wider
+variety of nonlinear functions. Both of these methods work well only to find
+"local minima" and may get stuck in a minima which is not the global minimum
+for a function.  <p>
+
+<h3><a name = "3">Levenberg-Marquardt least-squares fitting: lmfit</a></h3>
+
+Another widely used method is the "Levenberg-Marquardt" method. It is useful
+when the model consists of a known continuous function that has computable
+first and second derivatives.  This allows a very efficient "iterative"
+algorithm to find the best fit. The derivatives allow the iterative steps to be
+nearly optimal in size and direction. <p>
+
+The Levenberg-Marquardt least-squares fitting method is implemented in NeuronC.
+You can use the "lmfit()" procedure in either the interpreted or compiled
+versions, and a 2D compiled version is also available.  A test program,
+"gaussfit.cc" is provided for the 2D version.
+
+<h3><a name = "4">Levenberg-Marquardt least-squares fitting: modelfit</a></h3>
+<p>
+To fit a model such as "retsim" to a set of real data, you compile "modelfit" and
+run it like this:</p>
+
+modelfit --data_file R2_111201_03_prefnull.txt --template_file R2_111201_03_prefnull_template_s9.data --template_file2 fdsgc_chans28_template_s9.data --expt_string "mosrun -l -b -g retsim --expt dsgc_chans --n_dsgc 1 --n_sbac 0 --sbarr -1 --dsgc_file morph_ds1e --dsgc_densfile dens_dsgc_chans.n --nvalfile nval_dsgc_sbac_chans.n --sbac_file morph_sbac3c --minten -0.058 --econtrast 0.017 --eincr 0 --icontrast 0.017 --iincr 0.00417 --velocity 2000 --prestimdur 0.05 --poststimdur 0.05 --vstart -0.115 --vstop 0.045 --dvst -0.06  --dvrev -0.051 --drm 41.3e3 --dendrm 60e3 --dri 95 --elec_rs 5e6 --elnode 5000 --light_inhib 1 --ampa_cond 4e-09 --nmda_cond 1.0177e-09 --gaba_cond 4.60799e-09 --movein -1 --set_vclamp 1 --ttxbath 1 --tea 0.9937 --kdr_voff 0.02714 --kexp 2.7438 --fourap 1 --ioffset 0 --use_ghki 1 --ninfo 2 -s 18 --stimscale 0.45 --skipv 9" --p1 --ampa_cond --c1 1e-9 --p2 --gaba_cond --c2 0.5e-9 --p3 --iincr --c3 0.001 --p4 --nmda_cond --c4 1e-9 --c4_min 0  >& modelfit_run91 &
+<p>
+The modelfit program takes arguments describing the data file, either 1 or 2
+template files, and the parameters for the fit.  The data file is a 2D matrix,
+typically with rows and columns, where each row represents one time point, and
+each column is a separate trace from the data set. The template file is a copy
+of the data file, with the same number of rows and columns, except that it
+contains numbers from zero to 1. The modelfit program reads in the data file and
+the template and multiplies them. For each non-zero value in the template
+(typically 1.0), the resulting value is selected from the original data file.
+This allows the modelfit program to use a subset of the points from the original
+data file.  Then when the model runs, its output is also multiplied by the
+template, and the values into the Levenberg-Marquard "lmfit()" procedure. 
+
+<p>
+The "mosrun" command is from the "mosix" job management system
+(http://www.mosix.cs.huji.ac.il). This allows jobs to be run in parallel in a
+cluster of computers connected on a fast local net.  Although it is easy to
+install on a 64-bit Linux system, "mosrun" is not necessary to run modelfit or
+retsim, because you can run jobs in parallel in the shell using "&" after each
+command.
+
+<p>
+If a second template file is defined, the modelfit program uses it to select the
+points from the model data output, which allows a different set of points to be
+passed to the Levenberg-Marquardt procedure. This is useful when you want to run
+the model faster by omitting some of the unnecessary data points found in the
+original data file.
+
+<p>
+The parameters for the modelfit program are set up on the command line:
+
+<pre>
+    --p1 --ampa_cond       (the label for the first parameter to be used as the variable name on the command line )
+    --c1 1e-9              (the starting value)
+    --c1_max  10e-9        (the max value)
+    --c1_min  1e-12        (the min value)
+
+    --p2 --gaba_cond       (the label for the second parameter)
+    --c2 0.5e-9            (the starting value for the second parameter)
+    .
+    .
+    .
+</pre>
+You can set up to 10 free parameters to be fit.  They are all given default
+values of zero for their minimum value, so if you want to allow them to go
+negative, you must set their minimum values explicitly. (Or you can comment out
+the code in modelfit.cc that sets their minimum to zero.) Although several
+parameters can be run in parallel on a multiprocessor CPU or in the Mosix
+multiprocessing envirnoment, a modelfit running with many free parameters will
+generally take longer than with just a few.
+
+<h3>The model command line</h3>
+
+Each parameter has a label that describes the name of the variable for the
+model, a starting value, and max and min values. When modelfit runs the
+model, it places the parameters and their values on the command line for the
+model, along with any other parameters set but not included in the fit as free
+parameters that have been included in the "expt_string" passed to modelfit. <p>
+
+
+<h3>Levenberg-Marquart with modelfit: multi-processing</h3>
+
+<p>
+The Levenberg-Marquart algorithm determines the gradient in N-space for each big
+step it takes to find and test a new point. If you have set many parameters, you
+will find that this slows down the L-M curve fitting because the gradient of the
+model must be tested for each parameter at each point. If you have several
+processors or cores, you can speed up the L-M procedure by turning on
+multi-processing. You do this by setting "--lm_multi_proc 1", either in the
+command line for modelfit or in the source code (set to 1 by default). This
+directs the modelfit program to send the test of each different parameter to a
+different job, which speeds up the L-M algorithm by the number of processors (up
+to the number of parameters).
+
+<p>
+To work correctly, the lm_multi_proc option requires that the output from the
+model contain a line that includes "done". Typically, you set up the model so
+that at the end after all the data has been output to the model data file you 
+print out a final line similar to: 
+
+printf ("# done\n");
+
+The "#" at the beginning of the line allows the "plotmod" plotting program to
+ignore the line when plotting the data.  Once each job is run, the modelfit
+program checks to see if it is done by reading the file using "tail". If "done"
+is found, modelfit then proceeds to direct the L-M algorithm to read and test
+the completed model data.
+
+<p>
+The filename for the model data file is defined by the modelfit program as
+"modelfit0xxxxx_y", where xxxxx = the modelfit process number, and y =
+the number of the parameter that is being tested in parallel jobs.  For some L-M
+tests of the model fitting, there is no test of the gradient for all the
+parameters and only one job is run at a time, with y = 0. A negative value for y
+means this is a multi-processing job running in parallel with others.
+
+<h3>modelfit run file</h3>
+<p>
+You can see the progress of the model fitting by looking at the modelfit_runxx
+file (xx=the run number, defined by the command that runs modelfit).  For each
+model run, the command line that was run along with the parameters, including
+their values that are being tested, are placed into the run file.  To find the
+model output files for each modelfit run, you can look in the run file to find
+the process number that is included in the model output file name.  You can then
+plot this file using the "plotmod filename | vid" data plotting command.
+
+<h3>Levenberg-Marquart with modelfit: creating data file from model output</h3>
+
+For some models, you may want to output many different traces that help to
+understand how the model is running but are not supposed to be compared and
+fitted to the original data.  You can set this up by defining a string called
+"data_split". This is the command that takes the traces that are to be compared
+with the original data file. You can define data_split on the command line for
+modelfit but it has the default value: 
+
+<pre>
+    data_split = "plotmod -t -s 18 %s_%%d | plotsplit --plotn 18 --info 0 &gt; %s_%%d.data\n";
+</pre>
+The %s is replaced with the model output filename, and the %%d is replaced by the parameter
+number.
+<p>
+
+<h3>Creating the template file</h3>
+<p>
+To make the template file, you create one with all zeros and the same number of 
+rows and columns as the data file:
+
+<pre>
+    make_template --ntraces 5 --tracelen 10000 &gt; file_template.data
+</pre>
+
+Then you edit this template file to add 1's wherever you want to define a point
+to be used in the fitting process. You can use the same template file for
+original data and model data, or you can use different template files that
+define different points, as long as the number of points for each template file
+is the same.
+
+<p>
+<h2><a name = "5">Random search fitting methods</a></h2>
+
+<p>
+There are several methods for fitting nonlinear functions that
+use a random search method.  These methods don't get stuck in
+local minima, and don't require knowing the derivatives of the
+simulated function, and in many cases can be faster than the
+simplex method.  The reason is that an N-dimensional landscape in
+a typical neural circuit simulation can be very rugged, e.g. the
+voltage in a neuron is nearly linear with input for some
+combinations of parameters but for other combinations it fires
+action potentials which are very nonlinear.  If the search
+includes a random component to it, the nonlinearities prevent the
+search from getting stuck in a local minimum and can find a
+global minimum faster than a purely directed search method.
+
+<h3><a name = "6">Simulated annealing and stochastic search</a></h3>
+
+<p>
+One method is <i>simulated annealing</i> which finds a local minimum
+but has random noise added to the comparison function which
+allows it to jump out of a local minimum to be more efficient at
+finding a global minimum.  One variation of this method adapts
+the "downhill simplex" method with different levels of noise
+depending on how close it gets to the minimum.  Another method is
+<i>stochastic search</i>. This method is very general and does not use
+a directed search procedure.  Instead it relies on random
+sampling to find the minima. 
+
+<p>
+Both <i>simulated annealing</i> and <i>stochastic search</i> are
+implemented in NeuronC.  To use these fitting methods:
+
+<li> 1) define a match function which computes the difference between
+simulation's output and a template of data values to
+match.<br><br>
+
+<li> 2) define a simulation function called "runsim()" which runs
+the simulation and the match function and returns with the match
+function's value.<br><br>
+
+<li> 3) Set up the test values and ranges for the free parameters
+and run the "ssrch()" search procedure which will run the search,
+calling the "runsim()" function to evaluate the match.<br><br>
+
+<li> 4) For the implementation of <i>simulated annealing</i> look in
+"nc/tcomp/simann.n", and for <i>stochastic search</i> look in
+"nc/tcomp/stsrch.n". As an example of how to run these methods,
+see the scripts "nc/tcomp/testsa.n" and "nc/tcomp/rsrch".
+<br><br>
+
+
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+ 
+</body>
+</html>

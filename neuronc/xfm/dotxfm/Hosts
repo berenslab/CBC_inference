@@ -1,0 +1,6 @@
+#XFM
+<host>:::rlogin.xpm:exec rsh <host> xterm -T <host> -display `hostname`\:0:
+FTP ftp.x.org:::terminal.xpm:exec xterm -T 'FTP ftp.x.org' -e ftp ftp.x.org:
+retina:::rlogin.xpm:exec rxvt -T retina -n retina -display `hostname`\:0 -e rsh retina:
+bip:::rlogin.xpm:exec rxvt -T bip -n bip -display `hostname`\:0 -e rsh bip:
+sim:::rlogin.xpm:exec rxvt -T sim -n sim -display `hostname`\:0 -e rsh sim:

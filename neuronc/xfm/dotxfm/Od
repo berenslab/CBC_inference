@@ -1,0 +1,6 @@
+#XFM
+od:::app_od_byte.xpm::rxvt -e runod -b $*
+od:::app_od_char.xpm::rxvt -e runod -c $*
+od:::app_od_dec.xpm::rxvt -e runod -d $*
+od:::app_od_hex.xpm::rxvt -e runod -x $*
+od:::app_od_oct.xpm::rxvt -e runod $*

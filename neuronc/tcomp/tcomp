@@ -1,0 +1,8 @@
+
+timinc = 1e-4;
+
+conn 1 to 2 cable length 240 dia 1;
+
+
+plot V[2],V[1];
+run;

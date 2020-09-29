@@ -1,0 +1,27 @@
+
+for (y=0; y<50; y++)
+  for (x=0; x<50; x++)
+    at [x][y] cone (x,y);
+
+//stim spot 20 loc (25,25) inten 10 start time dur 2;
+
+/* stim sine 25 loc (10,40) 
+		sphase 180 
+		orient 45 
+		inten 10 blur .1 
+		contrast .7 
+		start time dur 2; /* */
+
+ stim gabor 10 loc (25,25) 
+		xenv 20
+		yenv 5
+		sphase 0
+		orient 90 
+		inten 10 blur .1 
+		contrast .7 
+		start time dur 2; /* */
+
+display size 50;
+display center (25,25);
+
+display stim at 0.1;

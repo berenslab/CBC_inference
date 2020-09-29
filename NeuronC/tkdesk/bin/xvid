@@ -1,3 +1,0 @@
-#! /bin/csh
-#
-vid -w 1.6 -B 0 $argv

@@ -1,0 +1,145 @@
+#! /usr/bin/perl
+#
+#
+#
+#
+
+@cellnames = ( 
+	"cbp_0395_t1", 
+	"cbp_0399_t1", 
+	"cbp_0402_t1", 
+	"cbp_0437_t2", 
+	"cbp_0447_t2",
+	"cbp_0476_t3b", 
+	"cbp_0483_t3b", 
+	"cbp_0510_t4", 
+	"cbp_0520_t4", 
+	"cbp_0523_t4",
+	"cbp_0529_t4", 
+	"cbp_0534_t5a", 
+	"cbp_0536_t5a", 
+	"cbp_0540_t5a", 
+	"cbp_0541_t5a",
+	"cbp_0569_t5r", 
+	"cbp_0572_t5r", 
+	"cbp_0576_t5r", 
+	"cbp_0577_t5r", 
+	"cbp_0580_t5r",
+	"cbp_0592_t5x", 
+	"cbp_0594_t5x", 
+	"cbp_0596_t5x", 
+	"cbp_0598_t5x", 
+	"cbp_0604_xbc",
+	"cbp_0605_xbc", 
+	"cbp_0607_xbc", 
+	"cbp_0608_xbc", 
+	"cbp_0609_xbc", 
+	"cbp_0643_t6",
+	"cbp_0647_t6", 
+	"cbp_0652_t6", 
+	"cbp_0654_t6", 
+	"cbp_0658_t7", 
+	"cbp_0658a_t7"
+ );
+
+$cellnum = "510";
+$amarr   = 11;
+$presyn1 = 0;
+$dbp1_soma_z = 2e6;
+$zrot = 0;
+$soma_z = 0;
+$ps  = 0;
+$ps2 = 0;
+$n = 0;
+
+ $ksoma = 0;
+  $nahd = 0;
+  $naab = 0;
+
+  $g_am = 5e-10;
+ $g_am2 = 5e-10;
+$g_dbp1 = 8e-10;
+$g_dbp2 = 8e-10;
+
+use Getopt::Long;
+
+&GetOptions (
+             "cellnum=s"     => \$cellnum,
+             "theta=f"       => \$theta,
+             "condi=f"       => \$condi,
+             "amarr=f"       => \$amarr,
+             "ksoma=f"       => \$ksoma,
+             "nahd=f"        => \$nahd,
+             "naab=f"        => \$naab,
+             "zrot=f"        => \$zrot,
+             "g_am=f"        => \$g_am,
+             "g_am2=f"       => \$g_am2,
+             "g_dbp1=f"      => \$g_dbp1,
+             "g_dbp2=f"      => \$g_dbp2,
+             "presyn1=f"     => \$presyn1,
+             "n=f"           => \$n,
+            );
+
+# - - - - - - - - - - - - - - - - - - - -
+
+@cellname  = grep /$cellnum/, @cellnames;
+# print "@cellname","\n";
+
+#  Aubrey's cells
+
+if      ($cellnum eq "395")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "399")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "402")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "437")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "447")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "476")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "483")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "534")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "541")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "557")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "592")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "604")  { $soma_z = -10; $ps = 801;
+} elsif ($cellnum eq "658a") { $soma_z = -10; $ps = 802;
+}
+
+# Serge's cells
+	   
+if      ($cellnum eq "510") { $soma_z = -7;  $ps = 800; $ps2 = 812;
+} elsif ($cellnum eq "520") { $soma_z = -15; $ps = 845;
+} elsif ($cellnum eq "523") { $soma_z = -15; $ps = 800;
+} elsif ($cellnum eq "529") { $soma_z = -15; $ps = 826; $ps2 = 821;
+} elsif ($cellnum eq "536") { $soma_z =  0;  $ps = 808; $ps2 = 818;
+} elsif ($cellnum eq "540") { $soma_z = -7;  $ps = 820;
+} elsif ($cellnum eq "541") { $soma_z = -2;  $ps = 800; $zrot = 90;
+} elsif ($cellnum eq "569") { $soma_z = -8;  $ps = 808;
+} elsif ($cellnum eq "572") { $soma_z = -6;  $ps = 804; $zrot = 90;
+} elsif ($cellnum eq "576") { $soma_z = -6;  $ps = 800;
+} elsif ($cellnum eq "580") { $soma_z = -4;  $ps = 803;
+} elsif ($cellnum eq "594") { $soma_z = -4;  $ps = 802;
+} elsif ($cellnum eq "596") { $soma_z = -7;  $ps = 806;
+} elsif ($cellnum eq "598") { $soma_z = -4;  $ps = 804;
+} elsif ($cellnum eq "605") { $soma_z =  0;  $ps = 800; $zrot = 45; 
+} elsif ($cellnum eq "607") { $soma_z =  0;  $ps = 800;
+} elsif ($cellnum eq "608") { $soma_z = -2;  $ps = 804;
+} elsif ($cellnum eq "609") { $soma_z = -6;  $ps = 804;
+} elsif ($cellnum eq "643") { $soma_z = -4;  $ps = 801;
+} elsif ($cellnum eq "647") { $soma_z =  12; $ps = 800;
+} elsif ($cellnum eq "652") { $soma_z =  12; $ps = 804;
+} elsif ($cellnum eq "654") { $soma_z =  4;  $ps = 800;
+} elsif ($cellnum eq "658") { $soma_z =  6;  $ps = 800;
+}
+
+
+if ($dbp1_soma_z < 1e6) { $soma_z = $dbp1_soma_z; }
+if ($presyn1 > 0)       { $ps = $presyn1; }
+if ($zrot == 0)         { $thetaz = ""; } else { $thetaz = "--dbp1_thetaz $zrot"; }
+
+ $get_cbp = "--dbp1_file @cellname --dbp1_soma_z $soma_z $thetaz --presyn1 $ps"; 
+
+ if ($n==1) { print @cellname; }
+ else { print ("$get_cbp"); }
+
+# { system ("retsim --expt cbp_chirp --cbptype dbp1 $get_cbp --n_dbp1 10 --amarr $amarr --g_am $g_am --g_am2 $g_am2 --g_dbp1 $g_dbp1 --g_dbp2 $g_dbp2 --ksoma $ksoma --nahd $nahd --naab $naab  >& cbp_chirp.$cellname.$amarr.$ps.r &"); }
+
+
+

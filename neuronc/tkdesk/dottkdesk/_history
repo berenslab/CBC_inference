@@ -1,0 +1,62 @@
+~/News
+~/public_html
+~/nc
+~/nc/src
+~/nc/tcomp
+~/figs
+/usr
+/usr/cells
+/usr/mont
+/usr/mont/cel
+/usr/mont/demo
+/
+/home
+~/.tkdesk/.trash
+~/aii
+~/tcomp
+~
+# Command history:
+# Periodic command history:
+# HyperSearch history:
+# Files history:
+~/figs/3p3.fig
+~/figs/3p1.fig
+/usr/mont/cel/beta4.dat
+/usr/mont/cel/beta4fa.cor
+/usr/mont/cel/dflags
+/usr/mont/demo/bip1.plt
+/usr/mont/demo/demo2
+~/aii/aii.3d.psm
+~/aii/aii.3d.ps
+~/aii/aii4.1.5.r
+~/aii/aii.3b.psm
+~/aii/aii.3.n
+~/tcomp/tcomp20
+~/tcomp/x.ps
+~/tcomp/tcomp24d.r
+~/tcomp/x.r
+~/tcomp/cachans.txt
+~/tcomp/x.n
+~/tcomp/xxx
+~/tcomp/tt.n
+# Executables history:
+ncplot /home/rob/tcomp/tcomp24d.r
+xv -8
+netscape -ncols 64 http://bip.anatomy /disk/n
+xterm -geometry 80x40 -e mail
+xcalendar
+xterm -geometry 80x40 -e pine
+ncplotps /home/rob/tcomp/x.r
+aimaker /home/rob/tcomp/x.ps
+xterm -T XTerm -sb
+xterm -geometry 80x40 -e top
+netscape -ncols 64 http://bip.anatomy file:/home/rob/tcomp/x.ps
+ncdisp /home/rob/tcomp/tt.n
+xterm -T nc -n nc -e nc
+ncdisp /home/rob/tcomp/x.n
+pixmap
+ncdisp -v /home/rob/tcomp/x.n
+neurc /home/rob/tcomp/x.n
+xterm -T x.n -n x.n -e less /home/rob/tcomp/x.n
+neurc /home/rob/tcomp/tt.n
+ncdisp -v /home/rob/tcomp/tt.n

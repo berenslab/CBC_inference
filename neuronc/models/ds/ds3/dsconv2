@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+#  Script to convert cell anatomy file from Neurolucida format
+#   to the NeuronC format. 
+#
+#   R.G. Smith, May, 2001
+#
+     echo "#"
+     echo "# DS cell from Neurolucida file \""$1"\""
+     echo "#"
+     echo "#  Converted by \"dsconv\" on "`date`
+
+awk 'BEGIN {
+     node=1; 
+     dendrite = 0;
+     nsoma = 0;
+     xsoma = ysoma = zsoma = 0;
+     xsoma_max = ysoma_max = -10000;
+     xsoma_min = ysoma_min = 10000;
+     printf ("#\n");
+ printf ("#    node  parent   dia     xbio     ybio     zbio     region  dendr \n");
+     printf ("#\n");
+     region = "DEND";
+     old_region = "";
+     }
+
+     /(CellBody)/ { region = "SOMA";}
+     /(Dendrite)/ { dendrite++; region = "DEND";}
+     /(Axon)/     { dendrite++; region = "AXON";}
+ 
+     NF>=7 && !/^;/ {
+   
+         x = $2;
+         y = $3;
+         z = $4;
+         r = $5;
+         if (region=="SOMA") {
+            xsoma += x; 
+            ysoma += y; 
+            zsoma += z; 
+            nsoma++;
+            if (xsoma_max < x) xsoma_max = x;
+            if (xsoma_min > x) xsoma_min = x;
+            if (ysoma_max < y) ysoma_max = y;
+            if (ysoma_min > y) ysoma_min = y;
+         } 
+         else {
+           if (old_region=="SOMA" && region != "SOMA") {
+             xsoma /= nsoma;
+             ysoma /= nsoma;
+             zsoma /= nsoma;
+             soma_dia = ((xsoma_max-xsoma_min)+(ysoma_max-ysoma_min)) *0.5;
+             printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %5g\n",
+	 		0, 0, soma_dia, xsoma, ysoma, zsoma,
+			 old_region, dendrite-1);
+          }
+
+          if ($7=="Root\r") {       # change "Root" to look like "R-0"
+            id="R"; 
+            seqn="0"; 
+            nid[dendrite,""] = node; 
+          }
+          else {
+            id = substr($7,0,length($7)-1);    # remove comma
+            seqn = substr($8,0,length($8)-1);  # remove "\r" from end
+          }
+
+          parent = substr(id,0,length(id)-2);  # remove "-1" from end
+          nid[dendrite,id] = node; 
+
+          if (seqn == 1)    pn = nid[dendrite,parent];
+          else            pn = node-1; 
+          if (seqn==0)    pn = 0;
+
+# print id, seqn, parent, pn;
+
+#           printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %s %s\n",
+#	  			node, pn, r*2, x, y, z,region,id,parent);
+           printf (" %6d %6d     %-8.4g %-8.5g %-8.5g %-8.5g %s %5g\n",
+ 	 		node, pn, r*2, x, y, z, region,dendrite-1);
+          node++;
+       }
+       old_region = region;
+     }
+    ' $1 
+

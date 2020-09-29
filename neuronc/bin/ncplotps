@@ -1,0 +1,18 @@
+#! /bin/bash
+#
+#  ncplotps
+#
+for i in $@; do
+    echo ${i%.*}.ps
+    plotmod $i | vid -c > ${i%.*}.ps
+done
+
+
+##! /bin/csh -f
+##  ncplotps
+##
+#foreach i ($argv) 
+#  plotmod $i:r.r | vid -B 0 -c > $i:r.ps
+#end
+
+

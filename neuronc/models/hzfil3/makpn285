@@ -1,0 +1,54 @@
+#! /bin/csh -f
+#
+#  conversion from temporal to spatial plots
+#
+#  parameters:
+#  hzpn start stop center scale offset file
+#
+# hz285: 60 x 60 array of cones
+#
+#
+#
+hzpx 1 21 1830 1 0 130 hz285s.aa.r     >hz285s.aa.p
+hzpx 1 21 1830 1 0 130 hz285s.ab.r     >hz285s.ab.p
+hzpx 1 21 1830 1 0 130 hz285s.ac.r     >hz285s.ac.p
+hzpx 1 21 1830 1 0 130 hz285s.ad.r     >hz285s.ad.p
+hzpx 1 21 1830 1 0 130 hz285s.ae.r     >hz285s.ae.p
+hzpx 1 21 1830 1 0 130 hz285s.af.r     >hz285s.af.p
+hzpx 1 21 1830 1 0 100 hz285s.ag.r     >hz285s.ag.p
+hzpx 1 21 1830 1 0  90 hz285s.ah.r     >hz285s.ah.p
+hzpx 1 21 1830 1 0  85 hz285s.ai.r     >hz285s.ai.p
+hzpx 1 21 1830 1 0  80 hz285s.aj.r     >hz285s.aj.p
+hzpx 1 21 1830 1 0  75 hz285s.ak.r     >hz285s.ak.p
+hzpx 1 21 1830 1 0  70 hz285s.al.r     >hz285s.al.p
+#
+#
+# the type A hz cells:
+#
+hzp 22 25 16024 7 -0.3 130 hz285s.aa.r     >hz285s.aa.pa
+hzp 22 25 16024 7 -0.3 130 hz285s.ab.r     >hz285s.ab.pa
+hzp 22 25 16024 7 -0.3 130 hz285s.ac.r     >hz285s.ac.pa
+hzp 22 25 16024 7 -0.3 130 hz285s.ad.r     >hz285s.ad.pa
+hzp 22 25 16024 7 -0.3 130 hz285s.ae.r     >hz285s.ae.pa
+hzp 22 25 16024 7 -0.3 130 hz285s.af.r     >hz285s.af.pa
+hzp 22 25 16024 7 -0.3 100 hz285s.ag.r     >hz285s.ag.pa
+hzp 22 25 16024 7 -0.3  90 hz285s.ah.r     >hz285s.ah.pa
+hzp 22 25 16024 7 -0.3  85 hz285s.ai.r     >hz285s.ai.pa
+hzp 22 25 16024 7 -0.3  80 hz285s.aj.r     >hz285s.aj.pa
+hzp 22 25 16024 7 -0.3  75 hz285s.ak.r     >hz285s.ak.pa
+hzp 22 25 16024 7 -0.3  70 hz285s.al.r     >hz285s.al.pa
+#
+# the type B hz cells:
+#
+hzp 29 35 15084 4 -0.33 130 hz285s.aa.r     >hz285s.aa.pb
+hzp 29 35 15084 4 -0.33 130 hz285s.ab.r     >hz285s.ab.pb
+hzp 29 35 15084 4 -0.33 130 hz285s.ac.r     >hz285s.ac.pb
+hzp 29 35 15084 4 -0.33 130 hz285s.ad.r     >hz285s.ad.pb
+hzp 29 35 15084 4 -0.33 130 hz285s.ae.r     >hz285s.ae.pb
+hzp 29 35 15084 4 -0.33 130 hz285s.af.r     >hz285s.af.pb
+hzp 29 35 15084 4 -0.33 115 hz285s.ag.r     >hz285s.ag.pb
+hzp 29 35 15084 4 -0.33 110 hz285s.ah.r     >hz285s.ah.pb
+hzp 29 35 15084 4 -0.33 100 hz285s.ai.r     >hz285s.ai.pb
+hzp 29 35 15084 4 -0.33  95 hz285s.aj.r     >hz285s.aj.pb
+hzp 29 35 15084 4 -0.33  95 hz285s.ak.r     >hz285s.ak.pb
+hzp 29 35 15084 4 -0.33  90 hz285s.al.r     >hz285s.al.pb

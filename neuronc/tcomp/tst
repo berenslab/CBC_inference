@@ -1,0 +1,33 @@
+/* tcomp2:  test of cable with segments */
+
+
+timinc = 1e-4; 
+endexp = .05;
+complam=.2;
+relax = .5;
+crit=1e-8;
+ploti = .001;
+implicit=1;
+
+plmax = 0;
+plmin = -.07;
+
+seg = 353;
+drm = 5000;
+conn 1 to 2 cable length seg dia 1;
+conn 2 to 3 cable length seg dia 1;
+
+
+stim node 1 vclamp -.01 start 0 dur 1;
+
+plot V[1];
+plot V[2];
+plot V[3];
+
+step .01;
+
+for (i=3; i<10; i++) {
+  conn i to i+1 modify cable length 10 dia 1 vrest V[i];
+  step .001;
+};
+

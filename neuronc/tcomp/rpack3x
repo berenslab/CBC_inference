@@ -1,0 +1,34 @@
+/* rallpack 3:  test of cable with sequential-state channels */
+
+t1 = elap_time();
+
+timinc = 50e-6; 
+endexp = .25;
+complam=.05;
+relax = .25;
+crit  = 1e-8;
+ploti = 5e-5;
+
+plmax = .05;
+plmin = -.08;
+
+vcl = -.065;
+
+drm = 40000;
+conn 1 to 2 cable length 1000 dia 1 
+    Na type 1 vrev=.05 density .12
+    K type 1 vrev= -.077 density .036;
+
+stim node 1 cclamp 0.1e-9 start 0 dur 1e10;
+
+plot V[1];
+plot V[2];
+run;
+
+
+t2 = elap_time();
+
+totsecs = (t2 - t1) * 60;
+
+speed = ncomps * endexp / totsecs;
+print speed;

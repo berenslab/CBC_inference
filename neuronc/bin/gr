@@ -1,0 +1,4 @@
+#! /bin/bash
+#
+graph -M 200 -m 0 -C o -f $1 -f z200 | xvid
+

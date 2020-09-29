@@ -1,2 +1,0 @@
-#XFM
-top:::top.xpm:exec rxvt -T top -n top -e top >/dev/console:

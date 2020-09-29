@@ -1,0 +1,285 @@
+//module gcfuncs.n
+
+func make_gcbr (c, x, y, z, t, dt, tlen, cbr, nbr)
+  /* Function to make coarse skeleton of one gc dendrite.
+     c    = cell number.
+     t    = theta (orientation angle for dendrite).
+     dt   = dtheta (width of dendritic branching).
+     tlen = length remaining for branch.
+     cbr  = starting node to connect to.
+     nbr  = new node number to start with.
+   */
+  {
+    local xn,yn, rbr;
+
+    if (tlen <= 0) return nbr;
+    xn = x + gc_seglen * cos(t);
+    yn = y + gc_seglen * sin(t);
+    at [gc][c][nbr] loc (xn, yn, z);
+    make_gcseg (c, cbr, nbr, brdia=gc_taperdia * (tlen/gc_seglen)^.7,
+					gcregion=DEND);
+
+    rbr = make_gcbr(c,xn,yn,z,t-dt,dt/1.5,tlen-gc_seglen, nbr, nbr+1);
+    rbr = make_gcbr(c,xn,yn,z,t+dt,dt/1.5,tlen-gc_seglen, nbr, rbr+1);
+    return rbr;
+  };
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  if (notinit(make_gc_dend)) make_gc_dend = 1;
+  if (notinit(make_gc_axon)) make_gc_axon = 1;
+
+if (gc_morph!=MORPH_REAL){
+
+    if (notinit(gc_nbr))       gc_nbr     = 6;    /* number of gc branches */
+    if (notinit(gc_seglen))    gc_seglen  = 40;   /* length of gc segments */
+    if (notinit(gc_soma_dia))  gc_soma_dia = 10;  /* gc soma diameter */
+    if (notinit(gc_taperdia))  gc_taperdia = 0.8; /* multiplier for branch dia */
+
+    if (notinit(gc_dend_minthresh)) gc_dend_minthresh = 3 ;/* no tiny branches */
+
+    if (notinit(gc_dend_maxthresh)) gc_dend_maxthresh = 30;
+						/* no long spindly branches */
+    if (notinit(gc_dend_somathresh)) gc_dend_somathresh = 7;
+						/* not too close to soma */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+proc make_gcell(cellnr,xloc,yloc,direction,morph)
+{
+  if (morph!=MORPH_REAL) {
+
+    local br, n, nbn, first_nbn, last_axon_nbn;
+    local axdia, gcregion;
+
+    /* Make coarse skeleton of GC, then add space-filling dendrites.
+       Number of dendrites is preset.  Make finer-branching
+       space-filling dendrites by selecting random points
+       (within presettable radius). Test each point to see if
+       it's too close to any dendrite, too far away from
+       the original skeleton, or too close to the soma.
+       Then grow new dendrite to the new point.
+     */
+
+    /* soma */
+
+    at [gc][cellnr][soma] loc (0,0,0);
+    make_gcseg(c, soma, soma, gc_soma_dia, gcregion=SOMA);
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -  */
+
+    /* axon */
+
+    nbn = 1;			/* new branch node number */
+    if (notinit(make_gc_axon)) make_gc_axon = 1;
+
+    if (make_gc_axon) {
+
+      if (notinit(gc_axon_dia))       gc_axon_dia = 1;
+      if (notinit(gc_hill_dia))       gc_hill_dia = 2;
+      if (notinit(gc_axon_thin_dia))  gc_axon_thin_dia = .3;
+
+      at [gc][cellnr][nbn]   loc (-gc_soma_dia*.5+3,0,0);	/* end of hillock */
+      at [gc][cellnr][nbn+1] loc (-28,0,0);			/* end of thin ax */
+      at [gc][cellnr][nbn+2] loc (-200,0,0);			/* end of axon */
+
+      make_gcseg(c, soma,  nbn,   axdia=gc_hill_dia, gcregion=HILLOCK);
+      make_gcseg(c, nbn,   nbn+1, axdia=gc_axon_thin_dia, gcregion=AXON_THIN);
+      make_gcseg(c, nbn+1, nbn+2, axdia=gc_axon_dia, gcregion=AXON);
+      nbn += 3;
+    };
+    last_axon_nbn = nbn;
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -  */
+
+    /* make dendritic tree */
+
+    if (make_gc_dend) {
+      dt = 2 * PI / gc_nbr;
+      skel_radius = 3*gc_seglen;
+
+		/* set number of branches actually made */
+
+      if (notinit(gc_nbr_make)) gc_nbr_make = 1;
+      if (notinit(gc_br_density)) gc_br_density = .05;
+      if (notinit(gc_edge_sparseness)) gc_edge_sparseness = 1.;
+
+      for (d=0; d<gc_nbr_make; d++) {
+        t = dt * d;
+        nbn = make_gcbr(c, 0,0,0, t, dt/2.5, skel_radius, soma, nbn);
+      };
+      first_nbn = nbn;
+      find_maxmin(gc);		/* find out how large GC is so far */
+
+    /* grow branches randomly */
+
+      if (xmax > skel_radius) xmax = skel_radius;
+      if (ymax > skel_radius) ymax = skel_radius;
+
+      if (xmin < -skel_radius) xmin = -skel_radius;
+      if (ymin < -skel_radius) ymin = -skel_radius;
+
+      grow_incr = gc_dend_maxthresh + 10;
+      xmax += grow_incr;
+      xmin -= grow_incr;
+      ymax += grow_incr;
+      ymin -= grow_incr;
+
+      grow_radius = skel_radius + gc_dend_maxthresh;
+
+      try_area = (xmax - xmin) * (ymax - ymin);
+      ntries = try_area * gc_br_density;
+      if (info >= 3) printf ("# try_area %g, ntries %g\n",try_area,ntries);
+
+      for (tries=0; tries<ntries; tries++) {
+          local b, x, y;
+          local gbr, mindist, mindistf, dist;
+          local close_gc_el;
+
+         x = rrange (xmin,xmax);	/* make new point within DF */
+         y = rrange (ymin,ymax);
+         rdist = sqrt (x*x + y*y);
+	 if (gauss(rdist,grow_radius/gc_edge_sparseness) < rand())
+         /*if (rdist > grow_radius) */
+	 {		/* if beyond edge of cell */
+		tries--;
+		continue;
+	 };
+
+         at [gc][cellnr][nbn] loc (x,y,gc_zloc);		/* make new node */
+
+         mindist = mindistf = mindists = 1e10;
+         close_gc_el = 0;
+         foreach cable ?gbr node [gc][cellnr] ?b {
+
+           if (element gbr->elabl != "dend") continue; /* not dendrite */
+
+           if ((dist = e2dist([gc][cellnr][nbn],gbr)) < mindist) {
+             mindist = dist;			/* remember this dist */
+	     close_gc_el = gbr;			/* must not be too close */
+           };
+
+           if ((dist < mindistf) && (b >= last_axon_nbn) && (b < first_nbn) ) {
+             mindistf = dist;			/* must be close to orig skel */
+           };
+           if ((dist < mindists) && (b == soma)) {
+             mindists = dist;			/* must be bit away from soma */
+           };
+         //print "dist",dist;
+        };
+        if ((mindist  < gc_dend_minthresh /
+ 	  gauss(rdist,grow_radius/gc_edge_sparseness)) || /* no tiny branches */
+            (mindistf > gc_dend_maxthresh) || 	/* no long spindly branches */
+            (mindists < gc_dend_somathresh)) {	/* no branches near soma */
+	   erase node [gc][cellnr][nbn];			/* delete new node */
+	   continue;
+        }
+        else {					 /* make new branch */
+           cdist = efrac([gc][cellnr][nbn],close_gc_el); /* find loc for new node */
+
+           at [gc][cellnr][element close_gc_el->node1c]:
+				close_gc_el offset cdist put [gc][cellnr][nbn+1];
+
+		/* check to see if second new node is too near soma */
+           if (n2dist([gc][cellnr][nbn+1],[gc][cellnr][soma]) < gc_dend_somathresh) {
+	     erase node [gc][cellnr][nbn];		/* delete new node */
+	     /* erase node [gc][cellnr][nbn+1];	/* leave fractionated cable */
+	   } else {
+	     make_gcseg(c, nbn, nbn+1, brdia=0.5, gcregion=DEND);
+	   };
+           nbn += 2;
+        };
+       };  /* for (tries;;) */
+    };    /* make_gc_dend */
+
+    celden[gc][cellnr] = nbn;		/* number of nodes in gc */
+
+ }	/* morph */
+
+/*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
+
+ else {     /* realistic gc morphology */
+
+   fread (gcfile, cabldata, clines, ccols);      /* read anatomy file */
+
+   if (notinit(gcdendn)) gcdendn = -1;
+
+   c = 0;       /* cell number */
+   for (i=0; i<clines; i++) {              /* locate the nodes first */
+
+
+    if (!make_gc_dend)					/* skip dendr */
+	if ((cabldata[i][REG]==DEND) ||
+	    (cabldata[i][REG]==DEND_PROX)) continue;
+
+    if (!make_gc_axon)					/* skip axon */
+	if ((cabldata[i][REG]==AXON) ||
+	    (cabldata[i][REG]==AXON_THIN) ||
+	    (cabldata[i][REG]==AXON_LONG) ||
+	    (cabldata[i][REG]==HILLOCK)) continue;
+
+    /* If "gcdendn" is set non-negative, */
+    /*  allow constructing only a single dendrite */
+
+    if (ccols>DENDN) {
+      dend = cabldata[i][DENDN];
+      if ((gcdendn>=0) && (dend > 0) && (dend!=gcdendn)) continue;
+    };
+
+    n = cabldata[i][NODE];
+    at [gc][cellnr][n]                        /* locate the nodes */
+            loc(cabldata[i][AX],
+                cabldata[i][AY],
+                cabldata[i][AZ]);
+
+    make_gcseg (c, n, cabldata[i][PAR],  /* make the dendritic tree and axon */
+               cabldata[i][DIA],
+               cabldata[i][REG]);
+   };
+
+  };  /* realistic gc morphology */
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  find_maxmin(gc); 		/* find out how large GC is */
+
+  if (notinit(gcmargin)) gcmargin = 10;
+
+  xmax += gcmargin;
+  ymax += gcmargin;
+  xmin -= gcmargin;
+  ymin -= gcmargin;
+
+		/* add some extra dist to margin for amacrine outputs */
+
+  margin_add = am_output_dist * 1.5;
+
+  if ((ds_orient > 315) || (ds_orient <= 45)) {
+    xmin -= margin_add;
+  }
+
+  else if ((ds_orient > 45) && (ds_orient <= 135)) {
+    ymin -= margin_add;
+  }
+
+  else if ((ds_orient > 135) && (ds_orient <= 225)) {
+    xmax += margin_add;
+  }
+
+  else if ((ds_orient > 225) && (ds_orient <= 315)) {
+    ymax += margin_add;
+  };
+
+  xsize = xmax - xmin;
+  ysize = ymax - ymin;
+  xcent = int((xmax + xmin) * .5);
+  ycent = int((ymax + ymin) * .5);
+
+  gc_area = (xmax - xmin) * (ymax - ymin);
+  if (info >= 3) {
+    print "# gc area", gc_area;
+    print "# X max, min", xmax, xmin;
+    print "# Y max, min", ymax, ymin;
+  };
+};

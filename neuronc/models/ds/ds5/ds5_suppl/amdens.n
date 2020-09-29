@@ -1,0 +1,16 @@
+amdens = 
+{{
+/* Densities of currents for the cell's different regions (S/cm2). */
+
+/* dend  dend_prox  dend_dist 	soma   	hillock   thin     axon    axon_long */
+  
+  80e-3,   0e-3,    0e-3,     120e-3, 250e-3,   250e-3,   80e-3,   0e-3,	/* Na    */
+   0e-3,   0e-3,    0e-3, 	0e-3,  60e-3,    60e-3,    0e-3,   0e-3,	/* Na6   */
+   0e-3,   0e-3,   .5e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3,	/* Ca    */
+   0e-3,   0e-3,    0e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3,	/* Kdr   */
+   0e-3,   0e-3,    0e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3,		/* sKCa1 */
+   0e-3,   0e-3,    0e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3,	/* sKCa2 */
+   0e-3,   0e-3,    0e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3,		/* BCa   */
+   0e-3,   0e-3,    0e-3, 	0e-3,   0e-3,     0e-3,    0e-3,   0e-3		/* Ka    */
+}};
+

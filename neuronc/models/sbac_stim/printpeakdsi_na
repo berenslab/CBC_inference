@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# printpeakdsi_na
+#
+# $1=time, V=$30 (col 29 after time), Ca=$31 trace to find max
+#
+awk "BEGIN {
+
+      Vdend = 30;   # column one more than Vdend
+      Vsoma = 24;
+      peakd1=peakd2= -0.2;
+      peaks1=peaks2= -0.2;
+      tpeakd1=tpeakd2=0;
+      tpeaks1=tpeaks2=0;
+      peak0Time=0.055;
+      peak2Time=0.40;
+      printf (\"%s: \",\"$1\");
+     }
+     
+     "'/^#/   { if ($1 == "#e") {
+		 endexp = $5;
+	        peak2Time = endexp / 2;
+		# print "peak2Time", peak2Time;
+	      }
+	    }
+     $1==0.01 { peak0Time = $1; peaks0 = $Vdend; peakd0 = $Vsoma; }
+     !/^#/ { 
+	    if ($1<peak2Time) {
+	        if (peakd1 < $Vdend) { peakd1 = $Vdend; tpeakd1 = $1; }
+	        if (peaks1 < $Vsoma) { peaks1 = $Vsoma; tpeaks1 = $1; }
+	    }
+	    else {
+	      if (NF >= 35) {
+	        if (peakd2 < $Vdend) { peakd2 = $Vdend; tpeakd2 = $1; }
+	        if (peaks2 < $Vsoma) { peaks2 = $Vsoma; tpeaks2 = $1; }
+	      }
+	    }
+	  } 
+	END {
+	 # printf ("\n"); 
+	 # printf ("Peakd0:  %-6.4g: %-9.4g  \n", peak0Time, peakd0); 
+	 # printf ("Peakd1:  %-6.4g: %-9.4g  \n", tpeakd1, peakd1); 
+	 # printf ("Peakd2:  %-6.4g: %-9.4g  \n", tpeakd2, peakd2); 
+	 # printf ("Peaks0:  %-6.4g: %-9.4g  \n", peak0Time, peaks0); 
+	 # printf ("Peaks1:  %-6.4g: %-9.4g  \n", tpeaks1, peaks1); 
+	 # printf ("Peaks2:  %-6.4g: %-9.4g  \n", tpeaks2, peaks2); 
+	 peakdh1 = peakd0 - peakd1;
+	 peakdh2 = peakd0 - peakd2;
+	 peaksh1 = peaks1 - peaks0;
+	 peaksh2 = peaks2 - peaks0;
+	 printf ("DSI(D)  %-9.4g   DSI(S) %-9.4g\n", (peakdh1-peakdh2)/(peakdh1+peakdh2), (peaksh1-peaksh2)/(peaksh1+peaksh2)); 
+	}
+   ' $1

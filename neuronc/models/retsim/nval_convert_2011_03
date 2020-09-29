@@ -1,0 +1,6 @@
+#
+#  nval_convert_2011_03
+#
+#  Script to remove a cell parameter and add a synaptic parameter
+#
+nval_subrow 33 $1 | nval_convert_syn

@@ -1,9 +1,0 @@
-#! /bin/csh -f
-#
-foreach i ($argv) 
- plotmod -n -f $i | vid -c > $i:r.ps
- replace "1 .6 .6 setrgbcolor" "0 0 0 setrgbcolor" $i:r.ps
- replace ".5 setlinewidth" "1.5 setlinewidth" $i:r.ps
-end
-
-

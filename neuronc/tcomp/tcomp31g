@@ -1,0 +1,84 @@
+/* tcomp31:  Sequential-State Na and K channels */
+
+crit =   1e-8;
+endexp = .06;
+ploti=   1e-5;
+implicit= 0;
+timinc = 1e-5;
+tempcel = 10;
+
+drm=1e6;
+
+eq = -.05;
+
+at 1 sphere dia 1 vrev -.07 vrest= eq;
+at 1 chan K type 0 
+vrev -.07 maxcond 1e-9
+ename na0;
+
+at 2 sphere dia 1 vrev -.07 vrest= eq;
+at 2 chan K type 1 
+vrev -.07 maxcond 1e-9
+//chnoise=1 N 1000
+ename na1;
+
+at 3 sphere dia 1 vrev -.07 vrest= eq;
+at 3 chan KCa type 0 vrev -.07 
+chnoise=1 N 100 
+maxcond 2e-9 tauh=1
+ename kal0; 		 		
+
+at 3 chan Ca maxcond=1e-9 cbound=2;
+
+at 4 sphere dia 1 vrev -.07 vrest= eq;
+at 4 chan KCa type 1 vrev -.07
+chnoise=1 N 100
+maxcond 2e-9 tauh=1
+ename kal1; 		
+
+at 4 chan Ca maxcond=1e-9 cbound=2;
+
+vcla=-20e-3;
+
+stim node 1 vclamp -0.07 start .0 dur .01;
+stim node 1 vclamp vcla start .01 dur .04;
+stim node 1 vclamp -0.07 start .05 dur .01;
+
+stim node 2 vclamp -0.07 start .0 dur .01;
+stim node 2 vclamp vcla start .01 dur .04;
+stim node 2 vclamp -0.07 start .05 dur .01;
+
+stim node 3 vclamp -0.07 start .0 dur .01;
+stim node 3 vclamp vcla start .01 dur .04;
+stim node 3 vclamp -0.07 start .05 dur .01;
+
+stim node 4 vclamp -0.07 start .0 dur .01;
+stim node 4 vclamp vcla start .01 dur .04;
+stim node 4 vclamp -0.07 start .05 dur .01;
+
+//plot V[1] min -70e-3 max 20e-3;
+
+//plot I[1] max 1e-10 min -1e-10;
+//plot G(0) na0 max 1e-9 min -1e-9;
+
+//plot I[2] max 1e-10 min -1e-10;
+//plot G(0) na1 max 1e-9 min -1e-9;
+
+//plot I[3] max 1e-10 min -1e-10;	/* Ia */
+plot G(0) kal0 max 2e-9 min -2e-9;	/* G  */
+plot G(0) kal1 max 2e-9 min -2e-9;	/* G  */
+//plot G(1) kal0 max 2 min -2;		/* n  */
+//plot G(2) kal0 max 2 min -2;		/* h  */
+
+//plot I[4] max 1e-10 min -1e-10;
+//plot G(0) kal1 max 3e-9 min -1e-9;
+//plot G(1) kal1 max 3 min -1;
+//plot G(2) kal1 max 3 min -1;
+//plot G(3) kal1 max 3 min -1;
+//plot G(4) kal1 max 3 min -1;
+//plot G(5) kal1 max 3 min -1;
+//plot G(6) kal1 max 3 min -1;
+//plot G(7) kal1 max 3 min -1;
+//plot G(8) kal1 max 3 min -1;
+
+run;

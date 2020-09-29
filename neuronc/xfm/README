@@ -1,0 +1,49 @@
+
+The files in this directory are meant for use with "xfm", an X
+file manager available for the Linux operating system. The source
+code is available from Linux anonymous ftp sites. I have used
+xfm-1.3.2 with the files included here. To use them, first
+install "xfm", and run "xfm.install".  Then copy the dotxfm
+directory to .xfm in your home directory. This overwrites the
+default configuration files with the ones included here (but I
+started with the defaults so you aren't losing much). Copy the
+pixmap files into your /usr/X11/include/X11/pixmaps directory (or
+other suitable location, check the apps-default/Xpm file).  Copy
+the files in bin to a directory that is in your path, such as
+/usr/bin or /usr/local/bin.  This includes the scripts "ncdisp",
+"ncplot" and "runnc". These are used by "xfm" to pipe output from
+"nc" to the graphical viewer "vid" or the text viewer "less".
+
+The .xfm/magic file and the .xfm/xfmrc files have been modified
+to recognize the NeuronC file types  .n (nc script file), .m
+(function file), .r (text output file), as well as Montage file
+types .dat, .sto, .cor. It is possible to run "nc" to view the
+graphical output of a script file, to create a .pov file, and to
+run "povray" (ray tracer) on the .pov file, all from the xfm
+application manager.
+
+These will also work with the "moxfm" file manager as well.
+This is a motif-style manager that uses mostly the same
+configuration files but is more flexible. 
+
+To get the DOS menu to work, add these lines to your /etc/fstab
+table:
+
+/dev/fd0	/disk/a   msdos       noauto,user,exec,dev,suid 0 0
+/dev/fd1	/disk/b   msdos       noauto,user,exec,dev,suid 0 0
+
+
+xfm is available at:  
+
+  ftp.x.org:/contrib/applications/xfm-1.3.2.tar.gz       source code
+
+  sunsite.unc.edu                                        Linux binary
+  ftp.cdrom.com
+  ftp.pht.com 
+
+moxfm is available from:
+
+  http://ips105.desy.de:8765/~mai/moxfm
+
+
+Rob Smith     Oct, 1995
