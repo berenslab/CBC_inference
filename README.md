@@ -6,7 +6,7 @@ Also provides a more python wrapper for some of the NeuronC functionality.
 
 ## Code-structure
 
-The python core code used can be found [here](_pythoncode), must the experiments performed in the paper are described in jupyter notebooks that use this code.
+The python core code used can be found [here](pythoncode), must the experiments performed in the paper are described in jupyter notebooks that use this code.
 The code is structured similar to the paper. Since most experiments depend on the previous steps, the should be run in order. However, the data can also be loaded from zenodo, which allows to skip experiments or single (time-consuming) steps in single experiments.
 
 
@@ -23,16 +23,18 @@ The experiments are ordered as follows:
 
 The NeuronC [[1]](#1) version (6.3.14) used [here](NeuronC) was downloaded from http://retina.anatomy.upenn.edu/~rob/neuronc.html and used with minor modifications.
 
-After running the experiments or downloading the data, you can generate the [figures](_create_figures) and the animations [animations](_create_animations).
+After running the experiments or downloading the data, you can generate the [figures](create_figures) and the animations [animations](create_animations).
 
 ### Electrical stimulation
 
 The simulation of the electrical stimulation in the paper involded the software COMSOL. If you don't have access to this software, you can download the extracellular voltages from zenodo and simulate the electrical stimulation. If you want to recompute the extracellular voltage, you need to download the COMSOL files and rerun. Note that the experiments prepare the environment for this simulation, and the notebooks clearly indicate when COMSOL needs to be run. 
 
-### Stimulus optimization
+#### Stimulus optimization
 
 To optimize the stimuli we created a pipeline such that COMSOL can be run on a machine where it is installed, while SNPE and NeuronC can be run on a different machine.
 For this we created two directories [COMSOL2retsim_COMSOL](step4_optimize_stimulus/COMSOL2retsim_COMSOL) and [COMSOL2retsim_interface](step4_optimize_stimulus/COMSOL2retsim_interface). The former should be move to a computer that can run both COMSOL *and* jupyter notebook. The notebook run on this computer will communicate with COMSOL and save the COMSOL output to the [COMSOL2retsim_interface](step4_optimize_stimulus/COMSOL2retsim_interface), i.e. it needs read and write permission. Then you can run [step4_optimize_stimulus.ipynb](step4_optimize_stimulus/1_optimize_stimulus.ipynb) on the second machine, that also needs read and write permission for [COMSOL2retsim_interface](step4_optimize_stimulus/COMSOL2retsim_interface). It will load the COMSOL output, use it to run SNPE and NeuronC, and tell the other notebook when and how to create new COMSOL outputs.
+
+Similarily, this can be done for the [optimization of the electrical parameters of the retina](step3a_optimize_electrical_params).
 
 ## References
 <a id="1">[1]</a> 
