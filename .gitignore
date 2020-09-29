@@ -33,7 +33,7 @@ text_data/
 COMSOL_input/
 COMSOL_output/
 V_ames/
-*/_ready_*
+*_ready_*
 
 # C++
 # Prerequisites
