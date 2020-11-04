@@ -15,7 +15,7 @@ Either way you have to [download the data](step0a_download_data) to get full fun
 
 Download this repo and install the [requirements](requirements.txt). You may not have to install the specified package versions. <br>
 Execute the makefile in [NeuronC](neuronc) and in [Retsim](neuronc/models/retsim) to compile NeuronC and Retsim. <br>
-In addition, if you want to generate rendered cell images, you need to install [povray](http://www.povray.org/).
+In addition, if you want to generate rendered cell images, you need to install [povray](http://www.povray.org/). <br>
 Follow the experiments in the indicated order, starting with the download of the data.
 
 ## Experiments
