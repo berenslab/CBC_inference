@@ -1,8 +1,6 @@
-# CBC_inference
-
 This is the code for the paper <br>
-*Bayesian inference for biophysical neuron models enables stimulus optimization for retinal neuroprosthetics* <br>
-by Oesterle et al. 2020.
+  *Bayesian inference for biophysical neuron models enables stimulus optimization for retinal neuroprosthetics* <br>
+by Oesterle et al. 2020.<br>
 The paper can be found here: https://elifesciences.org/articles/54997
 
 This repo can be used to reproduce the data and figures shown in the paper.
