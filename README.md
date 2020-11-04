@@ -10,7 +10,7 @@ It also provides a python wrapper for some of the NeuronC functionality.
 # Code-structure
 
 While the core python code can be found [here](pythoncode), the experiments performed in the paper are described in jupyter notebooks (see below).
-The experients code is structured similar to the paper. Since most experiments depend on the previous steps, the should be run in order. However, the data can also be loaded from zenodo, which allows to skip experiments or single (time-consuming) steps in single experiments.
+The experiments' code is structured similar to the paper. Since most experiments depend on the previous steps, the should be run in order. However, the data can also be loaded from zenodo, which allows to skip experiments or single (time-consuming) steps in single experiments.
 Either way you have to [download the data](step0a_download_data) to get full functionality.
 
 ## Setup
