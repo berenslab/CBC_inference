@@ -39,7 +39,7 @@ The NeuronC [[1]](#1) version (6.3.14) used [here](neuronc) was downloaded from 
 
 ## Electrical stimulation
 
-The simulation of the electrical stimulation in the paper uses the commercially available software [COMSOL Mutliphysics](https://www.comsol.de/). If you don't have access to this software, you can download the extracellular voltages from zenodo and simulate the electrical stimulation. If you want to recompute the extracellular voltage, you need to download the COMSOL files and rerun them. Note that the experiments prepare the environment for this simulation, and the notebooks clearly indicate when COMSOL needs to be run. 
+The simulation of the electrical stimulation in the paper uses the commercially available software [COMSOL Multiphysics](https://www.comsol.de/). If you don't have access to this software, you can download the extracellular voltages from zenodo and simulate the electrical stimulation. If you want to recompute the extracellular voltage, you need to download the COMSOL files and rerun them. Note that the experiments prepare the environment for this simulation, and the notebooks clearly indicate when COMSOL needs to be run. 
 
 ### Stimulus optimization
 
