@@ -2,8 +2,7 @@
 
 This is the code for the paper <br>
 *Bayesian inference for biophysical neuron models enables stimulus optimization for retinal neuroprosthetics* <br>
-by Oesterle et al. 2020.<br>
-The paper can be found here: https://elifesciences.org/articles/54997
+by Oesterle et al. 2020 (DOI: [10.7554/eLife.54997](https://doi.org/10.7554/eLife.54997)).
 
 This repo can be used to reproduce the data and figures shown in the paper.
 It also provides a python wrapper for some of the NeuronC functionality.
