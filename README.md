@@ -14,6 +14,12 @@ While the core python code can be found [here](pythoncode), the experiments perf
 The experients code is structured similar to the paper. Since most experiments depend on the previous steps, the should be run in order. However, the data can also be loaded from zenodo, which allows to skip experiments or single (time-consuming) steps in single experiments.
 Either way you have to [download the data](step0a_download_data) to get full functionality.
 
+## Setup
+
+Download this repo and install the requirements(requirements.txt). You may not have to install the specified package versions. <br>
+Execute the makefile in neuronc(neuronc) and in retsim(neuronc/neuronc/models/retsim) to compile neuronc and retsim. <br>
+Follow the experiments in the indicated order, starting with the download of the data.
+
 ## Experiments
 The experiments are ordered as follows:
 
@@ -32,7 +38,6 @@ After running the experiments or downloading the data, you can generate the [fig
 ## NeuronC
 
 The NeuronC [[1]](#1) version (6.3.14) used [here](neuronc) was downloaded from http://retina.anatomy.upenn.edu/~rob/neuronc.html and used with minor modifications.
-To use it you have to run the makefile in [neuronc](neuronc) and in [retsim](neuronc/models/retsim).
 
 ## Electrical stimulation
 
