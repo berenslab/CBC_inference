@@ -16,8 +16,8 @@ Either way you have to [download the data](step0a_download_data) to get full fun
 
 ## Setup
 
-Download this repo and install the requirements(requirements.txt). You may not have to install the specified package versions. <br>
-Execute the makefile in neuronc(neuronc) and in retsim(neuronc/neuronc/models/retsim) to compile neuronc and retsim. <br>
+Download this repo and install the [requirements](requirements.txt). You may not have to install the specified package versions. <br>
+Execute the makefile in [neuronc](neuronc) and in [retsim](neuronc/neuronc/models/retsim) to compile neuronc and retsim. <br>
 Follow the experiments in the indicated order, starting with the download of the data.
 
 ## Experiments
